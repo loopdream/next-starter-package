@@ -11,34 +11,34 @@ This script will:
 - App folder structure 
 \n\n`;
 
-export const PRETTIER_CONFIG = `{
-  "semi": false,
-  "trailingComma": "es5",
-  "singleQuote": true,
-  "tabWidth": 2,
-  "useTabs": false
-}`;
+const EMOJIS = {
+  alert: `⚠️`,
+  spanner: `🔧`,
+  done: `✅`,
+};
 
+export const MESSAGES = {
+  nextJs: {
+    install: `${EMOJIS.spanner} 1. Running Next install script: npx create-next-app@latest \n\n Installing into directory: `,
+    error: `\n${EMOJIS.alert} Error creating Next.js app:`,
+  },
+  esLintPrettier: {
+    install: `\n${EMOJIS.spanner} 2.1 Installing @typescript-eslint/eslint-plugin prettier eslint-config-prettier...\n\n`,
+    eslintrc: `\n${EMOJIS.spanner} 2.2 Configuring eslintrc...`,
+    prettierrc: `\n${EMOJIS.spanner} 2.2 Configuring prettier...`,
+    error: `\n${EMOJIS.alert} Error setting up eslint and prettier:`,
+  },
+  done: `\n✅ Done\n\n`,
+  vsCodeSettings: `
 
-export const COMMANDS = {
-  installNext: `npx create-next-app@latest`,
-  installPrettier: `yarn add --dev prettier eslint-config-prettier`
-}
+  It is recommended you set VSCode to auto-fix eslint errors on save:
 
-export const LOG_MESSAGES = {
-  'nextJs': `1. Running Next install script: npx create-next-app@latest \n\n Installing into directory: `,
-  'nextJsError': `Error creating Next.js app:`, 
-  'vsCodeSettings': `
-
-    It is recommended you set VSCode to auto-fix eslint errors on save:
-
-    // .vscode/settings.json
-    {
-      "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": true
-      }
+  // .vscode/settings.json
+  {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
     }
-    
-    `,
-    'esLintPrettierError': `Error setting up eslint and prettier:`, 
-}
+  }
+  
+  `,
+};
