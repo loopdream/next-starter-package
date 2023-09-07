@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "npx tsc",
-    "start": "npx ts-node --pretty ./src/index.ts ",
+    "dev:start": "node --loader ts-node/esm ./src/index.ts",
+    "dev:build-start": "npm run build && node ./dist/index.js",
     "format:check": "prettier --check .",
     "format:write": "prettier --write .",
     "lint:check": "eslint .",

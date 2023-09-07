@@ -1,102 +1,110 @@
-import path from 'path'
+#!/usr/bin/env ts-node
+import path from 'path';
+import fs from 'fs';
 import { program } from 'commander';
 import figlet from 'figlet';
-import process from 'process';
-import prompts from 'prompts'
-import picocolors from 'picocolors'
-
-import { PROGRAM_DESCRIPTION, SCRIPT_DESCRIPTION } from './constants.js';
+import picocolors from 'picocolors';
+import prompts from 'prompts';
 
 import {
-  log,
   nextJSInstall,
   configureEslintPrettier,
   setupGit,
   setupHusky,
+  onPromptState,
+  goodbye,
 } from './functions.js';
 
-console.log(figlet.textSync('QuantSpark'), '\n\n');
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const onPromptState = (state: any) => {
-    if (state.aborted) {
-      // If we don't re-enable the terminal cursor before exiting
-      // the program, the cursor will remain hidden
-      process.stdout.write('\x1B[?25h')
-      process.stdout.write('\n')
-      process.exit(1)
-    }
-  }
+console.log('\n', figlet.textSync('QuantSpark'), '\n\n');
 
 program
   .name('qsbaseline')
-  .description(PROGRAM_DESCRIPTION)
+  .description(
+    `Generate a QuantSpark baseline Next.js app with best practace feature set`
+  )
   .version(`1.0.0`)
+  .usage('<projectName> -- [options]')
+  .argument('<projectName>')
+  .option('-d, --dev', 'my test option')
+  .action(async (projectName, options) => {
+    const { blue, red, green, cyan, gray } = picocolors;
 
-  .command(`generate`)
-  .argument(`<projectDirectory>`, `NextJS project directory`)
-  .option('-d, --dev', 'development mode')
-  .action(async (projectDirectory, options) => {
-    log(SCRIPT_DESCRIPTION);
-    let pPath = ''; 
-    if (options.dev) {
-      pPath = `/dev/${projectDirectory}`;
+    let projectDirectoryPath = projectName;
+
+    if (options?.dev) {
+      // if the dev flag is passed create a temp directory to install the dashboard
+      if (!fs.existsSync('./tmp')) fs.mkdirSync('./tmp');
+      projectDirectoryPath = path.join('tmp', projectName);
     }
-    const root = path.resolve(pPath);
-    console.log({root, pPath})
-   
- 
- 
-    const { blue } = picocolors;
 
-    const next = await nextJSInstall(root);
+    const root = path.resolve(projectDirectoryPath);
 
-    if (!next) return;
+    const promptOptions = await prompts([
+      {
+        onState: onPromptState,
+        type: 'toggle',
+        name: 'baselineDashboard',
+        message: `Would you like to install the ${blue('baseline dashboard')}?
+        
+This script will:
 
-    const qsconfig = await prompts([{
-      onState: onPromptState,
-      type: 'toggle',
-      name: 'eslintPrettier',
-      message: `Would you like to configure ${blue('Eslint and Prettier')}?`,
-      initial: 'Yes',
-      active: 'Yes',
-      inactive: 'No',
-    },
-    {
-      onState: onPromptState,
-      type: 'toggle',
-      name: 'gitHusky',
-      message: `Would you like to configure ${blue('Git and Husky')}?`,
-      initial: 'Yes',
-      active: 'Yes',
-      inactive: 'No',
-    },
-    {
-      onState: onPromptState,
-      type: 'toggle',
-      name: 'baselineDashboard',
-      message: `Would you like to install the ${blue('baseline dashboard')}?`,
-      initial: 'Yes',
-      active: 'Yes',
-      inactive: 'No',
-    },
-    {
-      onState: onPromptState,
-      type: 'toggle',
-      name: 'jestRTL',
-      message: `Would you like to install and configure ${blue('Jest and React Testing Library')}?`,
-      initial: 'Yes',
-      active: 'Yes',
-      inactive: 'No',
-    }])
+🔧 Install the latest version of Next JS into ${cyan(
+          './' + projectName
+        )} with the following config:
 
-  if(qsconfig.eslintPrettier) await configureEslintPrettier(root);
+    Typescript: ${green('yes')}
+    use npm: ${green('yes')}
+    tailwind: ${red('no')}
+    eslint: ${green('yes')}
+    src directory: ${green('yes')}
+    import-alias: ${blue('default')} ${gray('"@/*"')}
 
-  if(qsconfig.gitHusky) {
+🔧 Configure Typescript
+🔧 Configure ESLint
+🔧 Install and configure Prettier
+🔧 Init git
+🔧 Install and configure husky pre-commit hooks
+🔧 Install and configure Jest and React Testing Library
+🔧 Configure a baseline dashboard app 
+
+All configurations are based on QuantSpark standards
+
+Do you wish to proceed?`,
+        initial: 'Yes',
+        active: 'Yes',
+        inactive: 'No',
+      },
+      {
+        onState: onPromptState,
+        type: 'toggle',
+        name: 'nextAppRouter',
+        message: `Would you like next to use ${blue('App Router')}?`,
+        initial: 'Yes',
+        active: 'Yes',
+        inactive: 'No',
+      },
+    ]);
+
+    if (!promptOptions.baselineDashboard) goodbye();
+
+    await nextJSInstall({
+      root,
+      config: [
+        '--ts',
+        '--eslint',
+        '--src-dir',
+        '--import-alias',
+        '--use-npm',
+        '--tailwind',
+        false,
+        '--app',
+        promptOptions?.nextAppRouter ?? false,
+      ],
+    });
+
+    await configureEslintPrettier(root);
     await setupGit(root);
     await setupHusky(root);
-  }
-
   });
 
 program.parse();

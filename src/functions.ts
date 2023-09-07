@@ -2,11 +2,26 @@ import path from 'path';
 import os from 'os';
 import fs from 'fs';
 
+import figlet from 'figlet';
+import picocolors from 'picocolors';
+const { blue } = picocolors;
+
 import { MESSAGES } from './constants.js';
 
-import { execa } from 'execa';
-
 export const { log, error: errorLog } = console;
+
+const oops = `\n${figlet.textSync('Ooops...')}\n\n`;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const onPromptState = (state: any) => {
+  if (state.aborted) {
+    // If we don't re-enable the terminal cursor before exiting
+    // the program, the cursor will remain hidden
+    process.stdout.write('\x1B[?25h');
+    process.stdout.write('\n');
+    process.exit(1);
+  }
+};
 
 /**
  * nextJSInstall
@@ -17,21 +32,23 @@ export const { log, error: errorLog } = console;
  * @param    {String} projectDirectory   Directory to install next
  */
 
-export async function nextJSInstall(projectDirectory: string) {
-  log(`${MESSAGES.nextJs} ./${projectDirectory}\n\n`);
-
+export async function nextJSInstall({
+  root,
+  config = [],
+}: {
+  root: string;
+  config: string[];
+}) {
   try {
-    // call the next install with projectDirectory, eslint, and app router as default
-    await execa(
-      `npx`,
-      [`create-next-app@latest`, projectDirectory, '--eslint', '--app'],
-      {
-        stdio: 'inherit',
-      }
-    );
+    const { execa } = await import('execa');
+    // call the next install with root, eslint, and app router as default
+    await execa(`npx`, [`create-next-app@latest`, root, ...config], {
+      stdio: 'inherit',
+    });
 
     log(MESSAGES.done);
   } catch (error: unknown) {
+    console.log(oops);
     throw new Error(`${MESSAGES.nextJs.error} ${error}`);
   }
 
@@ -49,6 +66,7 @@ export async function nextJSInstall(projectDirectory: string) {
 
 export async function configureEslintPrettier(projectDirectory: string) {
   try {
+    const { execa } = await import('execa');
     log(MESSAGES.esLintPrettier.install);
 
     await execa(
@@ -110,6 +128,7 @@ export async function configureEslintPrettier(projectDirectory: string) {
 
 export async function setupGit(projectDirectory: string) {
   try {
+    const { execa } = await import('execa');
     await execa(`git`, [`init`], {
       stdio: 'inherit',
       cwd: projectDirectory,
@@ -121,6 +140,7 @@ export async function setupGit(projectDirectory: string) {
 
 export async function setupHusky(projectDirectory: string) {
   try {
+    const { execa } = await import('execa');
     await execa(`npx`, [`husky-init`], {
       stdio: 'inherit',
       cwd: projectDirectory,
@@ -131,4 +151,21 @@ export async function setupHusky(projectDirectory: string) {
   } catch (error: unknown) {
     throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
   }
+}
+
+export function goodbye() {
+  const goodbyes = [
+    'Au Revoir',
+    'Adios',
+    'Good bye',
+    'Ciao',
+    'Arrivederci',
+    'Zài jiàn',
+    'Sayōnara',
+    'Auf Wiedersehen',
+    'Namaste',
+    'Aloha',
+  ];
+  const randomGoodbye = goodbyes[Math.floor(Math.random() * goodbyes.length)];
+  return console.log(`\n`, figlet.textSync(randomGoodbye), '\n\n');
 }
