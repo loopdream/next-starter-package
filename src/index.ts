@@ -38,26 +38,26 @@ program
     }
 
     const root = path.resolve(projectDirectoryPath);
+   
 
-    const { baselineDashboard, useYarn, useNextAppRouter } = await prompts([
-      {
-        onState: onPromptState,
-        type: 'toggle',
-        name: 'baselineDashboard',
-        message: `Would you like to install the ${blue('baseline dashboard')}?
-        
+    const { installDashboard } = await prompts({
+      onState: onPromptState,
+      type: 'toggle',
+      name: 'installDashboard',
+      message: `Would you like to install the ${blue('baseline dashboard')}?
+      
 This script will:
 
 🔧 Install the latest version of Next JS into ${cyan(
-          './' + projectName
-        )} with the following config:
+        './' + projectName
+      )} with the following config:
 
-    Typescript: ${green('yes')}
-    use npm: ${green('yes')}
-    tailwind: ${red('no')}
-    eslint: ${green('yes')}
-    src directory: ${green('yes')}
-    import-alias: ${blue('default')} ${gray('"@/*"')}
+  Typescript: ${green('yes')}
+  use npm: ${green('yes')}
+  tailwind: ${red('no')}
+  eslint: ${green('yes')}
+  src directory: ${green('yes')}
+  import-alias: ${blue('default')} ${gray('"@/*"')}
 
 🔧 Configure Typescript
 🔧 Configure ESLint
@@ -70,19 +70,26 @@ This script will:
 All configurations are based on QuantSpark standards
 
 Do you wish to proceed?`,
-        initial: 'Yes',
-        active: 'Yes',
-        inactive: 'No',
-      },
-      {
-        onState: onPromptState,
-        type: 'toggle',
-        name: 'useYarn',
-        message: `Would you like next to use ${blue('Yarn')}?`,
-        initial: 'Yes',
-        active: 'Yes',
-        inactive: `No use ${blue('npm')}`,
-      },
+      initial: 'Yes',
+      active: 'Yes',
+      inactive: 'No',
+    });
+
+    if (!installDashboard) return goodbye();
+
+    const { 
+      // useYarn, 
+      useNextAppRouter } = await prompts([
+      // TODO enable Yarn usage
+      // {
+      //   onState: onPromptState,
+      //   type: 'toggle',
+      //   name: 'useYarn',
+      //   message: `Would you like next to use ${blue('Yarn')}?`,
+      //   initial: 'Yes',
+      //   active: 'Yes',
+      //   inactive: `No use ${blue('npm')}`,
+      // },
       {
         onState: onPromptState,
         type: 'toggle',
@@ -94,9 +101,7 @@ Do you wish to proceed?`,
       },
     ]);
 
-    if (!baselineDashboard) goodbye();
-
-    await nextJSInstall({
+     await nextJSInstall({
       root,
       config: [
         '--ts',
@@ -104,7 +109,7 @@ Do you wish to proceed?`,
         '--src-dir',
         '--import-alias',
         '--use-npm',
-        `--use-${useYarn ? 'yarn' : 'npm'}`,
+        // `--use-${useYarn ? 'yarn' : 'npm'}`,
         '--tailwind',
         false,
         '--app',
@@ -112,9 +117,9 @@ Do you wish to proceed?`,
       ],
     });
 
-    await configureEslintPrettier({ root, useYarn });
-    await setupGit(root);
-    await setupHusky({ root, useYarn });
+    // await configureEslintPrettier({ root, useYarn });
+    // await setupGit(root);
+    // await setupHusky({ root, useYarn });
   });
 
 program.parse();

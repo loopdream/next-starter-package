@@ -152,16 +152,19 @@ export async function setupHusky({
   try {
     const { execa } = await import('execa');
 
-    await execa(`npx`, [`husky-init`], {
+    if (useYarn) {
+      await execa(`yarn`, [`dlx`, `husky-init`, `--yarn2`], {
         stdio: 'inherit',
         cwd: root,
       });
-
-    if (useYarn) {
       await execa(`yarn`, [], {
         stdio: 'inherit',
       });
     } else {
+      await execa(`npx`, [`husky-init`], {
+        stdio: 'inherit',
+        cwd: root,
+      });
       await execa(`npm`, [`install`], {
         stdio: 'inherit',
       });
