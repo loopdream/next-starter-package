@@ -39,7 +39,7 @@ program
 
     const root = path.resolve(projectDirectoryPath);
 
-    const promptOptions = await prompts([
+    const { baselineDashboard, useYarn, useNextAppRouter } = await prompts([
       {
         onState: onPromptState,
         type: 'toggle',
@@ -77,7 +77,16 @@ Do you wish to proceed?`,
       {
         onState: onPromptState,
         type: 'toggle',
-        name: 'nextAppRouter',
+        name: 'useYarn',
+        message: `Would you like next to use ${blue('Yarn')}?`,
+        initial: 'Yes',
+        active: 'Yes',
+        inactive: `No use ${blue('npm')}`,
+      },
+      {
+        onState: onPromptState,
+        type: 'toggle',
+        name: 'useNextAppRouter',
         message: `Would you like next to use ${blue('App Router')}?`,
         initial: 'Yes',
         active: 'Yes',
@@ -85,7 +94,7 @@ Do you wish to proceed?`,
       },
     ]);
 
-    if (!promptOptions.baselineDashboard) goodbye();
+    if (!baselineDashboard) goodbye();
 
     await nextJSInstall({
       root,
@@ -95,16 +104,17 @@ Do you wish to proceed?`,
         '--src-dir',
         '--import-alias',
         '--use-npm',
+        `--use-${useYarn ? 'yarn' : 'npm'}`,
         '--tailwind',
         false,
         '--app',
-        promptOptions?.nextAppRouter ?? false,
+        useNextAppRouter ?? false,
       ],
     });
 
-    await configureEslintPrettier(root);
+    await configureEslintPrettier({ root, useYarn });
     await setupGit(root);
-    await setupHusky(root);
+    await setupHusky({ root, useYarn });
   });
 
 program.parse();

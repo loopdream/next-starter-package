@@ -3,8 +3,6 @@ import os from 'os';
 import fs from 'fs';
 
 import figlet from 'figlet';
-import picocolors from 'picocolors';
-const { blue } = picocolors;
 
 import { MESSAGES } from './constants.js';
 
@@ -29,7 +27,7 @@ export const onPromptState = (state: any) => {
  * Runs the create-next-app installer
  * Set installer arguments: directory name, eslint, app-router
  *
- * @param    {String} projectDirectory   Directory to install next
+ * @param    {String} root   Directory to install next
  */
 
 export async function nextJSInstall({
@@ -61,18 +59,24 @@ export async function nextJSInstall({
  * Installs eslint and prettier packages
  * Configures the eslint and prettier rc files
  *
- * @param    {String} projectDirectory   the Directory to perform tasks in
+ * @param    {String} root   the Directory to perform tasks in
  */
 
-export async function configureEslintPrettier(projectDirectory: string) {
+export async function configureEslintPrettier({
+  root,
+  useYarn = false,
+}: {
+  root: string;
+  useYarn: boolean;
+}) {
   try {
     const { execa } = await import('execa');
     log(MESSAGES.esLintPrettier.install);
 
     await execa(
-      `npm`,
+      `${useYarn ? 'yarn' : 'npm'}`,
       [
-        `install`,
+        `${useYarn ? 'add' : 'install'}`,
         `-D`,
         `@typescript-eslint/eslint-plugin`,
         `prettier`,
@@ -80,7 +84,7 @@ export async function configureEslintPrettier(projectDirectory: string) {
       ],
       {
         stdio: 'inherit',
-        cwd: projectDirectory,
+        cwd: root,
       }
     );
 
@@ -100,7 +104,7 @@ export async function configureEslintPrettier(projectDirectory: string) {
     };
 
     await fs.promises.writeFile(
-      path.join(projectDirectory, '.eslintrc.json'),
+      path.join(root, '.eslintrc.json'),
       JSON.stringify(eslintrc, null, 2) + os.EOL
     );
 
@@ -115,7 +119,7 @@ export async function configureEslintPrettier(projectDirectory: string) {
     };
 
     await fs.promises.writeFile(
-      path.join(projectDirectory, '.eslintrc.json'),
+      path.join(root, '.prettierrc.json'),
       JSON.stringify(prettierrc, null, 2) + os.EOL
     );
 
@@ -126,28 +130,42 @@ export async function configureEslintPrettier(projectDirectory: string) {
   return true;
 }
 
-export async function setupGit(projectDirectory: string) {
+export async function setupGit(root: string) {
   try {
     const { execa } = await import('execa');
     await execa(`git`, [`init`], {
       stdio: 'inherit',
-      cwd: projectDirectory,
+      cwd: root,
     });
   } catch (error: unknown) {
     throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
   }
 }
 
-export async function setupHusky(projectDirectory: string) {
+export async function setupHusky({
+  root,
+  useYarn = false,
+}: {
+  root: string;
+  useYarn: boolean;
+}) {
   try {
     const { execa } = await import('execa');
+
     await execa(`npx`, [`husky-init`], {
-      stdio: 'inherit',
-      cwd: projectDirectory,
-    });
-    await execa(`npm`, [`install`], {
-      stdio: 'inherit',
-    });
+        stdio: 'inherit',
+        cwd: root,
+      });
+
+    if (useYarn) {
+      await execa(`yarn`, [], {
+        stdio: 'inherit',
+      });
+    } else {
+      await execa(`npm`, [`install`], {
+        stdio: 'inherit',
+      });
+    }
   } catch (error: unknown) {
     throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
   }
