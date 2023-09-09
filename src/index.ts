@@ -30,7 +30,8 @@ program
     let projectDirectoryPath = projectName;
 
     if (options?.dev) {
-      // if the dev flag is passed create a temp directory to install the dashboard
+      // if the dev flag is passed create a temp directory for the project installation
+      // this is for testing as otherwise we would pollute the root dir
       if (!fs.existsSync('./tmp')) fs.mkdirSync('./tmp');
       projectDirectoryPath = path.join('tmp', projectName);
     }
