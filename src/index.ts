@@ -7,10 +7,11 @@ import figlet from 'figlet';
 
 import {
   nextJSInstall,
-  configureEslintPrettier,
   setupGit,
   setupHusky,
   goodbye,
+  InstallAndConfigurePrettier,
+  configureEslint,
 } from './functions.js';
 
 import { installDashboardPrompt, configurationPrompts } from './prompts.js';
@@ -60,7 +61,8 @@ program
       ],
     });
 
-    await configureEslintPrettier({ root, useYarn });
+    await configureEslint({ root, useYarn });
+    await InstallAndConfigurePrettier({ root, useYarn });
     await setupGit(root);
     await setupHusky({ root, useYarn });
   });

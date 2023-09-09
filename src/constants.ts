@@ -1,3 +1,20 @@
+export const ESLINTRC = {
+  plugins: ['@typescript-eslint'],
+  extends: ['next/core-web-vitals', 'plugin:@typescript-eslint/recommended'],
+  rules: {
+    '@typescript-eslint/no-unused-vars': 'error',
+    '@typescript-eslint/no-explicit-any': 'error',
+  },
+};
+
+export const PRETTERRC = {
+  semi: false,
+  trailingComma: 'es5',
+  singleQuote: true,
+  tabWidth: 2,
+  useTabs: false,
+};
+
 export const PROGRAM_DESCRIPTION = `Generate a QuantSpark baseline Next.js app with best practace feature set`;
 
 export const SCRIPT_DESCRIPTION = `\n\n${PROGRAM_DESCRIPTION}

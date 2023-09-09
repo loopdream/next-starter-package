@@ -4,7 +4,7 @@ import fs from 'fs';
 
 import figlet from 'figlet';
 
-import { MESSAGES } from './constants.js';
+import { MESSAGES, PRETTERRC, ESLINTRC } from './constants.js';
 
 export const { log, error: errorLog } = console;
 
@@ -54,16 +54,7 @@ export async function nextJSInstall({
   return true;
 }
 
-/**
- * configureEslintPrettier
- *
- * Installs eslint and prettier packages
- * Configures the eslint and prettier rc files
- *
- * @param    {String} root   the Directory to perform tasks in
- */
-
-export async function configureEslintPrettier({
+export async function configureEslint({
   root,
   useYarn = false,
 }: {
@@ -74,36 +65,55 @@ export async function configureEslintPrettier({
     const { execa } = await import('execa');
     log(MESSAGES.esLintPrettier.install);
 
+    const pkgMgr = useYarn ? 'yarn' : 'npm';
+    const pkgMgrCmd = useYarn ? 'add' : 'install';
+
+    await execa(pkgMgr, [pkgMgrCmd, `-D`, `@typescript-eslint/eslint-plugin`], {
+      stdio: 'inherit',
+      cwd: root,
+    });
+
+    log(MESSAGES.done, MESSAGES.esLintPrettier.eslintrc);
+
+    await fs.promises.writeFile(
+      path.join(root, '.eslintrc.json'),
+      JSON.stringify(ESLINTRC, null, 2) + os.EOL
+    );
+
+    log(MESSAGES.done);
+  } catch (error) {
+    throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+  }
+  return true;
+}
+
+export async function InstallAndConfigurePrettier({
+  root,
+  useYarn = false,
+}: {
+  root: string;
+  useYarn: boolean;
+}) {
+  try {
+    const { execa } = await import('execa');
+    log(MESSAGES.esLintPrettier.install);
+
+    const pkgMgr = useYarn ? 'yarn' : 'npm';
+    const pkgMgrCmd = useYarn ? 'add' : 'install';
+
     await execa(
-      `${useYarn ? 'yarn' : 'npm'}`,
-      [
-        `${useYarn ? 'add' : 'install'}`,
-        `-D`,
-        `@typescript-eslint/eslint-plugin`,
-        `prettier`,
-        `eslint-config-prettier`,
-      ],
+      pkgMgr,
+      [pkgMgrCmd, `-D`, `prettier`, `eslint-config-prettier`],
       {
         stdio: 'inherit',
         cwd: root,
       }
     );
 
-    log(MESSAGES.done, MESSAGES.esLintPrettier.eslintrc);
-
-    const eslintrc = {
-      plugins: ['@typescript-eslint'],
-      extends: [
-        'next/core-web-vitals',
-        'plugin:@typescript-eslint/recommended',
-        'prettier',
-      ],
-      rules: {
-        '@typescript-eslint/no-unused-vars': 'error',
-        '@typescript-eslint/no-explicit-any': 'error',
-      },
-    };
-
+    // ...and add prettier to eslint extends prop
+    const eslintrc = { ...ESLINTRC };
+    eslintrc.extends.push('prettier');
+    // write updated eslintrc
     await fs.promises.writeFile(
       path.join(root, '.eslintrc.json'),
       JSON.stringify(eslintrc, null, 2) + os.EOL
@@ -111,17 +121,9 @@ export async function configureEslintPrettier({
 
     log(MESSAGES.done, MESSAGES.esLintPrettier.prettierrc);
 
-    const prettierrc = {
-      semi: false,
-      trailingComma: 'es5',
-      singleQuote: true,
-      tabWidth: 2,
-      useTabs: false,
-    };
-
     await fs.promises.writeFile(
       path.join(root, '.prettierrc.json'),
-      JSON.stringify(prettierrc, null, 2) + os.EOL
+      JSON.stringify(PRETTERRC, null, 2) + os.EOL
     );
 
     log(MESSAGES.done);
