@@ -39,6 +39,7 @@ export async function nextJSInstall({
 }) {
   try {
     const { execa } = await import('execa');
+    console.log(`\n`); // line break
     // call the next install with root, eslint, and app router as default
     await execa(`npx`, [`create-next-app@latest`, root, ...config], {
       stdio: 'inherit',
@@ -47,7 +48,7 @@ export async function nextJSInstall({
     log(MESSAGES.done);
   } catch (error: unknown) {
     console.log(oops);
-    throw new Error(`${MESSAGES.nextJs.error} ${error}`);
+    throw new Error(`\n${MESSAGES.nextJs.error} ${error}`);
   }
 
   return true;
