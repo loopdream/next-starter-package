@@ -48,7 +48,7 @@ program
     await nextJSInstall({
       root,
       config: [
-        '--ts', 
+        '--ts',
         '--eslint',
         '--src-dir', // TODO: make optional
         '--import-alias',
