@@ -10,8 +10,10 @@ import {
   setupGit,
   setupHusky,
   goodbye,
-  InstallAndConfigurePrettier,
+  installAndConfigurePrettier,
   configureEslint,
+  installAndConfigureCypress,
+  installAndConfigureRTL,
 } from './functions.js';
 
 import { installDashboardPrompt, configurationPrompts } from './prompts.js';
@@ -61,10 +63,14 @@ program
       ],
     });
 
-    await configureEslint({ root, useYarn });
-    await InstallAndConfigurePrettier({ root, useYarn });
+    const args = { root, useYarn };
+
+    await configureEslint(args);
+    await installAndConfigurePrettier(args);
     await setupGit(root);
-    await setupHusky({ root, useYarn });
+    await setupHusky(args);
+    await installAndConfigureRTL(args);
+    await installAndConfigureCypress(args);
   });
 
 program.parse();

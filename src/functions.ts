@@ -87,7 +87,7 @@ export async function configureEslint({
   return true;
 }
 
-export async function InstallAndConfigurePrettier({
+export async function installAndConfigurePrettier({
   root,
   useYarn = false,
 }: {
@@ -192,4 +192,60 @@ export function goodbye() {
   ];
   const randomGoodbye = goodbyes[Math.floor(Math.random() * goodbyes.length)];
   return console.log(`\n`, figlet.textSync(randomGoodbye), '\n\n');
+}
+
+export async function installAndConfigureRTL({
+  root,
+  useYarn = false,
+}: {
+  root: string;
+  useYarn: boolean;
+}) {
+  try {
+    const { execa } = await import('execa');
+    log('Installing React Testing library');
+
+    const pkgMgr = useYarn ? 'yarn' : 'npm';
+    const pkgMgrCmd = useYarn ? 'add' : 'install';
+
+    await execa(pkgMgr, [pkgMgrCmd, `-D`, `@testing-library/react`], {
+      stdio: 'inherit',
+      cwd: root,
+    });
+
+    log('Installed React Testing library');
+
+    log(MESSAGES.done);
+  } catch (error) {
+    throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+  }
+  return true;
+}
+
+export async function installAndConfigureCypress({
+  root,
+  useYarn = false,
+}: {
+  root: string;
+  useYarn: boolean;
+}) {
+  try {
+    const { execa } = await import('execa');
+    log('Installing Cypress');
+
+    const pkgMgr = useYarn ? 'yarn' : 'npm';
+    const pkgMgrCmd = useYarn ? 'add' : 'install';
+
+    await execa(pkgMgr, [pkgMgrCmd, `-D`, `cypress`], {
+      stdio: 'inherit',
+      cwd: root,
+    });
+
+    log('Installed Cypress');
+
+    log(MESSAGES.done);
+  } catch (error) {
+    throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+  }
+  return true;
 }
