@@ -48,9 +48,9 @@ program
     await nextJSInstall({
       root,
       config: [
-        '--ts',
+        '--ts', 
         '--eslint',
-        '--src-dir',
+        '--src-dir', // TODO: make optional
         '--import-alias',
         '--use-npm',
         `--use-${useYarn ? 'yarn' : 'npm'}`,
