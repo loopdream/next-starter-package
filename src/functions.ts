@@ -4,7 +4,8 @@ import fs from 'fs';
 
 import figlet from 'figlet';
 
-import { MESSAGES, PRETTERRC, ESLINTRC } from './constants.js';
+import { PRETTERRC, ESLINTRC } from './configs.js';
+import { MESSAGES } from './messages.js';
 
 export const { log, error: errorLog } = console;
 
