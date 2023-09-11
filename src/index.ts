@@ -6,19 +6,9 @@ import fs from 'fs';
 import { program } from 'commander';
 import figlet from 'figlet';
 
-import {
-  // nextJSInstall,
-  setupGit,
-  setupHusky,
-  goodbye,
-  installAndConfigurePrettier,
-  configureEslint,
-  installAndConfigureCypress,
-  installAndConfigureJestRTL,
-  oops,
-} from './functions.js';
+import { goodbye, oops } from './functions.js';
 
-import { MESSAGES , ESLINTRC } from './constants.js';
+import { MESSAGES, ESLINTRC, PRETTERRC } from './constants.js';
 
 import { installDashboardPrompt, configurationPrompts } from './prompts.js';
 
@@ -53,10 +43,10 @@ program
 
     const { useYarn, useNextAppRouter } = await configurationPrompts();
 
-    /* INSTALL NEXT **/ 
+    /* INSTALL NEXT **/
 
     try {
-      console.log(`\n`); // line break
+      console.log(`\n`);
 
       await execa(
         `npx`,
@@ -80,25 +70,19 @@ program
       );
 
       console.log(MESSAGES.done);
-    } catch (error: unknown) {
+    } catch (error) {
       console.log(oops);
       throw new Error(`\n${MESSAGES.nextJs.error} ${error}`);
     }
 
-
-
-
     const pkgMgr = useYarn ? 'yarn' : 'npm';
     const pkgMgrCmd = useYarn ? 'add' : 'install';
 
-
-    /* INSTALL DEPENDANCIES **/ 
-
+    /* INSTALL DEPENDANCIES **/
 
     try {
- 
       console.log('Installing Dependancies');
-  
+
       await execa(
         pkgMgr,
         [
@@ -112,8 +96,8 @@ program
           // Testing Libraries
           `@testing-library/jest-dom`,
           `@testing-library/user-event`,
-          `@types/testing-library__jest-dom`,
-          `jest @testing-library/react`,
+          `jest`,
+          `@testing-library/react`,
           `jest-environment-jsdom`,
           `@typescript-eslint/eslint-plugin`,
           `cypress`,
@@ -123,47 +107,78 @@ program
           cwd: root,
         }
       );
-  
+
       console.log('Installed Dependancies');
-  
+
       console.log(MESSAGES.done);
     } catch (error) {
       throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
     }
 
-
-    /* CONFIGURE ESLINT **/ 
+    /* ESLINT CONFIGURATION **/
 
     try {
-  
       console.log(MESSAGES.esLintPrettier.install);
-  
-      await execa(pkgMgr, [pkgMgrCmd, `-D`, `@typescript-eslint/eslint-plugin`], {
-        stdio: 'inherit',
-        cwd: root,
-      });
-  
-      console.log(MESSAGES.done, MESSAGES.esLintPrettier.eslintrc);
-  
+
       await fs.promises.writeFile(
         path.join(root, '.eslintrc.json'),
         JSON.stringify(ESLINTRC, null, 2) + os.EOL
       );
-  
+
       console.log(MESSAGES.done);
     } catch (error) {
       throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
     }
 
+    /* PRETTIER CONFIGURATION  **/
 
-    const args = { root, useYarn };
+    try {
+      await fs.promises.writeFile(
+        path.join(root, '.prettierrc.json'),
+        JSON.stringify(PRETTERRC, null, 2) + os.EOL
+      );
 
-    await configureEslint(args);
-    await installAndConfigurePrettier(args);
-    await setupGit(root);
-    await setupHusky(args);
-    await installAndConfigureJestRTL(args);
-    await installAndConfigureCypress(args);
+      console.log(MESSAGES.done);
+    } catch (error) {
+      throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+    }
+
+    /* INIT GIT  **/
+
+    try {
+      await execa(`git`, [`init`], {
+        stdio: 'inherit',
+        cwd: root,
+      });
+    } catch (error) {
+      throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+    }
+
+    /* INSTALL HUSKY  **/
+
+    try {
+      const { execa } = await import('execa');
+
+      if (useYarn) {
+        await execa(`yarn`, [`dlx`, `husky-init`, `--yarn2`], {
+          stdio: 'inherit',
+          cwd: root,
+        });
+        await execa(`yarn`, [], {
+          stdio: 'inherit',
+        });
+      } else {
+        await execa(`npx`, [`husky-init`], {
+          stdio: 'inherit',
+          cwd: root,
+        });
+        await execa(`npm`, [`install`], {
+          stdio: 'inherit',
+        });
+      }
+    } catch (error) {
+      throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+    }
   });
 
 program.parse();

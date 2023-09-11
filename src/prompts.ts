@@ -14,15 +14,15 @@ export const installDashboardPrompt = (projectName: string) =>
 This script will:
 
 🔧 Install the latest version of Next JS into ${cyan(
-      projectName
+      `./${projectName}`
     )} with the following config:
 
-Typescript: ${green('yes')}
-use npm: ${green('yes')}
-tailwind: ${red('no')}
-eslint: ${green('yes')}
-src directory: ${green('yes')}
-import-alias: ${blue('default')} ${gray('"@/*"')}
+    Typescript: ${green('yes')}
+    use npm: ${green('yes')}
+    tailwind: ${red('no')}
+    eslint: ${green('yes')}
+    src directory: ${green('yes')}
+    import-alias: ${blue('default')} ${gray('"@/*"')}
 
 🔧 Configure Typescript
 🔧 Configure ESLint
