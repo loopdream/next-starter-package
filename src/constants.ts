@@ -1,10 +1,30 @@
+// export const ESLINTRC = {
+//   plugins: ['@typescript-eslint'],
+//   extends: ['next/core-web-vitals', 'plugin:@typescript-eslint/recommended'],
+//   rules: {
+//     '@typescript-eslint/no-unused-vars': 'error',
+//     '@typescript-eslint/no-explicit-any': 'error',
+//   },
+// };
+
 export const ESLINTRC = {
-  plugins: ['@typescript-eslint'],
-  extends: ['next/core-web-vitals', 'plugin:@typescript-eslint/recommended'],
+  plugins: ['@typescript-eslint', 'testing-library'],
+  extends: [
+    'next/core-web-vitals',
+    'plugin:@typescript-eslint/recommended',
+    'prettier',
+  ],
   rules: {
     '@typescript-eslint/no-unused-vars': 'error',
     '@typescript-eslint/no-explicit-any': 'error',
   },
+  overrides: [
+    // Only uses Testing Library lint rules in test files
+    {
+      files: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
+      extends: ['plugin:testing-library/react'],
+    },
+  ],
 };
 
 export const PRETTERRC = {

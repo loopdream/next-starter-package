@@ -8,7 +8,7 @@ import { MESSAGES, PRETTERRC, ESLINTRC } from './constants.js';
 
 export const { log, error: errorLog } = console;
 
-const oops = `\n${figlet.textSync('Ooops...')}\n\n`;
+export const oops = `\n${figlet.textSync('Ooops...')}\n\n`;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const onPromptState = (state: any) => {
@@ -179,22 +179,22 @@ export async function setupHusky({
 
 export function goodbye() {
   const goodbyes = [
-    'Au Revoir',
     'Adios',
-    'Good bye',
-    'Ciao',
-    'Arrivederci',
-    'Zài jiàn',
-    'Sayōnara',
-    'Auf Wiedersehen',
-    'Namaste',
     'Aloha',
+    'Arrivederci',
+    'Au Revoir',
+    'Auf Wiedersehen',
+    'Ciao',
+    'Good bye',
+    'Namaste',
+    'Sayōnara',
+    'Zài jiàn',
   ];
   const randomGoodbye = goodbyes[Math.floor(Math.random() * goodbyes.length)];
   return console.log(`\n`, figlet.textSync(randomGoodbye), '\n\n');
 }
 
-export async function installAndConfigureRTL({
+export async function installAndConfigureJestRTL({
   root,
   useYarn = false,
 }: {
@@ -208,10 +208,23 @@ export async function installAndConfigureRTL({
     const pkgMgr = useYarn ? 'yarn' : 'npm';
     const pkgMgrCmd = useYarn ? 'add' : 'install';
 
-    await execa(pkgMgr, [pkgMgrCmd, `-D`, `@testing-library/react`], {
-      stdio: 'inherit',
-      cwd: root,
-    });
+    await execa(
+      pkgMgr,
+      [
+        pkgMgrCmd,
+        `-D`,
+        `@testing-library/jest-dom`,
+        `@testing-library/user-event`,
+        `@types/testing-library__jest-dom`,
+        `eslint-plugin-testing-library`,
+        `jest @testing-library/react`,
+        `jest-environment-jsdom`,
+      ],
+      {
+        stdio: 'inherit',
+        cwd: root,
+      }
+    );
 
     log('Installed React Testing library');
 
@@ -242,6 +255,53 @@ export async function installAndConfigureCypress({
     });
 
     log('Installed Cypress');
+
+    log(MESSAGES.done);
+  } catch (error) {
+    throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+  }
+  return true;
+}
+
+export async function installDependancies({
+  root,
+  useYarn = false,
+}: {
+  root: string;
+  useYarn: boolean;
+}) {
+  try {
+    const { execa } = await import('execa');
+    log('Installing Dependancies');
+    const pkgMgr = useYarn ? 'yarn' : 'npm';
+    const pkgMgrCmd = useYarn ? 'add' : 'install';
+
+    await execa(
+      pkgMgr,
+      [
+        pkgMgrCmd,
+        `-D`,
+        // eslint
+        `eslint-plugin-testing-library`,
+        // prettier
+        `prettier`,
+        `eslint-config-prettier`,
+        // Testing Libraries
+        `@testing-library/jest-dom`,
+        `@testing-library/user-event`,
+        `@types/testing-library__jest-dom`,
+        `jest @testing-library/react`,
+        `jest-environment-jsdom`,
+        `@typescript-eslint/eslint-plugin`,
+        `cypress`,
+      ],
+      {
+        stdio: 'inherit',
+        cwd: root,
+      }
+    );
+
+    log('Installed Dependancies');
 
     log(MESSAGES.done);
   } catch (error) {

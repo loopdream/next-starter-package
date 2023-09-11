@@ -13,8 +13,11 @@ import {
   installAndConfigurePrettier,
   configureEslint,
   installAndConfigureCypress,
-  installAndConfigureRTL,
+  installAndConfigureJestRTL,
+  oops,
 } from './functions.js';
+
+import { MESSAGES } from './constants.js';
 
 import { installDashboardPrompt, configurationPrompts } from './prompts.js';
 
@@ -30,6 +33,9 @@ program
   .argument('<projectName>')
   .option('-d, --dev', 'my test option')
   .action(async (projectName, options) => {
+
+    const { execa } = await import('execa');
+
     let projectDirectoryPath = projectName;
 
     if (options?.dev) {
@@ -47,21 +53,53 @@ program
 
     const { useYarn, useNextAppRouter } = await configurationPrompts();
 
-    await nextJSInstall({
-      root,
-      config: [
-        '--ts',
-        '--eslint',
-        '--src-dir', // TODO: make optional
-        '--import-alias',
-        '--use-npm',
-        `--use-${useYarn ? 'yarn' : 'npm'}`,
-        '--tailwind',
-        false,
-        '--app',
-        useNextAppRouter ?? false,
-      ],
-    });
+    // await nextJSInstall({
+    //   root,
+    //   config: [
+    //     '--ts',
+    //     '--eslint',
+    //     '--src-dir', // TODO: make optional
+    //     '--import-alias',
+    //     '--use-npm',
+    //     `--use-${useYarn ? 'yarn' : 'npm'}`,
+    //     '--tailwind',
+    //     false,
+    //     '--app',
+    //     useNextAppRouter ?? false,
+    //   ],
+    // });
+
+    try {
+    
+      console.log(`\n`); // line break
+  
+
+      await execa(
+        `npx`,
+        [
+          `create-next-app@latest`,
+          root,
+          '--ts',
+          '--eslint',
+          '--src-dir',  
+          '--import-alias',
+          '--use-npm',
+          `--use-${useYarn ? 'yarn' : 'npm'}`,
+          '--tailwind',
+          false,
+          '--app',
+          useNextAppRouter ?? false,
+        ],
+        {
+          stdio: 'inherit',
+        }
+      );
+
+      console.log(MESSAGES.done);
+    } catch (error: unknown) {
+      console.log(oops);
+      throw new Error(`\n${MESSAGES.nextJs.error} ${error}`);
+    }
 
     const args = { root, useYarn };
 
@@ -69,7 +107,7 @@ program
     await installAndConfigurePrettier(args);
     await setupGit(root);
     await setupHusky(args);
-    await installAndConfigureRTL(args);
+    await installAndConfigureJestRTL(args);
     await installAndConfigureCypress(args);
   });
 
