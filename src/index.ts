@@ -1,12 +1,13 @@
 #!/usr/bin/env ts-node
 import path from 'path';
+import os from 'os';
 import fs from 'fs';
 
 import { program } from 'commander';
 import figlet from 'figlet';
 
 import {
-  nextJSInstall,
+  // nextJSInstall,
   setupGit,
   setupHusky,
   goodbye,
@@ -17,7 +18,7 @@ import {
   oops,
 } from './functions.js';
 
-import { MESSAGES } from './constants.js';
+import { MESSAGES , ESLINTRC } from './constants.js';
 
 import { installDashboardPrompt, configurationPrompts } from './prompts.js';
 
@@ -33,7 +34,6 @@ program
   .argument('<projectName>')
   .option('-d, --dev', 'my test option')
   .action(async (projectName, options) => {
-
     const { execa } = await import('execa');
 
     let projectDirectoryPath = projectName;
@@ -53,26 +53,10 @@ program
 
     const { useYarn, useNextAppRouter } = await configurationPrompts();
 
-    // await nextJSInstall({
-    //   root,
-    //   config: [
-    //     '--ts',
-    //     '--eslint',
-    //     '--src-dir', // TODO: make optional
-    //     '--import-alias',
-    //     '--use-npm',
-    //     `--use-${useYarn ? 'yarn' : 'npm'}`,
-    //     '--tailwind',
-    //     false,
-    //     '--app',
-    //     useNextAppRouter ?? false,
-    //   ],
-    // });
+    /* INSTALL NEXT **/ 
 
     try {
-    
       console.log(`\n`); // line break
-  
 
       await execa(
         `npx`,
@@ -81,7 +65,7 @@ program
           root,
           '--ts',
           '--eslint',
-          '--src-dir',  
+          '--src-dir',
           '--import-alias',
           '--use-npm',
           `--use-${useYarn ? 'yarn' : 'npm'}`,
@@ -100,6 +84,77 @@ program
       console.log(oops);
       throw new Error(`\n${MESSAGES.nextJs.error} ${error}`);
     }
+
+
+
+
+    const pkgMgr = useYarn ? 'yarn' : 'npm';
+    const pkgMgrCmd = useYarn ? 'add' : 'install';
+
+
+    /* INSTALL DEPENDANCIES **/ 
+
+
+    try {
+ 
+      console.log('Installing Dependancies');
+  
+      await execa(
+        pkgMgr,
+        [
+          pkgMgrCmd,
+          `-D`,
+          // eslint
+          `eslint-plugin-testing-library`,
+          // prettier
+          `prettier`,
+          `eslint-config-prettier`,
+          // Testing Libraries
+          `@testing-library/jest-dom`,
+          `@testing-library/user-event`,
+          `@types/testing-library__jest-dom`,
+          `jest @testing-library/react`,
+          `jest-environment-jsdom`,
+          `@typescript-eslint/eslint-plugin`,
+          `cypress`,
+        ],
+        {
+          stdio: 'inherit',
+          cwd: root,
+        }
+      );
+  
+      console.log('Installed Dependancies');
+  
+      console.log(MESSAGES.done);
+    } catch (error) {
+      throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+    }
+
+
+    /* CONFIGURE ESLINT **/ 
+
+    try {
+  
+      console.log(MESSAGES.esLintPrettier.install);
+  
+      await execa(pkgMgr, [pkgMgrCmd, `-D`, `@typescript-eslint/eslint-plugin`], {
+        stdio: 'inherit',
+        cwd: root,
+      });
+  
+      console.log(MESSAGES.done, MESSAGES.esLintPrettier.eslintrc);
+  
+      await fs.promises.writeFile(
+        path.join(root, '.eslintrc.json'),
+        JSON.stringify(ESLINTRC, null, 2) + os.EOL
+      );
+  
+      console.log(MESSAGES.done);
+    } catch (error) {
+      throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+    }
+
 
     const args = { root, useYarn };
 
