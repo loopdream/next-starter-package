@@ -51,13 +51,13 @@ export const configurationPrompts = () =>
       active: 'Yes',
       inactive: `No use ${blue('npm')}`,
     },
-    {
-      onState: onPromptState,
-      type: 'toggle',
-      name: 'useNextAppRouter',
-      message: `Would you like next to use ${blue('App Router')}?`,
-      initial: 'Yes',
-      active: 'Yes',
-      inactive: 'No',
-    },
+    // {
+    //   onState: onPromptState,
+    //   type: 'toggle',
+    //   name: 'useNextAppRouter',
+    //   message: `Would you like next to use ${blue('App Router')}?`,
+    //   initial: 'Yes',
+    //   active: 'Yes',
+    //   inactive: 'No',
+    // },
   ]);

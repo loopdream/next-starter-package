@@ -7,20 +7,18 @@ import { program } from 'commander';
 import figlet from 'figlet';
 import picocolors from 'picocolors';
 
-import { goodbye, oops } from './functions.js';
+import { goodbye } from './functions.js';
 
-import { ESLINTRC, PRETTERRC, JEST_CONFIG } from './configs.js';
 import { MESSAGES } from './messages.js';
 
 import { installDashboardPrompt, configurationPrompts } from './prompts.js';
 
 console.log('\n', figlet.textSync('QuantSpark'), '\n\n');
 
-
 program
-.name('qsbaseline')
-.description(
-  `Generate a QuantSpark baseline Next.js app with best practace feature set`
+  .name('qsbaseline')
+  .description(
+    `Generate a QuantSpark baseline Next.js app with best practace feature set`
   )
   .version(`1.0.0`)
   .usage('<projectName> -- [options]')
@@ -29,22 +27,26 @@ program
   .action(async (projectName, options) => {
     const { execa } = await import('execa');
     const { cyan } = picocolors;
+    
+    const oops = `\n${figlet.textSync('Ooops...')}\n\n`;
+
     let projectDirectoryPath = projectName;
 
     if (options?.dev) {
       // if the dev flag is passed create a temp directory for the project installation
       // this is for testing as otherwise we would pollute the root dir
-      if (!fs.existsSync('./tmp')) fs.mkdirSync('./tmp');
+      if (!fs.existsSync('./tmp')) await fs.promises.mkdir('./tmp');
       projectDirectoryPath = path.join('tmp', projectName);
     }
 
     const root = path.resolve(projectDirectoryPath);
+    const configsPath = path.resolve(path.join('src', 'configs'));
 
     const { installDashboard } = await installDashboardPrompt(projectName);
 
     if (!installDashboard) return goodbye();
 
-    const { useYarn, useNextAppRouter } = await configurationPrompts();
+    const { useYarn } = await configurationPrompts();
 
     const pkgMgr = useYarn ? 'yarn' : 'npm';
     const pkgMgrCmd = useYarn ? 'add' : 'install';
@@ -65,10 +67,6 @@ program
           '--import-alias',
           '--use-npm',
           `--use-${pkgMgr}`,
-          '--tailwind',
-          false,
-          '--app',
-          useNextAppRouter ?? false,
         ],
         {
           stdio: 'inherit',
@@ -100,13 +98,11 @@ program
         `cypress`,
       ];
 
-      const dependanciesStr = dependancies.reduce(
-        (acc, dep) => acc + `- ${cyan(dep)}\n`,
-        ''
-      );
-
       console.log(
-        `\n\nInstalling extra dependancies: \n${dependanciesStr}\n\n`
+        `\n\nInstalling extra dependancies: \n${dependancies.reduce(
+          (acc, dep) => acc + `- ${cyan(dep)}\n`,
+          ''
+        )}\n\n`
       );
 
       await execa(pkgMgr, [pkgMgrCmd, ...dependancies], {
@@ -121,41 +117,21 @@ program
       throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
     }
 
-    /* ESLINT CONFIGURATION **/
+    /* CONFIGURATION FILES **/
 
     try {
       console.log(MESSAGES.esLintPrettier.install);
 
-      await fs.promises.writeFile(
-        path.join(root, '.eslintrc.json'),
-        JSON.stringify(ESLINTRC, null, 2) + os.EOL
+      const configs = ['.eslintrc.json', '.prettierrc.json', 'jest.config.js'];
+
+      const configsPromise = configs.map((fileName) =>
+        fs.promises.copyFile(
+          path.join(configsPath, fileName),
+          path.join(root, fileName)
+        )
       );
 
-      console.log(MESSAGES.done);
-    } catch (error) {
-      throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
-    }
-
-    /* PRETTIER CONFIGURATION  **/
-
-    try {
-      await fs.promises.writeFile(
-        path.join(root, '.prettierrc.json'),
-        JSON.stringify(PRETTERRC, null, 2) + os.EOL
-      );
-
-      console.log(MESSAGES.done);
-    } catch (error) {
-      throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
-    }
-
-    /* JEST / RTL CONFIGURATION  **/
-
-    try {
-      await fs.promises.writeFile(
-        path.join(root, 'jest.config.js'),
-        JEST_CONFIG + os.EOL
-      );
+      await Promise.all(configsPromise);
 
       console.log(MESSAGES.done);
     } catch (error) {
@@ -176,8 +152,6 @@ program
     /* INSTALL HUSKY  **/
 
     try {
-      const { execa } = await import('execa');
-
       if (useYarn) {
         await execa(`yarn`, [`dlx`, `husky-init`, `--yarn2`], {
           stdio: 'inherit',
@@ -199,31 +173,47 @@ program
       throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
     }
 
-    /* CONFIGURE PACKAGE  **/
-    try {
+    /* CONFIGURE PACKAGE  
+    Add to Next's generated package file
+    **/
 
+    try {
       const packageFileJson = await fs.promises.readFile(
         path.join(root, 'package.json'),
         'utf8'
       );
+      
       const packageFile = JSON.parse(packageFileJson);
 
       packageFile.scripts = {
         ...packageFile.scripts,
+        e2e: 'cypress run',
         test: 'jest --watch',
         'test:ci': 'jest --ci',
+        'format:check': 'prettier --check .',
+        'format:write': 'prettier --write .',
+        'lint:check': 'eslint .',
+        'lint:fix': 'eslint --fix .',
       };
 
-      console.log({packageFile})
+      delete packageFile.scripts.lint; // delete next's lint setup script
 
       await fs.promises.writeFile(
         path.join(root, 'package.json'),
         JSON.stringify(packageFile, null, 2) + os.EOL
       );
-
     } catch (error) {
       throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
     }
+
+    // try {
+    //   await execa(`npm`, [`run`, `format:write`], {
+    //     stdio: 'inherit',
+    //     cwd: root,
+    //   });
+    // } catch (error) {
+    //   throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+    // }
   });
 
 program.parse();
