@@ -27,7 +27,7 @@ program
   .action(async (projectName, options) => {
     const { execa } = await import('execa');
     const { cyan } = picocolors;
-    
+
     const oops = `\n${figlet.textSync('Ooops...')}\n\n`;
 
     let projectDirectoryPath = projectName;
@@ -117,7 +117,7 @@ program
       throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
     }
 
-    /* CONFIGURATION FILES **/
+    /* COPY CONFIGURATION FILES **/
 
     try {
       console.log(MESSAGES.esLintPrettier.install);
@@ -182,7 +182,7 @@ program
         path.join(root, 'package.json'),
         'utf8'
       );
-      
+
       const packageFile = JSON.parse(packageFileJson);
 
       packageFile.scripts = {
