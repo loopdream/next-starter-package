@@ -41,23 +41,12 @@ Do you wish to proceed?`,
   });
 
 export const configurationPrompts = () =>
-  prompts([
-    {
-      onState: onPromptState,
-      type: 'toggle',
-      name: 'useYarn',
-      message: `Would you like next to use ${blue('Yarn')}?`,
-      initial: 'Yes',
-      active: 'Yes',
-      inactive: `No use ${blue('npm')}`,
-    },
-    // {
-    //   onState: onPromptState,
-    //   type: 'toggle',
-    //   name: 'useNextAppRouter',
-    //   message: `Would you like next to use ${blue('App Router')}?`,
-    //   initial: 'Yes',
-    //   active: 'Yes',
-    //   inactive: 'No',
-    // },
-  ]);
+  prompts({
+    onState: onPromptState,
+    type: 'toggle',
+    name: 'useYarn',
+    message: `Would you like next to use ${blue('Yarn')}?`,
+    initial: 'Yes',
+    active: 'Yes',
+    inactive: `No use ${blue('npm')}`,
+  });

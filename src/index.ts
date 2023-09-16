@@ -5,7 +5,6 @@ import fs from 'fs';
 
 import { program } from 'commander';
 import figlet from 'figlet';
-import picocolors from 'picocolors';
 
 import { goodbye } from './functions.js';
 
@@ -26,7 +25,6 @@ program
   .option('-d, --dev', 'my test option')
   .action(async (projectName, options) => {
     const { execa } = await import('execa');
-    const { cyan } = picocolors;
 
     const oops = `\n${figlet.textSync('Ooops...')}\n\n`;
 
@@ -47,7 +45,6 @@ program
     if (!installDashboard) return goodbye();
 
     const { useYarn } = await configurationPrompts();
-
     const pkgMgr = useYarn ? 'yarn' : 'npm';
     const pkgMgrCmd = useYarn ? 'add' : 'install';
 
@@ -56,28 +53,32 @@ program
     try {
       console.log(`\n`);
 
-      await execa(
-        `npx`,
-        [
-          `create-next-app@latest`,
-          root,
-          '--ts',
-          '--eslint',
-          '--src-dir',
-          '--import-alias',
-          '--use-npm',
-          `--use-${pkgMgr}`,
-        ],
-        {
-          stdio: 'inherit',
-        }
-      );
+      await execa(`npx`, [`create-next-app@latest`, root, `--use-${pkgMgr}`], {
+        stdio: 'inherit',
+      });
 
       console.log(MESSAGES.done);
     } catch (error) {
       console.log(oops);
       throw new Error(`\n${MESSAGES.nextJs.error} ${error}`);
     }
+
+    // TO DO - install deps based on next config
+    // const artifactExists = (fileName: string) => {
+    //   try {
+    //     return fs.existsSync(path.join(root, fileName));
+    //   } catch (e) {
+    //     console.log({ e });
+    //   }
+    // };
+    // const typescript = artifactExists('tsconfig.json');
+    // const nextHas = {
+    //   eslint: artifactExists('.eslintrc.json'),
+    //   tailwind: artifactExists(`tailwind.config.${typescript ? 'ts' : 'js'}`),
+    //   appRouter: !artifactExists('src/pages'),
+    //   srcDir: artifactExists('src'),
+    //   typescript: artifactExists('tsconfig.json'),
+    // };
 
     /* INSTALL DEPENDANCIES **/
 
@@ -96,14 +97,18 @@ program
         `@testing-library/react`,
         `@typescript-eslint/eslint-plugin`,
         `cypress`,
+        // storybook
+        '@storybook/addon-essentials',
+        '@storybook/addon-interactions',
+        '@storybook/addon-links',
+        '@storybook/addon-onboarding',
+        '@storybook/blocks',
+        '@storybook/nextjs',
+        '@storybook/react',
+        '@storybook/testing-library',
+        'eslint-plugin-storybook',
+        'storybook',
       ];
-
-      console.log(
-        `\n\nInstalling extra dependancies: \n${dependancies.reduce(
-          (acc, dep) => acc + `- ${cyan(dep)}\n`,
-          ''
-        )}\n\n`
-      );
 
       await execa(pkgMgr, [pkgMgrCmd, ...dependancies], {
         stdio: 'inherit',
@@ -138,6 +143,26 @@ program
       throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
     }
 
+    /* STORYBOOK CONFIGURATION  **/
+
+    try {
+      // await execa(`npx`, [`storybook@latest`, `init`], {
+      //   stdio: 'inherit',
+      //   cwd: root,
+      // });
+      await fs.promises.cp(
+        path.join(configsPath, '.storybook'),
+        path.join(root, '.storybook'),
+        {
+          recursive: true,
+        }
+      );
+
+      console.log(MESSAGES.done);
+    } catch (error) {
+      throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+    }
+
     /* INIT GIT  **/
 
     try {
@@ -152,23 +177,19 @@ program
     /* INSTALL HUSKY  **/
 
     try {
-      if (useYarn) {
-        await execa(`yarn`, [`dlx`, `husky-init`, `--yarn2`], {
+      await execa(
+        useYarn ? 'yarn' : 'npx',
+        useYarn ? [`dlx`, `husky-init`, `--yarn2`] : ['husky-init'],
+        {
           stdio: 'inherit',
           cwd: root,
-        });
-        await execa(`yarn`, [], {
-          stdio: 'inherit',
-        });
-      } else {
-        await execa(`npx`, [`husky-init`], {
-          stdio: 'inherit',
-          cwd: root,
-        });
-        await execa(`npm`, [`install`], {
-          stdio: 'inherit',
-        });
-      }
+        }
+      );
+
+      await execa(useYarn ? 'yarn' : 'npm', useYarn ? [] : ['install'], {
+        stdio: 'inherit',
+        cwd: root,
+      });
     } catch (error) {
       throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
     }
@@ -184,6 +205,7 @@ program
       );
 
       const packageFile = JSON.parse(packageFileJson);
+      delete packageFile.scripts.lint; // delete next's lint setup script
 
       packageFile.scripts = {
         ...packageFile.scripts,
@@ -194,9 +216,9 @@ program
         'format:write': 'prettier --write .',
         'lint:check': 'eslint .',
         'lint:fix': 'eslint --fix .',
+        storybook: 'storybook dev -p 6006',
+        'build-storybook': 'storybook build',
       };
-
-      delete packageFile.scripts.lint; // delete next's lint setup script
 
       await fs.promises.writeFile(
         path.join(root, 'package.json'),
