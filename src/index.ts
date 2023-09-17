@@ -1,24 +1,26 @@
 #!/usr/bin/env ts-node
 import path from 'path';
-import os from 'os';
 import fs from 'fs';
 
 import { program } from 'commander';
 import figlet from 'figlet';
+import ora from 'ora';
 
-import { goodbye } from './functions.js';
+import { addToPackageScripts, goodbye } from './functions.js';
 
 import { MESSAGES } from './messages.js';
 
-import { installDashboardPrompt, configurationPrompts } from './prompts.js';
+import {
+  installDashboardPrompt,
+  configurationPrompts,
+  useYarnPrompt,
+} from './prompts.js';
 
-console.log('\n', figlet.textSync('QuantSpark'), '\n\n');
+console.log('\n', figlet.textSync('Nextra'), '\n\n');
 
 program
   .name('qsbaseline')
-  .description(
-    `Generate a QuantSpark baseline Next.js app with best practace feature set`
-  )
+  .description(`Generate a baseline Next.js app with best practace feature set`)
   .version(`1.0.0`)
   .usage('<projectName> -- [options]')
   .argument('<projectName>')
@@ -44,9 +46,10 @@ program
 
     if (!installDashboard) return goodbye();
 
-    const { useYarn } = await configurationPrompts();
+    const { useYarn } = await useYarnPrompt();
     const pkgMgr = useYarn ? 'yarn' : 'npm';
     const pkgMgrCmd = useYarn ? 'add' : 'install';
+    const pkgMgrDevDeps = useYarn ? '--dev' : '--save-dev';
 
     /* INSTALL NEXT **/
 
@@ -56,185 +59,342 @@ program
       await execa(`npx`, [`create-next-app@latest`, root, `--use-${pkgMgr}`], {
         stdio: 'inherit',
       });
-
-      console.log(MESSAGES.done);
     } catch (error) {
       console.log(oops);
       throw new Error(`\n${MESSAGES.nextJs.error} ${error}`);
     }
 
-    // TO DO - install deps based on next config
-    // const artifactExists = (fileName: string) => {
-    //   try {
-    //     return fs.existsSync(path.join(root, fileName));
-    //   } catch (e) {
-    //     console.log({ e });
-    //   }
-    // };
-    // const typescript = artifactExists('tsconfig.json');
-    // const nextHas = {
-    //   eslint: artifactExists('.eslintrc.json'),
-    //   tailwind: artifactExists(`tailwind.config.${typescript ? 'ts' : 'js'}`),
-    //   appRouter: !artifactExists('src/pages'),
-    //   srcDir: artifactExists('src'),
-    //   typescript: artifactExists('tsconfig.json'),
-    // };
+    const artifactExists = (fileName: string) => {
+      try {
+        return fs.existsSync(path.join(root, fileName));
+      } catch (e) {
+        console.log({ e });
+      }
+    };
+    const typescript = artifactExists('tsconfig.json');
+    const nextConfig = {
+      appRouter: !artifactExists('src/pages'),
+      eslint: artifactExists('.eslintrc.json'),
+      tailwind: artifactExists(`tailwind.config.${typescript ? 'ts' : 'js'}`),
+      srcDir: artifactExists('src'),
+      typescript,
+    };
 
-    /* INSTALL DEPENDANCIES **/
+    const {
+      useCypress,
+      useDocker,
+      useHusky,
+      useJestRTL,
+      useLintStaged,
+      useNextStandalone,
+      usePrettier,
+      useStorybook,
+    } = await configurationPrompts();
 
-    try {
-      const dependancies = [
-        // eslint
-        `eslint-plugin-testing-library`,
-        // prettier
-        `prettier`,
-        `eslint-config-prettier`,
-        // Testing Libraries
-        `jest`,
-        `jest-environment-jsdom`,
-        `@testing-library/jest-dom`,
-        `@testing-library/user-event`,
-        `@testing-library/react`,
-        `@typescript-eslint/eslint-plugin`,
-        `cypress`,
-        // storybook
-        '@storybook/addon-essentials',
-        '@storybook/addon-interactions',
-        '@storybook/addon-links',
-        '@storybook/addon-onboarding',
-        '@storybook/blocks',
-        '@storybook/nextjs',
-        '@storybook/react',
-        '@storybook/testing-library',
-        'eslint-plugin-storybook',
-        'storybook',
-      ];
+    /* PRETTIER CONFIGURATION  **/
 
-      await execa(pkgMgr, [pkgMgrCmd, ...dependancies], {
-        stdio: 'inherit',
-        cwd: root,
-      });
+    if (usePrettier) {
+      const addPrettierSpinner = ora({
+        indent: 2,
+        text: 'Configuring Eslint and Prettier',
+      }).start();
 
-      console.log('Installed Dependancies');
+      try {
+        const deps = ['prettier', 'eslint-config-prettier'];
 
-      console.log(MESSAGES.done);
-    } catch (error) {
-      throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+        if (!useNextStandalone)
+          // when installing Next with standalone flag there no need to install dependencies as devDependencies in package file
+          // https://nextjs.org/docs/pages/api-reference/next-config-js/output
+          deps.push(pkgMgrDevDeps);
+
+        await execa(pkgMgr, [pkgMgrCmd, ...deps], {
+          // stdio: 'inherit',
+          cwd: root,
+        });
+
+        const saveConfigs = [
+          fs.promises.cp(
+            path.join(configsPath, '.eslintrc.json'),
+            path.join(root, '.eslintrc.json')
+          ),
+          fs.promises.cp(
+            path.join(configsPath, '.prettierrc.json'),
+            path.join(root, '.prettierrc.json')
+          ),
+          fs.promises.cp(
+            path.join(configsPath, '.prettierignore'),
+            path.join(root, '.prettierignore')
+          ),
+        ];
+
+        await Promise.all(saveConfigs);
+
+        addToPackageScripts({
+          scripts: {
+            'lint:check': 'eslint .',
+            'lint:fix': 'eslint --fix .',
+            'format:check': 'prettier --check .',
+            'format:write': 'prettier --write .',
+          },
+          root,
+        });
+
+        addPrettierSpinner.succeed();
+      } catch (error) {
+        addPrettierSpinner.fail();
+        throw new Error(`${error}`);
+      }
     }
 
-    /* COPY CONFIGURATION FILES **/
+    /* JEST RTL CONFIGURATION  **/
 
-    try {
-      console.log(MESSAGES.esLintPrettier.install);
+    if (useJestRTL) {
+      const addSJestRTLSpinner = ora({
+        indent: 2,
+        text: 'Configuring Jest and React Testing Library',
+      }).start();
 
-      // const configs = ['.eslintrc.json', '.prettierrc.json', 'jest.config.js'];
+      try {
+        const deps = [
+          'jest',
+          'jest-environment-jsdom',
+          '@testing-library/jest-dom',
+          '@testing-library/user-event',
+          '@testing-library/react',
+          '@typescript-eslint/eslint-plugin',
+          'cypress',
+          'eslint-plugin-testing-library',
+        ];
 
-      // const configsPromise = configs.map((fileName) =>
-      //   fs.promises.copyFile(
-      //     path.join(configsPath, fileName),
-      //     path.join(root, fileName)
-      //   )
-      // );
+        if (!useNextStandalone) deps.push(pkgMgrDevDeps);
 
-      await fs.promises.cp(configsPath, root, {
-        recursive: true,
-      });
+        await execa(pkgMgr, [pkgMgrCmd, ...deps], {
+          // stdio: 'inherit',
+          cwd: root,
+        });
 
-      console.log(MESSAGES.done);
-    } catch (error) {
-      throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+        await fs.promises.cp(
+          path.join(configsPath, 'jest.config.js'),
+          path.join(root, `jest.config.${nextConfig.typescript ? 'ts' : 'js'}`)
+        );
+
+        addToPackageScripts({
+          scripts: {
+            test: 'jest --watch',
+            'test:ci': 'jest --ci',
+          },
+          root,
+        });
+
+        addSJestRTLSpinner.succeed();
+      } catch (error) {
+        addSJestRTLSpinner.fail();
+        throw new Error(`${error}`);
+      }
+    }
+
+    /* CYPRESS CONFIGURATION  **/
+
+    if (useCypress) {
+      const addCypressSpinner = ora({
+        indent: 2,
+        text: 'Configuring Cypress',
+      }).start();
+      try {
+        await execa(pkgMgr, [pkgMgrCmd, pkgMgrDevDeps, 'cypress'], {
+          // stdio: 'inherit',
+          cwd: root,
+        });
+
+        await fs.promises.cp(
+          path.join(configsPath, 'cypress'),
+          path.join(root, 'cypress'),
+          {
+            recursive: true,
+          }
+        );
+
+        addToPackageScripts({
+          scripts: {
+            e2e: 'cypress run',
+          },
+          root,
+        });
+
+        addCypressSpinner.succeed();
+      } catch (error) {
+        addCypressSpinner.fail();
+        throw new Error(`${error}`);
+      }
+    }
+
+    /* LINT_STAGED CONFIGURATION  **/
+
+    if (useLintStaged) {
+      const addLintStagedSpinner = ora({
+        indent: 2,
+        text: 'Configuring Lint-staged',
+      }).start();
+
+      try {
+        const deps = ['lint-staged'];
+
+        if (!useNextStandalone) deps.push(pkgMgrDevDeps);
+
+        await execa(pkgMgr, [pkgMgrCmd, ...deps], {
+          // stdio: 'inherit',
+          cwd: root,
+        });
+
+        await fs.promises.cp(
+          path.join(configsPath, '.lintstagedrc'),
+          path.join(root, '.lintstagedrc')
+        );
+
+        addToPackageScripts({
+          scripts: {
+            storybook: 'storybook dev -p 6006',
+            'build-storybook': 'storybook build',
+          },
+          root,
+        });
+
+        addLintStagedSpinner.succeed();
+      } catch (error) {
+        addLintStagedSpinner.fail();
+        throw new Error(`${error}`);
+      }
+    }
+
+    /*  GIT & HUSKY CONFIGURATION  **/
+
+    if (useHusky) {
+      const addHuskySpinner = ora({
+        indent: 2,
+        text: 'Configuring Git and Husky',
+      }).start();
+
+      try {
+        await execa(`git`, [`init`], {
+          // stdio: 'inherit',
+          cwd: root,
+        });
+
+        await execa(
+          useYarn ? 'yarn' : 'npx',
+          useYarn ? [`dlx`, `husky-init`, `--yarn2`] : ['husky-init'],
+          {
+            // stdio: 'inherit',
+            cwd: root,
+          }
+        );
+
+        await execa(useYarn ? 'yarn' : 'npm', useYarn ? [] : ['install'], {
+          // stdio: 'inherit',
+          cwd: root,
+        });
+
+        addHuskySpinner.succeed();
+      } catch (error) {
+        addHuskySpinner.fail();
+        throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+      }
     }
 
     /* STORYBOOK CONFIGURATION  **/
 
-    // try {
+    if (useStorybook) {
+      const addStorybookSpinner = ora({
+        indent: 2,
+        text: 'Configuring Storybook',
+      }).start();
 
-    //   await fs.promises.cp(
-    //     path.join(configsPath, '.storybook'),
-    //     path.join(root, '.storybook'),
-    //     {
-    //       recursive: true,
-    //     }
-    //   );
+      try {
+        const deps = [
+          '@storybook/addon-essentials',
+          '@storybook/addon-interactions',
+          '@storybook/addon-links',
+          '@storybook/addon-onboarding',
+          '@storybook/blocks',
+          '@storybook/nextjs',
+          '@storybook/react',
+          '@storybook/testing-library',
+          'eslint-plugin-storybook',
+          'storybook',
+        ];
 
-    //   console.log(MESSAGES.done);
-    // } catch (error) {
-    //   throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
-    // }
+        if (!useNextStandalone) deps.push(pkgMgrDevDeps);
 
-    /* INIT GIT  **/
-
-    try {
-      await execa(`git`, [`init`], {
-        stdio: 'inherit',
-        cwd: root,
-      });
-    } catch (error) {
-      throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
-    }
-
-    /* INSTALL HUSKY  **/
-
-    try {
-      await execa(
-        useYarn ? 'yarn' : 'npx',
-        useYarn ? [`dlx`, `husky-init`, `--yarn2`] : ['husky-init'],
-        {
-          stdio: 'inherit',
+        await execa(pkgMgr, [pkgMgrCmd, ...deps], {
+          // stdio: 'inherit',
           cwd: root,
-        }
-      );
+        });
 
-      await execa(useYarn ? 'yarn' : 'npm', useYarn ? [] : ['install'], {
-        stdio: 'inherit',
-        cwd: root,
-      });
-    } catch (error) {
-      throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+        await fs.promises.cp(
+          path.join(configsPath, '.storybook'),
+          path.join(root, '.storybook'),
+          {
+            recursive: true,
+          }
+        );
+
+        addToPackageScripts({
+          scripts: {
+            storybook: 'storybook dev -p 6006',
+            'build-storybook': 'storybook build',
+          },
+          root,
+        });
+
+        addStorybookSpinner.succeed();
+      } catch (error) {
+        addStorybookSpinner.fail();
+        throw new Error(`${error}`);
+      }
     }
 
-    /* CONFIGURE PACKAGE  
-    Add to Next's generated package file
-    **/
+    /* DOCKER CONFIGURATION  **/
+
+    if (useDocker) {
+      const addDockerSpinner = ora({
+        indent: 2,
+        text: 'Configuring Docker',
+      }).start();
+
+      try {
+        const saveDockerFiles = [
+          'docker-compose.yml',
+          'Dockerfile',
+          'Makefile',
+        ].map((file) =>
+          fs.promises.cp(path.join(configsPath, file), path.join(root, file))
+        );
+
+        await Promise.all(saveDockerFiles);
+
+        addDockerSpinner.succeed();
+      } catch (error) {
+        addDockerSpinner.fail();
+        throw new Error(`${error}`);
+      }
+    }
+
+    /* FORMAT FILES  **/
+    const addFormatSpinner = ora({
+      indent: 2,
+      text: 'Formatting files with prettier',
+    }).start();
 
     try {
-      const packageFileJson = await fs.promises.readFile(
-        path.join(root, 'package.json'),
-        'utf8'
-      );
-
-      const packageFile = JSON.parse(packageFileJson);
-      delete packageFile.scripts.lint; // delete next's lint setup script
-
-      packageFile.scripts = {
-        ...packageFile.scripts,
-        e2e: 'cypress run',
-        test: 'jest --watch',
-        'test:ci': 'jest --ci',
-        'format:check': 'prettier --check .',
-        'format:write': 'prettier --write .',
-        'lint:check': 'eslint .',
-        'lint:fix': 'eslint --fix .',
-        storybook: 'storybook dev -p 6006',
-        'build-storybook': 'storybook build',
-      };
-
-      await fs.promises.writeFile(
-        path.join(root, 'package.json'),
-        JSON.stringify(packageFile, null, 2) + os.EOL
-      );
+      await execa(`npm`, [`run`, `format:write`], {
+        // stdio: 'inherit',
+        cwd: root,
+      });
+      addFormatSpinner.succeed();
     } catch (error) {
-      throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+      addFormatSpinner.fail();
+      throw new Error(`${error}`);
     }
-
-    // try {
-    //   await execa(`npm`, [`run`, `format:write`], {
-    //     stdio: 'inherit',
-    //     cwd: root,
-    //   });
-    // } catch (error) {
-    //   throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
-    // }
   });
 
 program.parse();

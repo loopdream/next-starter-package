@@ -40,7 +40,7 @@ Do you wish to proceed?`,
     inactive: 'No',
   });
 
-export const configurationPrompts = () =>
+export const useYarnPrompt = () =>
   prompts({
     onState: onPromptState,
     type: 'toggle',
@@ -50,3 +50,95 @@ export const configurationPrompts = () =>
     active: 'Yes',
     inactive: `No use ${blue('npm')}`,
   });
+
+export const configurationPrompts = () =>
+  prompts([
+    {
+      onState: onPromptState,
+      type: 'toggle',
+      name: 'useNextStandalone',
+      message: `Would you like to configure ${blue(
+        'Next'
+      )} for standalone production builds?`,
+      initial: 'Yes',
+      active: 'Yes',
+      inactive: `No`,
+    },
+    {
+      onState: onPromptState,
+      type: 'toggle',
+      name: 'usePrettier',
+      message: `Would you like to install and configure ${blue(
+        'Prettier'
+      )}? (recommended)`,
+      initial: 'Yes',
+      active: 'Yes',
+      inactive: `No`,
+    },
+    {
+      onState: onPromptState,
+      type: 'toggle',
+      name: 'useStorybook',
+      message: `Would you like to install and configure ${blue(
+        'Storybook'
+      )}? (recommended)`,
+      initial: 'Yes',
+      active: 'Yes',
+      inactive: `No`,
+    },
+    {
+      onState: onPromptState,
+      type: 'toggle',
+      name: 'useDocker',
+      message: `Would you like to add ${blue(
+        'Docker'
+      )} configuration? (recommended)`,
+      initial: 'Yes',
+      active: 'Yes',
+      inactive: `No`,
+    },
+    {
+      onState: onPromptState,
+      type: 'toggle',
+      name: 'useJestRTL',
+      message: `Would you like to install and configure ${blue(
+        'Jest'
+      )} and ${`React Testing Library`}? (recommended)`,
+      initial: 'Yes',
+      active: 'Yes',
+      inactive: `No`,
+    },
+    {
+      onState: onPromptState,
+      type: 'toggle',
+      name: 'useCypress',
+      message: `Would you like to install and configure ${blue(
+        'Cypress'
+      )}? (recommended)`,
+      initial: 'Yes',
+      active: 'Yes',
+      inactive: `No`,
+    },
+    {
+      onState: onPromptState,
+      type: 'toggle',
+      name: 'useHusky',
+      message: `Would you like to install and configure ${blue(
+        'Git'
+      )} and ${blue('Husky')}? (recommended)`,
+      initial: 'Yes',
+      active: 'Yes',
+      inactive: `No`,
+    },
+    {
+      onState: onPromptState,
+      type: 'toggle',
+      name: 'useLintStaged',
+      message: `Would you like to install and configure ${blue(
+        'Lint Staged'
+      )}? (recommended)`,
+      initial: 'Yes',
+      active: 'Yes',
+      inactive: `No use ${blue('npm')}`,
+    },
+  ]);

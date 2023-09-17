@@ -1,3 +1,7 @@
+#!/usr/bin/env ts-node
+import path from 'path';
+import os from 'os';
+import fs from 'fs';
 import figlet from 'figlet';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,3 +31,34 @@ export function goodbye() {
   const randomGoodbye = goodbyes[Math.floor(Math.random() * goodbyes.length)];
   return console.log(`\n`, figlet.textSync(randomGoodbye), '\n\n');
 }
+
+export const addToPackageScripts = async ({
+  scripts,
+  root,
+}: {
+  scripts: Record<string, string>;
+  root: string;
+}) => {
+  try {
+    const packageFileJson = await fs.promises.readFile(
+      path.join(root, 'package.json'),
+      'utf8'
+    );
+
+    const packageFile = JSON.parse(packageFileJson);
+
+    delete packageFile.scripts.lint; // delete next's lint setup script
+
+    packageFile.scripts = {
+      ...packageFile.scripts,
+      ...scripts,
+    };
+
+    await fs.promises.writeFile(
+      path.join(root, 'package.json'),
+      JSON.stringify(packageFile, null, 2) + os.EOL
+    );
+  } catch (error: unknown) {
+    throw new Error(`${error}`);
+  }
+};
