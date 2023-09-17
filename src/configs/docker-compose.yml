@@ -1,0 +1,51 @@
+version: "3"
+
+services:
+  development:
+    build:
+      context: .
+      target: deps
+    command: npm run dev
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+  staging:
+    build:
+      context: .
+      target: runner
+      args:
+        - NODE_ENV=development
+        - NEXT_PORT=3001
+  uat:
+    build:
+      context: .
+      target: runner
+      args:
+        - NODE_ENV=production
+        - NEXT_PORT=3002
+    ports:
+      - "3002:3002"
+    restart: always
+  production:
+    build:
+      context: .
+      target: runner
+      args:
+        - NODE_ENV=production
+        - NEXT_PORT=3003
+    ports:
+      - "3003:3003"
+    restart: always
+    # networks:
+    #   - test_network
+# Define a network, which allows containers to communicate
+# with each other, by using their container name as a hostname
+# networks:
+#   test_network:
+#     external: true

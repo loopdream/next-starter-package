@@ -127,16 +127,18 @@ program
     try {
       console.log(MESSAGES.esLintPrettier.install);
 
-      const configs = ['.eslintrc.json', '.prettierrc.json', 'jest.config.js'];
+      // const configs = ['.eslintrc.json', '.prettierrc.json', 'jest.config.js'];
 
-      const configsPromise = configs.map((fileName) =>
-        fs.promises.copyFile(
-          path.join(configsPath, fileName),
-          path.join(root, fileName)
-        )
-      );
+      // const configsPromise = configs.map((fileName) =>
+      //   fs.promises.copyFile(
+      //     path.join(configsPath, fileName),
+      //     path.join(root, fileName)
+      //   )
+      // );
 
-      await Promise.all(configsPromise);
+      await fs.promises.cp(configsPath, root, {
+        recursive: true,
+      });
 
       console.log(MESSAGES.done);
     } catch (error) {
@@ -145,23 +147,20 @@ program
 
     /* STORYBOOK CONFIGURATION  **/
 
-    try {
-      // await execa(`npx`, [`storybook@latest`, `init`], {
-      //   stdio: 'inherit',
-      //   cwd: root,
-      // });
-      await fs.promises.cp(
-        path.join(configsPath, '.storybook'),
-        path.join(root, '.storybook'),
-        {
-          recursive: true,
-        }
-      );
+    // try {
 
-      console.log(MESSAGES.done);
-    } catch (error) {
-      throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
-    }
+    //   await fs.promises.cp(
+    //     path.join(configsPath, '.storybook'),
+    //     path.join(root, '.storybook'),
+    //     {
+    //       recursive: true,
+    //     }
+    //   );
+
+    //   console.log(MESSAGES.done);
+    // } catch (error) {
+    //   throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+    // }
 
     /* INIT GIT  **/
 
