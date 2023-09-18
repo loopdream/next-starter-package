@@ -61,7 +61,8 @@ program
       });
     } catch (error) {
       console.log(oops);
-      throw new Error(`\n${MESSAGES.nextJs.error} ${error}`);
+      console.log(oops);
+      throw new Error(`\n${error}`);
     }
 
     const artifactExists = (fileName: string) => {
@@ -91,6 +92,26 @@ program
       useStorybook,
     } = await configurationPrompts();
 
+    /* NEXT STANDALONE CONFIGURATION  **/
+
+    if (useNextStandalone) {
+      const addStandaloneSpinner = ora({
+        indent: 2,
+        text: 'Configuring Eslint and Prettier',
+      }).start();
+
+      try {
+        await fs.promises.cp(
+          path.join(configsPath, 'next.config.js'),
+          path.join(root, `next.config.js}`)
+        );
+      } catch (error) {
+        addStandaloneSpinner.fail();
+        console.log(oops);
+        throw new Error(`\n${error}`);
+      }
+    }
+
     /* PRETTIER CONFIGURATION  **/
 
     if (usePrettier) {
@@ -105,6 +126,8 @@ program
           'eslint-config-prettier',
           '@typescript-eslint/eslint-plugin',
         ];
+
+        if (!nextConfig.eslint) deps.push('eslint');
 
         if (!useNextStandalone)
           // when installing Next with standalone flag there no need to install dependencies as devDependencies in package file
@@ -146,7 +169,8 @@ program
         addPrettierSpinner.succeed();
       } catch (error) {
         addPrettierSpinner.fail();
-        throw new Error(`${error}`);
+        console.log(oops);
+        throw new Error(`\n${error}`);
       }
     }
 
@@ -192,7 +216,8 @@ program
         addSJestRTLSpinner.succeed();
       } catch (error) {
         addSJestRTLSpinner.fail();
-        throw new Error(`${error}`);
+        console.log(oops);
+        throw new Error(`\n${error}`);
       }
     }
 
@@ -227,7 +252,8 @@ program
         addCypressSpinner.succeed();
       } catch (error) {
         addCypressSpinner.fail();
-        throw new Error(`${error}`);
+        console.log(oops);
+        throw new Error(`\n${error}`);
       }
     }
 
@@ -265,7 +291,8 @@ program
         addLintStagedSpinner.succeed();
       } catch (error) {
         addLintStagedSpinner.fail();
-        throw new Error(`${error}`);
+        console.log(oops);
+        throw new Error(`\n${error}`);
       }
     }
 
@@ -352,7 +379,8 @@ program
         addStorybookSpinner.succeed();
       } catch (error) {
         addStorybookSpinner.fail();
-        throw new Error(`${error}`);
+        console.log(oops);
+        throw new Error(`\n${error}`);
       }
     }
 
@@ -378,8 +406,38 @@ program
         addDockerSpinner.succeed();
       } catch (error) {
         addDockerSpinner.fail();
-        throw new Error(`${error}`);
+        console.log(oops);
+        throw new Error(`\n${error}`);
       }
+    }
+
+    const addEnvSpinner = ora({
+      indent: 2,
+      text: 'Configuring Environment variables',
+    }).start();
+
+    try {
+      await fs.promises.cp(
+        path.join(configsPath, '.env.example'),
+        path.join(root, '.env.example')
+      );
+
+      addToPackageScripts({
+        scripts: {
+          'env:make':
+            'cp .env.example .env.local && cp .env.example .env.development && cp .env.example .env.production',
+        },
+        root,
+      });
+
+      await execa(pkgMgr, ['run', 'env:make'], {
+        cwd: root,
+      });
+      addEnvSpinner.succeed();
+    } catch (error) {
+      addEnvSpinner.fail();
+      console.log(oops);
+      throw new Error(`\n${error}`);
     }
 
     /* FORMAT FILES  **/
@@ -396,7 +454,8 @@ program
       addFormatSpinner.succeed();
     } catch (error) {
       addFormatSpinner.fail();
-      throw new Error(`${error}`);
+      console.log(oops);
+      throw new Error(`\n${error}`);
     }
   });
 
