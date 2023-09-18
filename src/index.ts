@@ -100,7 +100,11 @@ program
       }).start();
 
       try {
-        const deps = ['prettier', 'eslint-config-prettier'];
+        const deps = [
+          'prettier',
+          'eslint-config-prettier',
+          '@typescript-eslint/eslint-plugin',
+        ];
 
         if (!useNextStandalone)
           // when installing Next with standalone flag there no need to install dependencies as devDependencies in package file
@@ -161,7 +165,6 @@ program
           '@testing-library/jest-dom',
           '@testing-library/user-event',
           '@testing-library/react',
-          '@typescript-eslint/eslint-plugin',
           'cypress',
           'eslint-plugin-testing-library',
         ];
