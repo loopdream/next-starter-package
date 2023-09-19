@@ -1,4 +1,4 @@
-version: "3"
+version: '3'
 
 services:
   development:
@@ -8,9 +8,7 @@ services:
     command: npm run dev
     restart: always
     ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
+      - '3000:3000'
     volumes:
       - .:/app
       - /app/node_modules
@@ -20,27 +18,30 @@ services:
       context: .
       target: runner
       args:
-        - NODE_ENV=development
         - NEXT_PORT=3001
+        - HOSTNAME=0.0.0.0
+    ports:
+      - '3001:3001'
+    restart: always
   uat:
     build:
       context: .
       target: runner
       args:
-        - NODE_ENV=production
         - NEXT_PORT=3002
+        - HOSTNAME=0.0.0.0
     ports:
-      - "3002:3002"
+      - '3002:3002'
     restart: always
   production:
     build:
       context: .
       target: runner
       args:
-        - NODE_ENV=production
         - NEXT_PORT=3003
+        - HOSTNAME=0.0.0.0
     ports:
-      - "3003:3003"
+      - '3003:3003'
     restart: always
     # networks:
     #   - test_network

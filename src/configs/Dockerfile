@@ -2,8 +2,6 @@
 FROM node:18-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-ARG NODE_ENV
-ENV NODE_ENV $NODE_ENV
 # Install dependencies based on the preferred package manager
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 RUN \
@@ -16,10 +14,14 @@ RUN \
 # Stage 2: build
 FROM node:18-alpine AS builder
 WORKDIR /app
+ENV BUILD_STANDALONE true
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY src ./src
 COPY public ./public
-COPY package.json next.config.js tsconfig.json .env.production ./
+COPY package.json next.config.js tsconfig.json .env.local .env postcss.config.js  ./
+COPY tailwind.config.ts ./
+ 
 RUN \
   if [ -f yarn.lock ]; then yarn build; \
   elif [ -f package-lock.json ]; then npm run build; \
@@ -33,31 +35,27 @@ WORKDIR /app
 
 ARG NEXT_PORT
 ARG NODE_ENV
-ENV NODE_ENV $NODE_ENV
+ARG HOSTNAME
 
+ENV NODE_ENV production
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
 
-COPY --from=builder --chown=nextjs:nodejs /app/.env.$NODE_ENV ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
-
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
 
 USER nextjs
-
 
 EXPOSE $NEXT_PORT
 ENV PORT $NEXT_PORT
 
-ENV HOSTNAME localhost
+ENV HOSTNAME $HOSTNAME
 
+ENV NEXT_TELEMETRY_DISABLED 1
 
-CMD ["npm", "start"]
-
-
-
- 
+CMD ["node", "server.js"]

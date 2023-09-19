@@ -97,7 +97,7 @@ program
     if (useNextStandalone) {
       const addStandaloneSpinner = ora({
         indent: 2,
-        text: 'Configuring Eslint and Prettier',
+        text: 'Configuring next standalone production builds',
       }).start();
 
       try {
@@ -105,6 +105,7 @@ program
           path.join(configsPath, 'next.config.js'),
           path.join(root, `next.config.js}`)
         );
+        addStandaloneSpinner.succeed();
       } catch (error) {
         addStandaloneSpinner.fail();
         console.log(oops);
@@ -417,22 +418,24 @@ program
     }).start();
 
     try {
-      await fs.promises.cp(
-        path.join(configsPath, '.env.example'),
-        path.join(root, '.env.example')
+      const envFiles = ['.env.example', '.env.local', '.env'].map((file) =>
+        fs.promises.cp(
+          path.join(configsPath, '.env.example'),
+          path.join(root, file)
+        )
       );
 
-      addToPackageScripts({
-        scripts: {
-          'env:make':
-            'cp .env.example .env.local && cp .env.example .env.development && cp .env.example .env.production',
-        },
-        root,
-      });
+      await Promise.all(envFiles);
 
-      await execa(pkgMgr, ['run', 'env:make'], {
-        cwd: root,
-      });
+      if (fs.existsSync(path.join(root, '.gitignore'))) {
+        await fs.promises.appendFile(
+          path.join(root, '.gitignore'),
+          `# env files
+          .env
+          .env.local`
+        );
+      }
+
       addEnvSpinner.succeed();
     } catch (error) {
       addEnvSpinner.fail();
