@@ -114,3 +114,25 @@ export const useLintStagedPrompt: PromptObject = {
   active: 'Yes',
   inactive: `No use ${blue('npm')}`,
 };
+
+export const useSelectedDependenciesPrompt: PromptObject = {
+  type: 'multiselect',
+  name: 'useSelectedDependencies',
+  message: 'Install some popular packages?',
+  choices: [
+    { title: 'classname', value: 'classname' },
+    { title: 'jotai', value: 'jotai' },
+    { title: 'zustand', value: 'zustand' },
+    { title: 'formik', value: 'formik' },
+    { title: '@reduxjs/toolkit', value: '@reduxjs/toolkit' },
+    { title: '@apollo/client graphql', value: '@apollo/client graphql' },
+    { title: 'swr', value: 'swr' },
+    { title: '@tanstack/react-query', value: '@tanstack/react-query' },
+    { title: 'react-redux', value: '@tanstack/react-query' },
+    { title: 'yup', value: 'yup' },
+    { title: 'mobx', value: 'mobx' },
+    { title: 'react-spring', value: 'react-spring' },
+    { title: 'mobx-react', value: 'mobx-react' },
+  ],
+  hint: '- Space to select. Return to submit',
+};

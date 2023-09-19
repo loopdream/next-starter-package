@@ -9,6 +9,7 @@ import prompts from 'prompts';
 
 import {
   addToPackageScripts,
+  oops,
   //goodbye
 } from './functions/utils.js';
 
@@ -23,6 +24,7 @@ import {
   useLintStagedPrompt,
   useNextStandalonePrompt,
   usePrettierPrompt,
+  useSelectedDependenciesPrompt,
   useStorybookPrompt,
 } from './prompts.js';
 
@@ -39,8 +41,6 @@ program
   .option('-d, --dev', 'my test option')
   .action(async (projectName, options) => {
     const { execa } = await import('execa');
-
-    const oops = `\n${figlet.textSync('Ooops...')}\n\n`;
 
     let projectDirectoryPath = projectName;
 
@@ -60,11 +60,7 @@ program
     const packageManagerSaveDev =
       packageManager === 'npm' ? '--save-dev' : '-D';
 
-    /* INSTALL NEXT **/
-
     const nextConfig = await installNext({ root, packageManager });
-
-    console.log({ nextConfig });
 
     const {
       useCypress,
@@ -75,6 +71,7 @@ program
       useNextStandalone,
       usePrettier,
       useStorybook,
+      useSelectedDependencies,
     } = await prompts([
       useNextStandalonePrompt,
       usePrettierPrompt,
@@ -84,7 +81,9 @@ program
       useCypressPrompt,
       useHuskyPrompt,
       useDockerPrompt,
+      useSelectedDependenciesPrompt,
     ]);
+    console.log({ useSelectedDependencies });
 
     /* NEXT STANDALONE CONFIGURATION  **/
 
