@@ -5,16 +5,28 @@ import fs from 'fs';
 import { program } from 'commander';
 import figlet from 'figlet';
 import ora from 'ora';
+import prompts from 'prompts';
 
-import { addToPackageScripts, goodbye } from './functions.js';
+import {
+  addToPackageScripts,
+  //goodbye
+} from './functions/utils.js';
 
 import { MESSAGES } from './messages.js';
 
 import {
-  installDashboardPrompt,
-  configurationPrompts,
-  useYarnPrompt,
+  packageManagerPrompt,
+  useCypressPrompt,
+  useDockerPrompt,
+  useHuskyPrompt,
+  useJestRTLPrompt,
+  useLintStagedPrompt,
+  useNextStandalonePrompt,
+  usePrettierPrompt,
+  useStorybookPrompt,
 } from './prompts.js';
+
+import installNext from './functions/installNext.js';
 
 console.log('\n', figlet.textSync('Nextra'), '\n\n');
 
@@ -42,44 +54,17 @@ program
     const root = path.resolve(projectDirectoryPath);
     const configsPath = path.resolve(path.join('src', 'configs'));
 
-    const { installDashboard } = await installDashboardPrompt(projectName);
+    const { packageManager } = await prompts(packageManagerPrompt);
 
-    if (!installDashboard) return goodbye();
-
-    const { useYarn } = await useYarnPrompt();
-    const pkgMgr = useYarn ? 'yarn' : 'npm';
-    const pkgMgrCmd = useYarn ? 'add' : 'install';
-    const pkgMgrDevDeps = useYarn ? '--dev' : '--save-dev';
+    const packageManagerAdd = packageManager === 'npm' ? 'install' : 'add';
+    const packageManagerSaveDev =
+      packageManager === 'npm' ? '--save-dev' : '-D';
 
     /* INSTALL NEXT **/
 
-    try {
-      console.log(`\n`);
+    const nextConfig = await installNext({ root, packageManager });
 
-      await execa(`npx`, [`create-next-app@latest`, root, `--use-${pkgMgr}`], {
-        stdio: 'inherit',
-      });
-    } catch (error) {
-      console.log(oops);
-      console.log(oops);
-      throw new Error(`\n${error}`);
-    }
-
-    const artifactExists = (fileName: string) => {
-      try {
-        return fs.existsSync(path.join(root, fileName));
-      } catch (e) {
-        console.log({ e });
-      }
-    };
-    const typescript = artifactExists('tsconfig.json');
-    const nextConfig = {
-      appRouter: !artifactExists('src/pages'),
-      eslint: artifactExists('.eslintrc.json'),
-      tailwind: artifactExists(`tailwind.config.${typescript ? 'ts' : 'js'}`),
-      srcDir: artifactExists('src'),
-      typescript,
-    };
+    console.log({ nextConfig });
 
     const {
       useCypress,
@@ -90,7 +75,16 @@ program
       useNextStandalone,
       usePrettier,
       useStorybook,
-    } = await configurationPrompts();
+    } = await prompts([
+      useNextStandalonePrompt,
+      usePrettierPrompt,
+      useJestRTLPrompt,
+      useLintStagedPrompt,
+      useStorybookPrompt,
+      useCypressPrompt,
+      useHuskyPrompt,
+      useDockerPrompt,
+    ]);
 
     /* NEXT STANDALONE CONFIGURATION  **/
 
@@ -103,7 +97,7 @@ program
       try {
         await fs.promises.cp(
           path.join(configsPath, 'next.config.js'),
-          path.join(root, `next.config.js}`)
+          path.join(root, `next.config.js`)
         );
         addStandaloneSpinner.succeed();
       } catch (error) {
@@ -133,9 +127,9 @@ program
         if (!useNextStandalone)
           // when installing Next with standalone flag there no need to install dependencies as devDependencies in package file
           // https://nextjs.org/docs/pages/api-reference/next-config-js/output
-          deps.push(pkgMgrDevDeps);
+          deps.push(packageManagerSaveDev);
 
-        await execa(pkgMgr, [pkgMgrCmd, ...deps], {
+        await execa(packageManager, [packageManagerAdd, ...deps], {
           // stdio: 'inherit',
           cwd: root,
         });
@@ -194,9 +188,9 @@ program
           'eslint-plugin-testing-library',
         ];
 
-        if (!useNextStandalone) deps.push(pkgMgrDevDeps);
+        if (!useNextStandalone) deps.push(packageManagerSaveDev);
 
-        await execa(pkgMgr, [pkgMgrCmd, ...deps], {
+        await execa(packageManager, [packageManagerAdd, ...deps], {
           // stdio: 'inherit',
           cwd: root,
         });
@@ -230,10 +224,14 @@ program
         text: 'Configuring Cypress',
       }).start();
       try {
-        await execa(pkgMgr, [pkgMgrCmd, pkgMgrDevDeps, 'cypress'], {
-          // stdio: 'inherit',
-          cwd: root,
-        });
+        await execa(
+          packageManager,
+          [packageManagerAdd, packageManagerSaveDev, 'cypress'],
+          {
+            // stdio: 'inherit',
+            cwd: root,
+          }
+        );
 
         await fs.promises.cp(
           path.join(configsPath, 'cypress'),
@@ -269,9 +267,9 @@ program
       try {
         const deps = ['lint-staged'];
 
-        if (!useNextStandalone) deps.push(pkgMgrDevDeps);
+        if (!useNextStandalone) deps.push(packageManagerSaveDev);
 
-        await execa(pkgMgr, [pkgMgrCmd, ...deps], {
+        await execa(packageManager, [packageManagerAdd, ...deps], {
           // stdio: 'inherit',
           cwd: root,
         });
@@ -312,18 +310,30 @@ program
         });
 
         await execa(
-          useYarn ? 'yarn' : 'npx',
-          useYarn ? [`dlx`, `husky-init`, `--yarn2`] : ['husky-init'],
+          packageManager === 'npm'
+            ? 'npx'
+            : packageManager === 'yarn'
+            ? 'yarn'
+            : 'pnpm',
+          packageManager === 'npm'
+            ? ['husky-init']
+            : packageManager === 'yarn'
+            ? [`dlx`, `husky-init`, `--yarn2`]
+            : [`dlx`, `husky-init`],
           {
             // stdio: 'inherit',
             cwd: root,
           }
         );
 
-        await execa(useYarn ? 'yarn' : 'npm', useYarn ? [] : ['install'], {
-          // stdio: 'inherit',
-          cwd: root,
-        });
+        await execa(
+          packageManager,
+          packageManager === 'npm' ? ['install'] : [],
+          {
+            // stdio: 'inherit',
+            cwd: root,
+          }
+        );
 
         addHuskySpinner.succeed();
       } catch (error) {
@@ -354,9 +364,9 @@ program
           'storybook',
         ];
 
-        if (!useNextStandalone) deps.push(pkgMgrDevDeps);
+        if (!useNextStandalone) deps.push(packageManagerSaveDev);
 
-        await execa(pkgMgr, [pkgMgrCmd, ...deps], {
+        await execa(packageManager, [packageManagerAdd, ...deps], {
           // stdio: 'inherit',
           cwd: root,
         });

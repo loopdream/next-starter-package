@@ -62,3 +62,5 @@ export const addToPackageScripts = async ({
     throw new Error(`${error}`);
   }
 };
+
+export const oops = `\n${figlet.textSync('Ooops...')}\n\n`;
