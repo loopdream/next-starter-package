@@ -1,14 +1,15 @@
 import path from 'path';
 import fs from 'fs';
 
-import { oops } from './utils.js';
+import { oops } from '../utils/index.js';
+import { PackageManagerType } from '../utils/usePackageManager.js';
 
 const installNext = async ({
   root,
   packageManager,
 }: {
   root: string;
-  packageManager: string;
+  packageManager: PackageManagerType;
 }) => {
   try {
     console.log(`\n`);
@@ -16,7 +17,7 @@ const installNext = async ({
 
     await execa(
       `npx`,
-      [`create-next-app@latest`, root, `--use-${packageManager}`],
+      [`create-next-app@latest`, root, `--use-${packageManager.name}`],
       {
         stdio: 'inherit',
       }

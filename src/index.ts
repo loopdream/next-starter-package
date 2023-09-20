@@ -7,14 +7,7 @@ import figlet from 'figlet';
 import ora from 'ora';
 import prompts from 'prompts';
 
-import {
-  addToPackageScripts,
-  addToDevDependencies,
-  oops,
-  //goodbye
-} from './functions/utils.js';
-
-import { MESSAGES } from './messages.js';
+import { oops, usePackageManager } from './utils/index.js';
 
 import {
   packageManagerPrompt,
@@ -55,11 +48,12 @@ program
     const root = path.resolve(projectDirectoryPath);
     const configsPath = path.resolve(path.join('src', 'configs'));
 
-    const { packageManager } = await prompts(packageManagerPrompt);
+    const { packageManagerChoice } = await prompts(packageManagerPrompt);
 
-    const packageManagerAdd = packageManager === 'npm' ? 'install' : 'add';
-    const packageManagerSaveDev =
-      packageManager === 'npm' ? '--save-dev' : '-D';
+    const packageManager = usePackageManager({
+      packageManager: packageManagerChoice,
+      root,
+    });
 
     const nextConfig = await installNext({ root, packageManager });
 
@@ -84,7 +78,6 @@ program
       useDockerPrompt,
       useSelectedDependenciesPrompt,
     ]);
-    console.log({ useSelectedDependencies });
 
     /* NEXT STANDALONE CONFIGURATION  **/
 
@@ -124,16 +117,14 @@ program
 
         if (!nextConfig.eslint) dependencies.push('eslint');
 
-        if (!useNextStandalone)
-          // when installing Next with standalone flag there no need to install dependencies as devDependencies in package file
-          // https://nextjs.org/docs/pages/api-reference/next-config-js/output
-          dependencies.push(packageManagerSaveDev);
+        // if (!useNextStandalone)
+        //   // when installing Next with standalone flag there no need to install dependencies as devDependencies in package file
+        //   // https://nextjs.org/docs/pages/api-reference/next-config-js/output
+        //   dependencies.push(packageManagerSaveDev);
 
-        addToDevDependencies({
-          root,
-          packageManager,
-          packageManagerAdd,
+        await packageManager.addToDependencies({
           dependencies,
+          isDevDependencies: true,
         });
 
         const saveConfigs = [
@@ -153,14 +144,11 @@ program
 
         await Promise.all(saveConfigs);
 
-        addToPackageScripts({
-          scripts: {
-            'lint:check': 'eslint .',
-            'lint:fix': 'eslint --fix .',
-            'format:check': 'prettier --check .',
-            'format:write': 'prettier --write .',
-          },
-          root,
+        await packageManager.addToScripts({
+          'lint:check': 'eslint .',
+          'lint:fix': 'eslint --fix .',
+          'format:check': 'prettier --check .',
+          'format:write': 'prettier --write .',
         });
 
         addPrettierSpinner.succeed();
@@ -190,13 +178,11 @@ program
           'eslint-plugin-testing-library',
         ];
 
-        if (!useNextStandalone) dependencies.push(packageManagerSaveDev);
+        if (!useNextStandalone) dependencies.push(packageManager.cmds.saveDev);
 
-        addToDevDependencies({
-          root,
-          packageManager,
-          packageManagerAdd,
+        await packageManager.addToDependencies({
           dependencies,
+          isDevDependencies: true,
         });
 
         await fs.promises.cp(
@@ -204,12 +190,9 @@ program
           path.join(root, `jest.config.${nextConfig.typescript ? 'ts' : 'js'}`)
         );
 
-        addToPackageScripts({
-          scripts: {
-            test: 'jest --watch',
-            'test:ci': 'jest --ci',
-          },
-          root,
+        await packageManager.addToScripts({
+          test: 'jest --watch',
+          'test:ci': 'jest --ci',
         });
 
         addSJestRTLSpinner.succeed();
@@ -228,29 +211,18 @@ program
         text: 'Configuring Cypress',
       }).start();
       try {
-        await execa(
-          packageManager,
-          [packageManagerAdd, packageManagerSaveDev, 'cypress'],
-          {
-            // stdio: 'inherit',
-            cwd: root,
-          }
-        );
+        await packageManager.addToDependencies({
+          dependencies: ['cypress'],
+          isDevDependencies: true,
+        });
 
         await fs.promises.cp(
           path.join(configsPath, 'cypress'),
           path.join(root, 'cypress'),
-          {
-            recursive: true,
-          }
+          { recursive: true }
         );
 
-        addToPackageScripts({
-          scripts: {
-            e2e: 'cypress run',
-          },
-          root,
-        });
+        await packageManager.addToScripts({ e2e: 'cypress run' });
 
         addCypressSpinner.succeed();
       } catch (error) {
@@ -269,13 +241,11 @@ program
       }).start();
 
       try {
-        const deps = ['lint-staged'];
+        // if (!useNextStandalone) deps.push(packageManager.cmds.saveDev);
 
-        if (!useNextStandalone) deps.push(packageManagerSaveDev);
-
-        await execa(packageManager, [packageManagerAdd, ...deps], {
-          // stdio: 'inherit',
-          cwd: root,
+        await packageManager.addToDependencies({
+          dependencies: ['lint-staged'],
+          isDevDependencies: true,
         });
 
         await fs.promises.cp(
@@ -283,12 +253,9 @@ program
           path.join(root, '.lintstagedrc')
         );
 
-        addToPackageScripts({
-          scripts: {
-            storybook: 'storybook dev -p 6006',
-            'build-storybook': 'storybook build',
-          },
-          root,
+        await packageManager.addToScripts({
+          storybook: 'storybook dev -p 6006',
+          'build-storybook': 'storybook build',
         });
 
         addLintStagedSpinner.succeed();
@@ -299,7 +266,7 @@ program
       }
     }
 
-    /*  GIT & HUSKY CONFIGURATION  **/
+    // /*  GIT & HUSKY CONFIGURATION  **/
 
     if (useHusky) {
       const addHuskySpinner = ora({
@@ -308,45 +275,36 @@ program
       }).start();
 
       try {
-        await execa(`git`, [`init`], {
-          // stdio: 'inherit',
-          cwd: root,
-        });
+        await execa(`git`, [`init`], { cwd: root });
 
         await execa(
-          packageManager === 'npm'
+          packageManager.name === 'npm'
             ? 'npx'
-            : packageManager === 'yarn'
+            : packageManager.name === 'yarn'
             ? 'yarn'
             : 'pnpm',
-          packageManager === 'npm'
+          packageManager.name === 'npm'
             ? ['husky-init']
-            : packageManager === 'yarn'
+            : packageManager.name === 'yarn'
             ? [`dlx`, `husky-init`, `--yarn2`]
             : [`dlx`, `husky-init`],
-          {
-            // stdio: 'inherit',
-            cwd: root,
-          }
+          { cwd: root }
         );
 
         await execa(
-          packageManager,
-          packageManager === 'npm' ? ['install'] : [],
-          {
-            // stdio: 'inherit',
-            cwd: root,
-          }
+          packageManager.name,
+          packageManager.name === 'npm' ? ['install'] : [],
+          { cwd: root }
         );
 
         addHuskySpinner.succeed();
       } catch (error) {
         addHuskySpinner.fail();
-        throw new Error(`${MESSAGES.esLintPrettier.error} ${error}`);
+        throw new Error(`${error}`);
       }
     }
 
-    /* STORYBOOK CONFIGURATION  **/
+    // /* STORYBOOK CONFIGURATION  **/
 
     if (useStorybook) {
       const addStorybookSpinner = ora({
@@ -355,7 +313,7 @@ program
       }).start();
 
       try {
-        const deps = [
+        const dependencies = [
           '@storybook/addon-essentials',
           '@storybook/addon-interactions',
           '@storybook/addon-links',
@@ -368,11 +326,9 @@ program
           'storybook',
         ];
 
-        if (!useNextStandalone) deps.push(packageManagerSaveDev);
-
-        await execa(packageManager, [packageManagerAdd, ...deps], {
-          // stdio: 'inherit',
-          cwd: root,
+        await packageManager.addToDependencies({
+          dependencies,
+          isDevDependencies: true,
         });
 
         await fs.promises.cp(
@@ -383,12 +339,9 @@ program
           }
         );
 
-        addToPackageScripts({
-          scripts: {
-            storybook: 'storybook dev -p 6006',
-            'build-storybook': 'storybook build',
-          },
-          root,
+        await packageManager.addToScripts({
+          storybook: 'storybook dev -p 6006',
+          'build-storybook': 'storybook build',
         });
 
         addStorybookSpinner.succeed();
@@ -399,7 +352,7 @@ program
       }
     }
 
-    /* DOCKER CONFIGURATION  **/
+    // /* DOCKER CONFIGURATION  **/
 
     if (useDocker) {
       const addDockerSpinner = ora({
@@ -457,17 +410,66 @@ program
       throw new Error(`\n${error}`);
     }
 
+    /* ADDING SELECTED PACKAGES  **/
+    if (useSelectedDependencies.length > 0) {
+      const addSelectedPackagesSpinner = ora({
+        indent: 2,
+        text: 'Adding selected packages',
+      }).start();
+
+      try {
+        const dependencies = useSelectedDependencies
+          .filter(({ saveDev }: { saveDev: boolean }) => !saveDev)
+          .map(({ module }: { module: string }) => module);
+
+        const devDependencies = useSelectedDependencies
+          .filter(({ saveDev }: { saveDev: boolean }) => saveDev)
+          .map(({ module }: { module: string }) => module);
+
+        await packageManager.addToDependencies({ dependencies });
+
+        await packageManager.addToDependencies({
+          dependencies: devDependencies,
+          isDevDependencies: true,
+        });
+
+        addSelectedPackagesSpinner.succeed();
+      } catch (error) {
+        addSelectedPackagesSpinner.fail();
+        console.log(oops);
+        throw new Error(`\n${error}`);
+      }
+    }
+
     /* FORMAT FILES  **/
     const addFormatSpinner = ora({
       indent: 2,
-      text: 'Formatting files with prettier',
+      text: 'Cleaning up',
     }).start();
 
     try {
+      if (useSelectedDependencies.length > 0) {
+        const dependencies = useSelectedDependencies
+          .filter(({ saveDev }: { saveDev: boolean }) => !saveDev)
+          .map(({ module }: { module: string }) => module);
+
+        const devDependencies = useSelectedDependencies
+          .filter(({ saveDev }: { saveDev: boolean }) => saveDev)
+          .map(({ module }: { module: string }) => module);
+
+        await packageManager.addToDependencies({ dependencies });
+
+        await packageManager.addToDependencies({
+          dependencies: devDependencies,
+          isDevDependencies: true,
+        });
+      }
+
       await execa(`npm`, [`run`, `format:write`], {
         // stdio: 'inherit',
         cwd: root,
       });
+
       addFormatSpinner.succeed();
     } catch (error) {
       addFormatSpinner.fail();

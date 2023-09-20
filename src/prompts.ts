@@ -1,12 +1,12 @@
 import picocolors from 'picocolors';
 import { PromptObject } from 'prompts';
-import { onPromptState } from './functions/utils.js';
+import { onPromptState } from './utils/index.js';
 
 const { blue } = picocolors;
 
 export const packageManagerPrompt: PromptObject = {
   type: 'select',
-  name: 'packageManager',
+  name: 'packageManagerChoice',
   message: 'Pick a package manager',
   choices: [
     { title: 'Npm', value: 'npm' },
@@ -120,44 +120,77 @@ export const useSelectedDependenciesPrompt: PromptObject = {
   name: 'useSelectedDependencies',
   message: 'Install some popular packages?',
   choices: [
-    { title: 'classname', value: { module: 'classname' } },
-    { title: 'jotai', value: { module: 'jotai' } },
-    { title: 'zustand', value: { module: 'zustand' } },
-    { title: 'formik', value: { module: 'formik' } },
-    { title: '@reduxjs/toolkit', value: { module: '@reduxjs/toolkit' } },
+    { title: 'classname', value: { module: 'classname', saveDev: false } },
+    { title: 'jotai', value: { module: 'jotai', saveDev: false } },
+    { title: 'zustand', value: { module: 'zustand', saveDev: false } },
+    { title: 'formik', value: { module: 'formik', saveDev: false } },
+    {
+      title: '@reduxjs/toolkit',
+      value: { module: '@reduxjs/toolkit', saveDev: false },
+    },
     {
       title: '@apollo/client graphql',
       value: { module: '@apollo/client graphql' },
     },
-    { title: 'swr', value: { module: 'swr' } },
+    { title: 'swr', value: { module: 'swr', saveDev: false } },
     {
       title: '@tanstack/react-query',
       value: { module: '@tanstack/react-query' },
     },
-    { title: 'react-redux', value: { module: '@tanstack/react-query' } },
-    { title: 'yup', value: { module: 'yup' } },
-    { title: 'mobx', value: { module: 'mobx' } },
-    { title: 'react-spring', value: { module: 'react-spring' } },
-    { title: 'mobx-react', value: { module: 'mobx-react' } },
-    { title: 'styled-components', value: { module: 'styled-components' } },
-    { title: 'react-hook-form', value: { module: 'react-hook-form' } },
-    { title: 'react-i18next', value: { module: 'react-i18next' } },
-    { title: '@emotion/css', value: { module: '@emotion/css' } },
+    {
+      title: 'react-redux',
+      value: { module: '@tanstack/react-query', saveDev: false },
+    },
+    { title: 'yup', value: { module: 'yup', saveDev: false } },
+    { title: 'mobx', value: { module: 'mobx', saveDev: false } },
+    {
+      title: 'react-spring',
+      value: { module: 'react-spring', saveDev: false },
+    },
+    { title: 'mobx-react', value: { module: 'mobx-react', saveDev: false } },
+    {
+      title: 'styled-components',
+      value: { module: 'styled-components', saveDev: false },
+    },
+    {
+      title: 'react-hook-form',
+      value: { module: 'react-hook-form', saveDev: false },
+    },
+    {
+      title: 'react-i18next',
+      value: { module: 'react-i18next', saveDev: false },
+    },
+    {
+      title: '@emotion/css',
+      value: { module: '@emotion/css', saveDev: false },
+    },
     {
       title: '@stripe/react-stripe-js',
       value: { module: '@stripe/react-stripe-js' },
     },
-    { title: 'react-virtualized', value: { module: 'react-virtualized' } },
-    { title: '@mui/material', value: { module: '@mui/material' } },
-    { title: '@mui/icons-material', value: { module: '@mui/icons-material' } },
-    { title: 'next-auth', value: { module: 'next-auth' } },
-    { title: 'react-toastify', value: { module: 'react-toastify' } },
-    { title: '@svgr/core', value: { module: '@svgr/core' } },
+    {
+      title: 'react-virtualized',
+      value: { module: 'react-virtualized', saveDev: false },
+    },
+    {
+      title: '@mui/material',
+      value: { module: '@mui/material', saveDev: false },
+    },
+    {
+      title: '@mui/icons-material',
+      value: { module: '@mui/icons-material', saveDev: false },
+    },
+    { title: 'next-auth', value: { module: 'next-auth', saveDev: false } },
+    {
+      title: 'react-toastify',
+      value: { module: 'react-toastify', saveDev: false },
+    },
+    { title: '@svgr/core', value: { module: '@svgr/core', saveDev: false } },
     {
       title: '@tanstack/react-query-devtools',
       value: { module: '@tanstack/react-query-devtools' },
     },
-    { title: 'recharts', value: { module: 'recharts' } },
+    { title: 'recharts', value: { module: 'recharts', saveDev: false } },
   ],
   hint: '- Space to select. Return to submit',
 };
