@@ -1,8 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 
-import { oops } from '../utils/index.js';
-import { PackageManagerType } from '../utils/usePackageManager.js';
+import { oops, PackageManagerType } from '../utils/index.js';
 
 const installNext = async ({
   root,

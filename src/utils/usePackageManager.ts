@@ -50,9 +50,9 @@ const usePackageManager = ({
         ? PackageManagerAddKind.INSTALL
         : PackageManagerAddKind.ADD,
     saveDev:
-      name === PackageManagerKind.NPM
-        ? PackageManagerSaveDevKind.SAVE_DEV
-        : PackageManagerSaveDevKind.DEV,
+      name === PackageManagerKind.YARN
+        ? PackageManagerSaveDevKind.DEV
+        : PackageManagerSaveDevKind.SAVE_DEV,
   };
 
   const addToDependencies = async ({
