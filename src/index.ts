@@ -9,6 +9,7 @@ import prompts from 'prompts';
 
 import {
   addToPackageScripts,
+  addToDevDependencies,
   oops,
   //goodbye
 } from './functions/utils.js';
@@ -115,22 +116,24 @@ program
       }).start();
 
       try {
-        const deps = [
+        const dependencies = [
           'prettier',
           'eslint-config-prettier',
           '@typescript-eslint/eslint-plugin',
         ];
 
-        if (!nextConfig.eslint) deps.push('eslint');
+        if (!nextConfig.eslint) dependencies.push('eslint');
 
         if (!useNextStandalone)
           // when installing Next with standalone flag there no need to install dependencies as devDependencies in package file
           // https://nextjs.org/docs/pages/api-reference/next-config-js/output
-          deps.push(packageManagerSaveDev);
+          dependencies.push(packageManagerSaveDev);
 
-        await execa(packageManager, [packageManagerAdd, ...deps], {
-          // stdio: 'inherit',
-          cwd: root,
+        addToDevDependencies({
+          root,
+          packageManager,
+          packageManagerAdd,
+          dependencies,
         });
 
         const saveConfigs = [
@@ -177,7 +180,7 @@ program
       }).start();
 
       try {
-        const deps = [
+        const dependencies = [
           'jest',
           'jest-environment-jsdom',
           '@testing-library/jest-dom',
@@ -187,11 +190,13 @@ program
           'eslint-plugin-testing-library',
         ];
 
-        if (!useNextStandalone) deps.push(packageManagerSaveDev);
+        if (!useNextStandalone) dependencies.push(packageManagerSaveDev);
 
-        await execa(packageManager, [packageManagerAdd, ...deps], {
-          // stdio: 'inherit',
-          cwd: root,
+        addToDevDependencies({
+          root,
+          packageManager,
+          packageManagerAdd,
+          dependencies,
         });
 
         await fs.promises.cp(

@@ -63,4 +63,26 @@ export const addToPackageScripts = async ({
   }
 };
 
+export const addToDevDependencies = async ({
+  dependencies,
+  packageManager,
+  packageManagerAdd,
+  root,
+}: {
+  dependencies: string[];
+  packageManager: string;
+  packageManagerAdd: string;
+  root: string;
+}) => {
+  const { execa } = await import('execa');
+  try {
+    await execa(packageManager, [packageManagerAdd, ...dependencies], {
+      // stdio: 'inherit',
+      cwd: root,
+    });
+  } catch (error: unknown) {
+    throw new Error(`${error}`);
+  }
+};
+
 export const oops = `\n${figlet.textSync('Ooops...')}\n\n`;
