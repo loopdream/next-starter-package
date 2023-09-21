@@ -24,6 +24,7 @@ import {
 
 import installNext from './functions/installNext.js';
 import configurePrettier from './functions/configurePrettier.js';
+import configureJestRTL from './functions/configureJestRTL.js';
 
 console.log('\n', figlet.textSync('Nextra'), '\n\n');
 
@@ -80,6 +81,12 @@ program
       useSelectedDependenciesPrompt,
     ]);
 
+    const configureProps = {
+      root,
+      packageManager,
+      configsPath,
+      nextConfig,
+    };
     /* NEXT STANDALONE CONFIGURATION  **/
 
     if (useNextStandalone) {
@@ -101,52 +108,9 @@ program
       }
     }
 
-    if (usePrettier)
-      await configurePrettier({ root, packageManager, configsPath });
+    if (usePrettier) await configurePrettier(configureProps);
 
-    /* JEST RTL CONFIGURATION  **/
-
-    if (useJestRTL) {
-      const addSJestRTLSpinner = ora({
-        indent: 2,
-        text: 'Configuring Jest and React Testing Library',
-      }).start();
-
-      try {
-        const dependencies = [
-          'jest',
-          'jest-environment-jsdom',
-          '@testing-library/jest-dom',
-          '@testing-library/user-event',
-          '@testing-library/react',
-          'cypress',
-          'eslint-plugin-testing-library',
-        ];
-
-        if (!useNextStandalone) dependencies.push(packageManager.cmds.saveDev);
-
-        await packageManager.addToDependencies({
-          dependencies,
-          isDevDependencies: true,
-        });
-
-        await fs.promises.cp(
-          path.join(configsPath, 'jest.config.js'),
-          path.join(root, `jest.config.${nextConfig.typescript ? 'ts' : 'js'}`)
-        );
-
-        await packageManager.addToScripts({
-          test: 'jest --watch',
-          'test:ci': 'jest --ci',
-        });
-
-        addSJestRTLSpinner.succeed();
-      } catch (error) {
-        addSJestRTLSpinner.fail();
-        console.log(oops);
-        throw new Error(`\n${error}`);
-      }
-    }
+    if (useJestRTL) await configureJestRTL(configureProps);
 
     /* CYPRESS CONFIGURATION  **/
 

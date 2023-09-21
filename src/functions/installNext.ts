@@ -3,6 +3,14 @@ import fs from 'fs';
 
 import { oops, PackageManagerType } from '../utils/index.js';
 
+export interface InstallNextType {
+  appRouter: boolean;
+  eslint: boolean;
+  tailwind: boolean;
+  srcDir: boolean;
+  typescript: boolean;
+}
+
 const installNext = async ({
   root,
   packageManager,
@@ -34,12 +42,13 @@ const installNext = async ({
     }
   };
 
-  const typescript = artifactExists('tsconfig.json');
-  const nextConfig = {
-    appRouter: !artifactExists('src/pages'),
-    eslint: artifactExists('.eslintrc.json'),
-    tailwind: artifactExists(`tailwind.config.${typescript ? 'ts' : 'js'}`),
-    srcDir: artifactExists('src'),
+  const typescript = artifactExists('tsconfig.json') || false;
+  const nextConfig: InstallNextType = {
+    appRouter: !artifactExists('src/pages') || false,
+    eslint: artifactExists('.eslintrc.json') || false,
+    tailwind:
+      artifactExists(`tailwind.config.${typescript ? 'ts' : 'js'}`) || false,
+    srcDir: artifactExists('src') || false,
     typescript,
   };
 

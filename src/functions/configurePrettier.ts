@@ -3,15 +3,18 @@ import fs from 'fs';
 import ora from 'ora';
 
 import { oops, PackageManagerType } from '../utils/index.js';
+import { InstallNextType } from './installNext.js';
 
 const configurePrettier = async ({
   root,
   packageManager,
   configsPath,
+  nextConfig,
 }: {
   root: string;
   packageManager: PackageManagerType;
   configsPath: string;
+  nextConfig: InstallNextType;
 }) => {
   const addPrettierSpinner = ora({
     indent: 2,
@@ -25,7 +28,7 @@ const configurePrettier = async ({
       '@typescript-eslint/eslint-plugin',
     ];
 
-    // if (!nextConfig.eslint) dependencies.push('eslint');
+    if (!nextConfig.eslint) dependencies.push('eslint');
 
     // if (!useNextStandalone)
     //   // when installing Next with standalone flag there no need to install dependencies as devDependencies in package file
