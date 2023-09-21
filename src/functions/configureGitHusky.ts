@@ -3,11 +3,11 @@ import ora from 'ora';
 import { PackageManagerType } from '../utils/index.js';
 
 const configureGitHusky = async ({
-  root,
   packageManager,
+  root,
 }: {
-  root: string;
   packageManager: PackageManagerType;
+  root: string;
 }) => {
   const { execa } = await import('execa');
 

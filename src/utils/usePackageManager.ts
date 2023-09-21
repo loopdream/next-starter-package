@@ -31,13 +31,13 @@ export type AddToDependenciesType = {
 export type AddToScriptsType = Record<string, string>;
 
 export type PackageManagerType = {
-  name: PackageManagerKind;
+  addToDependencies: (o: AddToDependenciesType) => Promise<void>;
+  addToScripts: (a: AddToScriptsType) => Promise<void>;
   cmds: {
     add: PackageManagerAddKind;
     saveDev: PackageManagerSaveDevKind;
   };
-  addToDependencies: (o: AddToDependenciesType) => Promise<void>;
-  addToScripts: (a: AddToScriptsType) => Promise<void>;
+  name: PackageManagerKind;
 };
 
 const usePackageManager = ({
@@ -99,10 +99,10 @@ const usePackageManager = ({
   };
 
   return {
-    name,
-    cmds,
     addToDependencies,
     addToScripts,
+    cmds,
+    name,
   } as PackageManagerType;
 };
 

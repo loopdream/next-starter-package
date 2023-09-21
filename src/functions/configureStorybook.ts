@@ -5,13 +5,13 @@ import ora from 'ora';
 import { oops, PackageManagerType } from '../utils/index.js';
 
 const configureStorybook = async ({
-  root,
-  packageManager,
   configsPath,
+  packageManager,
+  root,
 }: {
-  root: string;
-  packageManager: PackageManagerType;
   configsPath: string;
+  packageManager: PackageManagerType;
+  root: string;
 }) => {
   const addStorybookSpinner = ora({
     indent: 2,

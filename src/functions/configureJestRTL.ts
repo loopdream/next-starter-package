@@ -6,15 +6,15 @@ import { oops, PackageManagerType } from '../utils/index.js';
 import { InstallNextType } from './installNext.js';
 
 const configureJestRTL = async ({
-  root,
-  packageManager,
   configsPath,
   nextConfig,
+  packageManager,
+  root,
 }: {
-  root: string;
-  packageManager: PackageManagerType;
   configsPath: string;
   nextConfig: InstallNextType;
+  packageManager: PackageManagerType;
+  root: string;
 }) => {
   const addSJestRTLSpinner = ora({
     indent: 2,

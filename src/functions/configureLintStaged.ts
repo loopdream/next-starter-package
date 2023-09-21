@@ -5,13 +5,13 @@ import ora from 'ora';
 import { oops, PackageManagerType } from '../utils/index.js';
 
 const configureLintStaged = async ({
-  root,
-  packageManager,
   configsPath,
+  packageManager,
+  root,
 }: {
-  root: string;
-  packageManager: PackageManagerType;
   configsPath: string;
+  packageManager: PackageManagerType;
+  root: string;
 }) => {
   const addLintStagedSpinner = ora({
     indent: 2,

@@ -6,17 +6,17 @@ import { oops, PackageManagerType } from '../utils/index.js';
 export interface InstallNextType {
   appRouter: boolean;
   eslint: boolean;
-  tailwind: boolean;
   srcDir: boolean;
+  tailwind: boolean;
   typescript: boolean;
 }
 
 const installNext = async ({
-  root,
   packageManager,
+  root,
 }: {
-  root: string;
   packageManager: PackageManagerType;
+  root: string;
 }) => {
   try {
     console.log(`\n`);

@@ -5,11 +5,11 @@ import ora from 'ora';
 import { oops } from '../utils/index.js';
 
 const configureDocker = async ({
-  root,
   configsPath,
+  root,
 }: {
-  root: string;
   configsPath: string;
+  root: string;
 }) => {
   const addDockerSpinner = ora({
     indent: 2,

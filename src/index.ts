@@ -68,23 +68,23 @@ program
     const nextConfig = await installNext({ root, packageManager });
 
     const choices = await prompts([
-      useNextStandalonePrompt,
-      usePrettierPrompt,
+      useCypressPrompt,
+      useDockerPrompt,
+      useHuskyPrompt,
       useJestRTLPrompt,
       useLintStagedPrompt,
-      useStorybookPrompt,
-      useCypressPrompt,
-      useHuskyPrompt,
-      useDockerPrompt,
+      useNextStandalonePrompt,
+      usePrettierPrompt,
       useSelectedDependenciesPrompt,
+      useStorybookPrompt,
     ]);
 
     const configureProps = {
-      root,
-      packageManager,
+      choices,
       configsPath,
       nextConfig,
-      choices,
+      packageManager,
+      root,
     };
 
     await configureNext(configureProps);
