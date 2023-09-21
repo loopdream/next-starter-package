@@ -35,7 +35,7 @@ const configureNext = async ({
     addStandaloneSpinner.succeed();
   } catch (error) {
     addStandaloneSpinner.fail();
-    console.log(oops);
+    oops();
     throw new Error(`\n${error}`);
   }
 };

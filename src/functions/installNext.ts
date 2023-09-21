@@ -30,7 +30,7 @@ const installNext = async ({
       }
     );
   } catch (error) {
-    console.log(oops);
+    oops();
     throw new Error(`\n${error}`);
   }
 

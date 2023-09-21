@@ -41,7 +41,7 @@ const configureEnvVars = async ({
     addEnvSpinner.succeed();
   } catch (error) {
     addEnvSpinner.fail();
-    console.log(oops);
+    oops();
     throw new Error(`\n${error}`);
   }
 };

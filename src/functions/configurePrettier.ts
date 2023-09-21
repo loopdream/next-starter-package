@@ -67,7 +67,7 @@ const configurePrettier = async ({
     addPrettierSpinner.succeed();
   } catch (error) {
     addPrettierSpinner.fail();
-    console.log(oops);
+    oops();
     throw new Error(`\n${error}`);
   }
 };

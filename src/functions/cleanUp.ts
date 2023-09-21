@@ -20,7 +20,7 @@ const cleanUp = async ({
     addFormatSpinner.succeed();
   } catch (error) {
     addFormatSpinner.fail();
-    console.log(oops);
+    oops();
     throw new Error(`\n${error}`);
   }
 };

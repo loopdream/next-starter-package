@@ -39,7 +39,7 @@ const configureLintStaged = async ({
     addLintStagedSpinner.succeed();
   } catch (error) {
     addLintStagedSpinner.fail();
-    console.log(oops);
+    oops();
     throw new Error(`\n${error}`);
   }
 };

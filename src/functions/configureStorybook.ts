@@ -53,7 +53,7 @@ const configureStorybook = async ({
     addStorybookSpinner.succeed();
   } catch (error) {
     addStorybookSpinner.fail();
-    console.log(oops);
+    oops();
     throw new Error(`\n${error}`);
   }
 };

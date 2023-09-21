@@ -30,7 +30,7 @@ const configureDocker = async ({
     addDockerSpinner.succeed();
   } catch (error) {
     addDockerSpinner.fail();
-    console.log(oops);
+    oops();
     throw new Error(`\n${error}`);
   }
 };

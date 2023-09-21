@@ -35,7 +35,7 @@ const configureCypress = async ({
     addCypressSpinner.succeed();
   } catch (error) {
     addCypressSpinner.fail();
-    console.log(oops);
+    oops();
     throw new Error(`\n${error}`);
   }
 };

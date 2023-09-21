@@ -1,10 +1,21 @@
 import picocolors from 'picocolors';
 import { PromptObject } from 'prompts';
-import { onPromptState } from './utils/index.js';
 
 const { blue } = picocolors;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const onPromptState = (state: any) => {
+  if (state.aborted) {
+    // If we don't re-enable the terminal cursor before exiting
+    // the program, the cursor will remain hidden
+    process.stdout.write('\x1B[?25h');
+    process.stdout.write('\n');
+    process.exit(1);
+  }
+};
+
 export const packageManagerPrompt: PromptObject = {
+  onState: onPromptState,
   type: 'select',
   name: 'packageManagerChoice',
   message: 'Pick a package manager',

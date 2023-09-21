@@ -36,7 +36,7 @@ const configureSelectedPackages = async ({
     addSelectedPackagesSpinner.succeed();
   } catch (error) {
     addSelectedPackagesSpinner.fail();
-    console.log(oops);
+    oops();
     throw new Error(`\n${error}`);
   }
 };

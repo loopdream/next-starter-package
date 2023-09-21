@@ -52,7 +52,7 @@ const configureJestRTL = async ({
     addSJestRTLSpinner.succeed();
   } catch (error) {
     addSJestRTLSpinner.fail();
-    console.log(oops);
+    oops();
     throw new Error(`\n${error}`);
   }
 };
