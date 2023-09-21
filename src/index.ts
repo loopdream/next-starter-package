@@ -29,7 +29,7 @@ import {
   configureGitHusky,
   configureJestRTL,
   configureLintStaged,
-  configureNextConfigFile,
+  configureNext,
   configurePrettier,
   configureSelectedDependencies,
   configureStorybook,
@@ -87,7 +87,7 @@ program
       choices,
     };
 
-    await configureNextConfigFile(configureProps);
+    await configureNext(configureProps);
 
     if (choices.usePrettier) {
       await configurePrettier(configureProps);
@@ -130,3 +130,5 @@ program
   });
 
 program.parse();
+
+export default program;

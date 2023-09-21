@@ -5,7 +5,7 @@ export { default as configureEnvVars } from './configureEnvVars.js';
 export { default as configureGitHusky } from './configureGitHusky.js';
 export { default as configureJestRTL } from './configureJestRTL.js';
 export { default as configureLintStaged } from './configureLintStaged.js';
-export { default as configureNextConfigFile } from './configureNextConfigFile.js';
+export { default as configureNext } from './configureNext.js';
 export { default as configurePrettier } from './configurePrettier.js';
 export { default as configureSelectedDependencies } from './configureSelectedDependencies.js';
 export { default as configureStorybook } from './configureStorybook.js';

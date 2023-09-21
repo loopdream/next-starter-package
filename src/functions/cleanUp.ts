@@ -1,5 +1,3 @@
-import path from 'path';
-import fs from 'fs';
 import ora from 'ora';
 
 import { oops, PackageManagerType } from '../utils/index.js';
