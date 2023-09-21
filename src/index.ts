@@ -22,14 +22,18 @@ import {
   useStorybookPrompt,
 } from './prompts.js';
 
-import installNext from './functions/installNext.js';
-import configurePrettier from './functions/configurePrettier.js';
-import configureJestRTL from './functions/configureJestRTL.js';
-import configureLintStaged from './functions/configureLintStaged.js';
-import configureCypress from './functions/configureCypress.js';
-import configureGitHusky from './functions/configureGitHusky.js';
-import configureStorybook from './functions/configureStorybook.js';
-import configureDocker from './functions/configureDocker.js';
+import {
+  installNext,
+  configurePrettier,
+  configureJestRTL,
+  configureLintStaged,
+  configureGitHusky,
+  configureCypress,
+  configureStorybook,
+  configureDocker,
+  configureEnvVars,
+  configureSelectedDependencies,
+} from './functions/index.js';
 
 console.log('\n', figlet.textSync('Nextra'), '\n\n');
 
@@ -81,8 +85,8 @@ program
       packageManager,
       configsPath,
       nextConfig,
+      choices,
     };
-    /* NEXT STANDALONE CONFIGURATION  **/
 
     if (choices.useNextStandalone) {
       const addStandaloneSpinner = ora({
@@ -115,72 +119,18 @@ program
 
     if (choices.useStorybook) await configureStorybook(configureProps);
 
-    if (choices.useDocker) await configureDocker(configureProps);
-
-    const addEnvSpinner = ora({
-      indent: 2,
-      text: 'Configuring Environment variables',
-    }).start();
-
-    try {
-      const envFiles = ['.env.example', '.env.local', '.env'].map((file) =>
-        fs.promises.cp(
-          path.join(configsPath, '.env.example'),
-          path.join(root, file)
-        )
-      );
-
-      await Promise.all(envFiles);
-
-      if (fs.existsSync(path.join(root, '.gitignore'))) {
-        await fs.promises.appendFile(
-          path.join(root, '.gitignore'),
-          `# env files
-          .env
-          .env.local`
-        );
-      }
-
-      addEnvSpinner.succeed();
-    } catch (error) {
-      addEnvSpinner.fail();
-      console.log(oops);
-      throw new Error(`\n${error}`);
+    if (choices.useDocker) {
+      await configureDocker(configureProps);
+      await configureEnvVars(configureProps);
     }
 
     /* ADDING SELECTED PACKAGES  **/
 
-    if (choices.useSelectedDependencies.length > 0) {
-      const addSelectedPackagesSpinner = ora({
-        indent: 2,
-        text: 'Adding selected packages',
-      }).start();
-
-      try {
-        const dependencies = choices.useSelectedDependencies
-          .filter(({ saveDev }: { saveDev: boolean }) => !saveDev)
-          .map(({ module }: { module: string }) => module);
-
-        const devDependencies = choices.useSelectedDependencies
-          .filter(({ saveDev }: { saveDev: boolean }) => saveDev)
-          .map(({ module }: { module: string }) => module);
-
-        if (dependencies.length > 0)
-          await packageManager.addToDependencies({ dependencies });
-
-        if (devDependencies.length > 0)
-          await packageManager.addToDependencies({
-            dependencies: devDependencies,
-            isDevDependencies: true,
-          });
-
-        addSelectedPackagesSpinner.succeed();
-      } catch (error) {
-        addSelectedPackagesSpinner.fail();
-        console.log(oops);
-        throw new Error(`\n${error}`);
-      }
-    }
+    if (choices.useSelectedDependencies.length > 0)
+      await configureSelectedDependencies({
+        ...configureProps,
+        selectedDependencies: choices.useSelectedDependencies,
+      });
 
     /* FORMAT FILES  **/
 
