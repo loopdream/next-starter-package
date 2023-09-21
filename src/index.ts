@@ -25,6 +25,11 @@ import {
 import installNext from './functions/installNext.js';
 import configurePrettier from './functions/configurePrettier.js';
 import configureJestRTL from './functions/configureJestRTL.js';
+import configureLintStaged from './functions/configureLintStaged.js';
+import configureCypress from './functions/configureCypress.js';
+import configureGitHusky from './functions/configureGitHusky.js';
+import configureStorybook from './functions/configureStorybook.js';
+import configureDocker from './functions/configureDocker.js';
 
 console.log('\n', figlet.textSync('Nextra'), '\n\n');
 
@@ -59,17 +64,7 @@ program
 
     const nextConfig = await installNext({ root, packageManager });
 
-    const {
-      useCypress,
-      useDocker,
-      useHusky,
-      useJestRTL,
-      useLintStaged,
-      useNextStandalone,
-      usePrettier,
-      useStorybook,
-      useSelectedDependencies,
-    } = await prompts([
+    const choices = await prompts([
       useNextStandalonePrompt,
       usePrettierPrompt,
       useJestRTLPrompt,
@@ -89,7 +84,7 @@ program
     };
     /* NEXT STANDALONE CONFIGURATION  **/
 
-    if (useNextStandalone) {
+    if (choices.useNextStandalone) {
       const addStandaloneSpinner = ora({
         indent: 2,
         text: 'Configuring next standalone production builds',
@@ -108,185 +103,19 @@ program
       }
     }
 
-    if (usePrettier) await configurePrettier(configureProps);
+    if (choices.usePrettier) await configurePrettier(configureProps);
 
-    if (useJestRTL) await configureJestRTL(configureProps);
+    if (choices.useJestRTL) await configureJestRTL(configureProps);
 
-    /* CYPRESS CONFIGURATION  **/
+    if (choices.useCypress) await configureCypress(configureProps);
 
-    if (useCypress) {
-      const addCypressSpinner = ora({
-        indent: 2,
-        text: 'Configuring Cypress',
-      }).start();
-      try {
-        await packageManager.addToDependencies({
-          dependencies: ['cypress'],
-          isDevDependencies: true,
-        });
+    if (choices.useLintStaged) await configureLintStaged(configureProps);
 
-        await fs.promises.cp(
-          path.join(configsPath, 'cypress'),
-          path.join(root, 'cypress'),
-          { recursive: true }
-        );
+    if (choices.useHusky) await configureGitHusky(configureProps);
 
-        await packageManager.addToScripts({ e2e: 'cypress run' });
+    if (choices.useStorybook) await configureStorybook(configureProps);
 
-        addCypressSpinner.succeed();
-      } catch (error) {
-        addCypressSpinner.fail();
-        console.log(oops);
-        throw new Error(`\n${error}`);
-      }
-    }
-
-    /* LINT_STAGED CONFIGURATION  **/
-
-    if (useLintStaged) {
-      const addLintStagedSpinner = ora({
-        indent: 2,
-        text: 'Configuring Lint-staged',
-      }).start();
-
-      try {
-        // if (!useNextStandalone) deps.push(packageManager.cmds.saveDev);
-
-        await packageManager.addToDependencies({
-          dependencies: ['lint-staged'],
-          isDevDependencies: true,
-        });
-
-        await fs.promises.cp(
-          path.join(configsPath, '.lintstagedrc'),
-          path.join(root, '.lintstagedrc')
-        );
-
-        await packageManager.addToScripts({
-          storybook: 'storybook dev -p 6006',
-          'build-storybook': 'storybook build',
-        });
-
-        addLintStagedSpinner.succeed();
-      } catch (error) {
-        addLintStagedSpinner.fail();
-        console.log(oops);
-        throw new Error(`\n${error}`);
-      }
-    }
-
-    // /*  GIT & HUSKY CONFIGURATION  **/
-
-    if (useHusky) {
-      const addHuskySpinner = ora({
-        indent: 2,
-        text: 'Configuring Git and Husky',
-      }).start();
-
-      try {
-        await execa(`git`, [`init`], { cwd: root });
-
-        await execa(
-          packageManager.name === 'npm'
-            ? 'npx'
-            : packageManager.name === 'yarn'
-            ? 'yarn'
-            : 'pnpm',
-          packageManager.name === 'npm'
-            ? ['husky-init']
-            : packageManager.name === 'yarn'
-            ? [`dlx`, `husky-init`, `--yarn2`]
-            : [`dlx`, `husky-init`],
-          { cwd: root }
-        );
-
-        await execa(
-          packageManager.name,
-          packageManager.name === 'npm' ? ['install'] : [],
-          { cwd: root }
-        );
-
-        addHuskySpinner.succeed();
-      } catch (error) {
-        addHuskySpinner.fail();
-        throw new Error(`${error}`);
-      }
-    }
-
-    // /* STORYBOOK CONFIGURATION  **/
-
-    if (useStorybook) {
-      const addStorybookSpinner = ora({
-        indent: 2,
-        text: 'Configuring Storybook',
-      }).start();
-
-      try {
-        const dependencies = [
-          '@storybook/addon-essentials',
-          '@storybook/addon-interactions',
-          '@storybook/addon-links',
-          '@storybook/addon-onboarding',
-          '@storybook/blocks',
-          '@storybook/nextjs',
-          '@storybook/react',
-          '@storybook/testing-library',
-          'eslint-plugin-storybook',
-          'storybook',
-        ];
-
-        await packageManager.addToDependencies({
-          dependencies,
-          isDevDependencies: true,
-        });
-
-        await fs.promises.cp(
-          path.join(configsPath, '.storybook'),
-          path.join(root, '.storybook'),
-          {
-            recursive: true,
-          }
-        );
-
-        await packageManager.addToScripts({
-          storybook: 'storybook dev -p 6006',
-          'build-storybook': 'storybook build',
-        });
-
-        addStorybookSpinner.succeed();
-      } catch (error) {
-        addStorybookSpinner.fail();
-        console.log(oops);
-        throw new Error(`\n${error}`);
-      }
-    }
-
-    // /* DOCKER CONFIGURATION  **/
-
-    if (useDocker) {
-      const addDockerSpinner = ora({
-        indent: 2,
-        text: 'Configuring Docker',
-      }).start();
-
-      try {
-        const saveDockerFiles = [
-          'docker-compose.yml',
-          'Dockerfile',
-          'Makefile',
-        ].map((file) =>
-          fs.promises.cp(path.join(configsPath, file), path.join(root, file))
-        );
-
-        await Promise.all(saveDockerFiles);
-
-        addDockerSpinner.succeed();
-      } catch (error) {
-        addDockerSpinner.fail();
-        console.log(oops);
-        throw new Error(`\n${error}`);
-      }
-    }
+    if (choices.useDocker) await configureDocker(configureProps);
 
     const addEnvSpinner = ora({
       indent: 2,
@@ -321,18 +150,18 @@ program
 
     /* ADDING SELECTED PACKAGES  **/
 
-    if (useSelectedDependencies.length > 0) {
+    if (choices.useSelectedDependencies.length > 0) {
       const addSelectedPackagesSpinner = ora({
         indent: 2,
         text: 'Adding selected packages',
       }).start();
 
       try {
-        const dependencies = useSelectedDependencies
+        const dependencies = choices.useSelectedDependencies
           .filter(({ saveDev }: { saveDev: boolean }) => !saveDev)
           .map(({ module }: { module: string }) => module);
 
-        const devDependencies = useSelectedDependencies
+        const devDependencies = choices.useSelectedDependencies
           .filter(({ saveDev }: { saveDev: boolean }) => saveDev)
           .map(({ module }: { module: string }) => module);
 
@@ -355,7 +184,7 @@ program
 
     /* FORMAT FILES  **/
 
-    if (usePrettier) {
+    if (choices.usePrettier) {
       const addFormatSpinner = ora({
         indent: 2,
         text: 'Cleaning up',
