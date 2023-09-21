@@ -24,7 +24,7 @@ const installNext = async ({
 
     await execa(
       `npx`,
-      [`create-next-app@latest`, root, `--use-${packageManager.name}`],
+      [`create-next-app@latest`, root, `--use-${packageManager.kind}`],
       {
         stdio: 'inherit',
       }

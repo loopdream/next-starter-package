@@ -37,20 +37,20 @@ export type PackageManagerType = {
     add: PackageManagerAddKind;
     saveDev: PackageManagerSaveDevKind;
   };
-  name: PackageManagerKind;
+  kind: PackageManagerKind;
 };
 
 const usePackageManager = ({
-  packageManager: name,
+  packageManager: kind,
   root,
 }: UsePackageManagerType) => {
   const cmds = {
     add:
-      name === PackageManagerKind.NPM
+      kind === PackageManagerKind.NPM
         ? PackageManagerAddKind.INSTALL
         : PackageManagerAddKind.ADD,
     saveDev:
-      name === PackageManagerKind.YARN
+      kind === PackageManagerKind.YARN
         ? PackageManagerSaveDevKind.DEV
         : PackageManagerSaveDevKind.SAVE_DEV,
   };
@@ -64,7 +64,7 @@ const usePackageManager = ({
       const deps = [...dependencies];
       if (isDevDependencies) deps.push(cmds.saveDev);
 
-      await execa(name, [cmds.add, ...deps], {
+      await execa(kind, [cmds.add, ...deps], {
         // stdio: 'inherit',
         cwd: root,
       });
@@ -102,7 +102,7 @@ const usePackageManager = ({
     addToDependencies,
     addToScripts,
     cmds,
-    name,
+    kind,
   } as PackageManagerType;
 };
 

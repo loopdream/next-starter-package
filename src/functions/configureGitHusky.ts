@@ -1,6 +1,6 @@
 import ora from 'ora';
 
-import { PackageManagerType } from '../utils/index.js';
+import { PackageManagerType, PackageManagerKind } from '../utils/index.js';
 
 const configureGitHusky = async ({
   packageManager,
@@ -19,25 +19,24 @@ const configureGitHusky = async ({
   try {
     await execa(`git`, [`init`], { cwd: root });
 
-    await execa(
-      packageManager.name === 'npm'
-        ? 'npx'
-        : packageManager.name === 'yarn'
-        ? 'yarn'
-        : 'pnpm',
-      packageManager.name === 'npm'
-        ? ['husky-init']
-        : packageManager.name === 'yarn'
-        ? [`dlx`, `husky-init`, `--yarn2`]
-        : [`dlx`, `husky-init`],
-      { cwd: root }
-    );
+    if (packageManager.kind === PackageManagerKind.YARN) {
+      await execa(PackageManagerKind.YARN, [`dlx`, `husky-init`, `--yarn2`], {
+        cwd: root,
+      });
+      await execa(packageManager.kind, [], { cwd: root });
+    }
 
-    await execa(
-      packageManager.name,
-      packageManager.name === 'npm' ? ['install'] : [],
-      { cwd: root }
-    );
+    if (packageManager.kind === PackageManagerKind.PNPM) {
+      await execa(PackageManagerKind.YARN, [`dlx`, `husky-init`], {
+        cwd: root,
+      });
+      await execa(packageManager.kind, [`install`], { cwd: root });
+    }
+
+    if (packageManager.kind === PackageManagerKind.NPM) {
+      await execa(`npx`, [`husky-init`], { cwd: root });
+      await execa(packageManager.kind, [`install`], { cwd: root });
+    }
 
     addHuskySpinner.succeed();
   } catch (error) {
