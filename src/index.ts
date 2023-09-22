@@ -4,12 +4,12 @@ import fs from 'fs';
 
 import { program } from 'commander';
 import figlet from 'figlet';
-import runPrompts from 'prompts';
+import prompt from 'prompts';
 
 import { usePackageManager } from './utils/index.js';
 
 import nextra from './configurations/index.js';
-import prompts from './prompts.js';
+import questions from './questions.js';
 
 console.log('\n', figlet.textSync('Nextra'), '\n\n');
 
@@ -33,8 +33,8 @@ program
     const root = path.resolve(projectDirectoryPath);
     const configsPath = path.resolve(path.join('src', 'configs'));
 
-    const { packageManagerChoice } = await runPrompts(
-      prompts.packageManagerPrompt
+    const { packageManagerChoice } = await prompt(
+      questions.packageManagerPrompt
     );
 
     const packageManager = usePackageManager({
@@ -47,21 +47,21 @@ program
       packageManager,
     });
 
-    const choices = await runPrompts([
-      prompts.useNextStandalone,
-      prompts.useNextImageOptimisation,
-      prompts.usePrettier,
-      prompts.useJestRTL,
-      prompts.useLintStaged,
-      prompts.useStorybook,
-      prompts.useHusky,
-      prompts.useDocker,
-      prompts.useCypress,
-      prompts.useSelectedDependencies,
+    const answers = await prompt([
+      questions.useNextStandalone,
+      questions.useNextImageOptimisation,
+      questions.usePrettier,
+      questions.useJestRTL,
+      questions.useLintStaged,
+      questions.useStorybook,
+      questions.useHusky,
+      questions.useDocker,
+      questions.useCypress,
+      questions.useSelectedDependencies,
     ]);
 
     const configureProps = {
-      choices,
+      answers,
       configsPath,
       nextConfig,
       packageManager,
@@ -70,49 +70,49 @@ program
 
     await nextra.configureNext(configureProps);
 
-    if (choices.useNextImageOptimisation) {
+    if (answers.useNextImageOptimisation) {
       // https://nextjs.org/docs/app/building-your-application/optimizing/images
       await packageManager.addToDependencies({
         dependencies: ['prettier'],
       });
     }
 
-    if (choices.usePrettier) {
+    if (answers.usePrettier) {
       await nextra.configurePrettier(configureProps);
     }
 
-    if (choices.useJestRTL) {
+    if (answers.useJestRTL) {
       await nextra.configureJestRTL(configureProps);
     }
 
-    if (choices.useCypress) {
+    if (answers.useCypress) {
       await nextra.configureCypress(configureProps);
     }
 
-    if (choices.useLintStaged) {
+    if (answers.useLintStaged) {
       await nextra.configureLintStaged(configureProps);
     }
 
-    if (choices.useHusky) {
+    if (answers.useHusky) {
       await nextra.configureGitHusky(configureProps);
     }
 
-    if (choices.useStorybook) {
+    if (answers.useStorybook) {
       await nextra.configureStorybook(configureProps);
     }
 
-    if (choices.useDocker) {
+    if (answers.useDocker) {
       await nextra.configureDocker(configureProps);
       await nextra.configureEnvVars(configureProps);
     }
 
-    if (choices.useSelectedDependencies.length > 0)
+    if (answers.useSelectedDependencies.length > 0)
       await nextra.configureSelectedDependencies({
         ...configureProps,
-        selectedDependencies: choices.useSelectedDependencies,
+        selectedDependencies: answers.useSelectedDependencies,
       });
 
-    if (choices.usePrettier) {
+    if (answers.usePrettier) {
       await nextra.cleanUp(configureProps);
     }
   });
