@@ -1,4 +1,6 @@
 import ora from 'ora';
+import prompts from 'prompts';
+
 import { oops, PackageManagerType } from '../utils/index.js';
 
 const configureSelectedPackages = async ({
@@ -6,9 +8,7 @@ const configureSelectedPackages = async ({
   selectedDependencies,
 }: {
   packageManager: PackageManagerType;
-  // TODO
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  selectedDependencies: any;
+  selectedDependencies: prompts.Answers<string>;
 }) => {
   const addSelectedPackagesSpinner = ora({
     indent: 2,

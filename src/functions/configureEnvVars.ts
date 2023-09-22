@@ -3,14 +3,14 @@ import fs from 'fs';
 import ora from 'ora';
 
 import { oops, PackageManagerType } from '../utils/index.js';
-import { InstallNextType } from './installNext.js';
+import { NextConfigType } from './installNext.js';
 
 const configureEnvVars = async ({
   configsPath,
   root,
 }: {
   configsPath: string;
-  nextConfig: InstallNextType;
+  nextConfig: NextConfigType;
   packageManager: PackageManagerType;
   root: string;
 }) => {

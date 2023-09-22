@@ -3,7 +3,7 @@ import fs from 'fs';
 import ora from 'ora';
 
 import { oops, PackageManagerType } from '../utils/index.js';
-import { InstallNextType } from './installNext.js';
+import { NextConfigType } from './installNext.js';
 
 const configurePrettier = async ({
   configsPath,
@@ -12,7 +12,7 @@ const configurePrettier = async ({
   root,
 }: {
   configsPath: string;
-  nextConfig: InstallNextType;
+  nextConfig: NextConfigType;
   packageManager: PackageManagerType;
   root: string;
 }) => {

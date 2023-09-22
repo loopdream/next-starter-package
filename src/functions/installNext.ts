@@ -3,7 +3,7 @@ import fs from 'fs';
 
 import { oops, PackageManagerType } from '../utils/index.js';
 
-export interface InstallNextType {
+export interface NextConfigType {
   appRouter: boolean;
   eslint: boolean;
   srcDir: boolean;
@@ -43,7 +43,7 @@ const installNext = async ({
   };
 
   const typescript = artifactExists('tsconfig.json') || false;
-  const nextConfig: InstallNextType = {
+  const nextConfig: NextConfigType = {
     appRouter: !artifactExists('src/pages') || false,
     eslint: artifactExists('.eslintrc.json') || false,
     tailwind:
