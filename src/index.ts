@@ -6,7 +6,7 @@ import { program } from 'commander';
 import figlet from 'figlet';
 import prompt from 'prompts';
 
-import { usePackageManager } from './utils/index.js';
+import { usePackageManager, readmeGen } from './utils/index.js';
 
 import nextra from './configurations/index.js';
 import questions from './questions.js';
@@ -31,7 +31,10 @@ program
     }
 
     const root = path.resolve(projectDirectoryPath);
-    const configsPath = path.resolve(path.join('src', 'configs'));
+    const configsPath = path.resolve(path.join('src', 'templates'));
+    const markdownPath = path.resolve(path.join('src', 'markdown'));
+
+    const readme = readmeGen(root);
 
     const { packageManagerChoice } = await prompt(
       questions.packageManagerPrompt
@@ -42,10 +45,8 @@ program
       root,
     });
 
-    const nextConfig = await nextra.installNext({
-      root,
-      packageManager,
-    });
+    const nextConfig = await nextra.createNextApp({ root, packageManager });
+    readme.addMarkdown(path.join(markdownPath, 'next.md'));
 
     const answers = await prompt([
       questions.useNextStandalone,
@@ -73,48 +74,63 @@ program
     if (answers.useNextImageOptimisation) {
       // https://nextjs.org/docs/app/building-your-application/optimizing/images
       await packageManager.addToDependencies({
-        dependencies: ['prettier'],
+        dependencies: ['sharp'],
       });
     }
 
     if (answers.usePrettier) {
       await nextra.configurePrettier(configureProps);
+      await readme.addMarkdown(path.join(markdownPath, 'prettier.md'));
     }
 
     if (answers.useJestRTL) {
       await nextra.configureJestRTL(configureProps);
+      await readme.addMarkdown(path.join(markdownPath, 'jestRTL.md'));
     }
 
     if (answers.useCypress) {
       await nextra.configureCypress(configureProps);
+      await readme.addMarkdown(path.join(markdownPath, 'cypress.md'));
     }
 
     if (answers.useLintStaged) {
       await nextra.configureLintStaged(configureProps);
+      await readme.addMarkdown(path.join(markdownPath, 'lint-staged.md'));
     }
 
     if (answers.useHusky) {
       await nextra.configureGitHusky(configureProps);
+      await readme.addMarkdown(path.join(markdownPath, 'git.md'));
+      await readme.addMarkdown(path.join(markdownPath, 'husky.md'));
     }
 
     if (answers.useStorybook) {
       await nextra.configureStorybook(configureProps);
+      await readme.addMarkdown(path.join(markdownPath, 'storybook.md'));
     }
 
     if (answers.useDocker) {
       await nextra.configureDocker(configureProps);
       await nextra.configureEnvVars(configureProps);
+      await readme.addMarkdown(path.join(markdownPath, 'docker.md'));
     }
 
-    if (answers.useSelectedDependencies.length > 0)
+    if (answers.useSelectedDependencies.length > 0) {
       await nextra.configureSelectedDependencies({
         ...configureProps,
         selectedDependencies: answers.useSelectedDependencies,
       });
+      await readme.addMarkdown(
+        path.join(markdownPath, 'selected-dependencies.md')
+      );
+    }
 
     if (answers.usePrettier) {
+      // clean up === format files - maybe other stuff TBC
       await nextra.cleanUp(configureProps);
     }
+
+    await readme.generate();
   });
 
 program.parse();

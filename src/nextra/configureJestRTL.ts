@@ -3,7 +3,7 @@ import fs from 'fs';
 import ora from 'ora';
 
 import { oops, PackageManagerType } from '../utils/index.js';
-import { NextConfigType } from './installNext.js';
+import { NextConfigType } from './createNextApp.js';
 
 const configureJestRTL = async ({
   configsPath,

@@ -9,7 +9,7 @@ import configureNext from './configureNext.js';
 import configurePrettier from './configurePrettier.js';
 import configureSelectedDependencies from './configureSelectedDependencies.js';
 import configureStorybook from './configureStorybook.js';
-import installNext from './installNext.js';
+import createNextApp from './createNextApp.js';
 
 export default {
   cleanUp,
@@ -23,5 +23,5 @@ export default {
   configurePrettier,
   configureSelectedDependencies,
   configureStorybook,
-  installNext,
+  createNextApp,
 };

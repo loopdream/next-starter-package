@@ -11,7 +11,7 @@ export interface NextConfigType {
   typescript: boolean;
 }
 
-const installNext = async ({
+const createNextApp = async ({
   packageManager,
   root,
 }: {
@@ -55,4 +55,4 @@ const installNext = async ({
   return nextConfig;
 };
 
-export default installNext;
+export default createNextApp;
