@@ -4,38 +4,12 @@ import fs from 'fs';
 
 import { program } from 'commander';
 import figlet from 'figlet';
-import prompts from 'prompts';
+import runPrompts from 'prompts';
 
 import { usePackageManager } from './utils/index.js';
 
-import {
-  packageManagerPrompt,
-  useCypressPrompt,
-  useDockerPrompt,
-  useHuskyPrompt,
-  useJestRTLPrompt,
-  useLintStagedPrompt,
-  useNextStandalonePrompt,
-  usePrettierPrompt,
-  useSelectedDependenciesPrompt,
-  useStorybookPrompt,
-  useImageOptimisationPrompt,
-} from './prompts.js';
-
-import {
-  cleanUp,
-  configureCypress,
-  configureDocker,
-  configureEnvVars,
-  configureGitHusky,
-  configureJestRTL,
-  configureLintStaged,
-  configureNext,
-  configurePrettier,
-  configureSelectedDependencies,
-  configureStorybook,
-  installNext,
-} from './functions/index.js';
+import nextra from './configurations/index.js';
+import prompts from './prompts.js';
 
 console.log('\n', figlet.textSync('Nextra'), '\n\n');
 
@@ -59,26 +33,31 @@ program
     const root = path.resolve(projectDirectoryPath);
     const configsPath = path.resolve(path.join('src', 'configs'));
 
-    const { packageManagerChoice } = await prompts(packageManagerPrompt);
+    const { packageManagerChoice } = await runPrompts(
+      prompts.packageManagerPrompt
+    );
 
     const packageManager = usePackageManager({
       packageManager: packageManagerChoice,
       root,
     });
 
-    const nextConfig = await installNext({ root, packageManager });
+    const nextConfig = await nextra.installNext({
+      root,
+      packageManager,
+    });
 
-    const choices = await prompts([
-      useNextStandalonePrompt,
-      useImageOptimisationPrompt,
-      usePrettierPrompt,
-      useJestRTLPrompt,
-      useLintStagedPrompt,
-      useStorybookPrompt,
-      useHuskyPrompt,
-      useCypressPrompt,
-      useDockerPrompt,
-      useSelectedDependenciesPrompt,
+    const choices = await runPrompts([
+      prompts.useNextStandalone,
+      prompts.useNextImageOptimisation,
+      prompts.usePrettier,
+      prompts.useJestRTL,
+      prompts.useLintStaged,
+      prompts.useStorybook,
+      prompts.useHusky,
+      prompts.useDocker,
+      prompts.useCypress,
+      prompts.useSelectedDependencies,
     ]);
 
     const configureProps = {
@@ -89,9 +68,9 @@ program
       root,
     };
 
-    await configureNext(configureProps);
+    await nextra.configureNext(configureProps);
 
-    if (choices.useImageOptimisation) {
+    if (choices.useNextImageOptimisation) {
       // https://nextjs.org/docs/app/building-your-application/optimizing/images
       await packageManager.addToDependencies({
         dependencies: ['prettier'],
@@ -99,42 +78,42 @@ program
     }
 
     if (choices.usePrettier) {
-      await configurePrettier(configureProps);
+      await nextra.configurePrettier(configureProps);
     }
 
     if (choices.useJestRTL) {
-      await configureJestRTL(configureProps);
+      await nextra.configureJestRTL(configureProps);
     }
 
     if (choices.useCypress) {
-      await configureCypress(configureProps);
+      await nextra.configureCypress(configureProps);
     }
 
     if (choices.useLintStaged) {
-      await configureLintStaged(configureProps);
+      await nextra.configureLintStaged(configureProps);
     }
 
     if (choices.useHusky) {
-      await configureGitHusky(configureProps);
+      await nextra.configureGitHusky(configureProps);
     }
 
     if (choices.useStorybook) {
-      await configureStorybook(configureProps);
+      await nextra.configureStorybook(configureProps);
     }
 
     if (choices.useDocker) {
-      await configureDocker(configureProps);
-      await configureEnvVars(configureProps);
+      await nextra.configureDocker(configureProps);
+      await nextra.configureEnvVars(configureProps);
     }
 
     if (choices.useSelectedDependencies.length > 0)
-      await configureSelectedDependencies({
+      await nextra.configureSelectedDependencies({
         ...configureProps,
         selectedDependencies: choices.useSelectedDependencies,
       });
 
     if (choices.usePrettier) {
-      await cleanUp(configureProps);
+      await nextra.cleanUp(configureProps);
     }
   });
 

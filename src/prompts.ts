@@ -30,7 +30,7 @@ export const packageManagerPrompt: PromptObject = {
   initial: 0,
 };
 
-export const useNextStandalonePrompt: PromptObject = {
+export const useNextStandalone: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'useNextStandalone',
@@ -42,7 +42,7 @@ export const useNextStandalonePrompt: PromptObject = {
   inactive: `No`,
 };
 
-export const usePrettierPrompt: PromptObject = {
+export const usePrettier: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'usePrettier',
@@ -54,7 +54,7 @@ export const usePrettierPrompt: PromptObject = {
   inactive: `No`,
 };
 
-export const useStorybookPrompt: PromptObject = {
+export const useStorybook: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'useStorybook',
@@ -66,7 +66,7 @@ export const useStorybookPrompt: PromptObject = {
   inactive: `No`,
 };
 
-export const useDockerPrompt: PromptObject = {
+export const useDocker: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'useDocker',
@@ -78,7 +78,7 @@ export const useDockerPrompt: PromptObject = {
   inactive: `No`,
 };
 
-export const useJestRTLPrompt: PromptObject = {
+export const useJestRTL: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'useJestRTL',
@@ -90,7 +90,7 @@ export const useJestRTLPrompt: PromptObject = {
   inactive: `No`,
 };
 
-export const useCypressPrompt: PromptObject = {
+export const useCypress: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'useCypress',
@@ -102,7 +102,7 @@ export const useCypressPrompt: PromptObject = {
   inactive: `No`,
 };
 
-export const useHuskyPrompt: PromptObject = {
+export const useHusky: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'useHusky',
@@ -114,7 +114,7 @@ export const useHuskyPrompt: PromptObject = {
   inactive: `No`,
 };
 
-export const useLintStagedPrompt: PromptObject = {
+export const useLintStaged: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'useLintStaged',
@@ -126,17 +126,17 @@ export const useLintStagedPrompt: PromptObject = {
   inactive: `No`,
 };
 
-export const useImageOptimisationPrompt: PromptObject = {
+export const useNextImageOptimisation: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'useImageOptimisation',
+  name: 'useNextImageOptimisation',
   message: `Will you be using ${blue('Next')}'s image optimisation? `,
   initial: 'No',
   active: 'Yes',
   inactive: `No`,
 };
 
-export const useSelectedDependenciesPrompt: PromptObject = {
+export const useSelectedDependencies: PromptObject = {
   type: 'multiselect',
   name: 'useSelectedDependencies',
   message: 'Install some popular packages?',
@@ -214,4 +214,18 @@ export const useSelectedDependenciesPrompt: PromptObject = {
     { title: 'recharts', value: { module: 'recharts', saveDev: false } },
   ],
   hint: '- Space to select. Return to submit',
+};
+
+export default {
+  packageManagerPrompt,
+  useCypress,
+  useDocker,
+  useHusky,
+  useNextImageOptimisation,
+  useJestRTL,
+  useLintStaged,
+  useNextStandalone,
+  usePrettier,
+  useSelectedDependencies,
+  useStorybook,
 };
