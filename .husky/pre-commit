@@ -2,8 +2,10 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 
-# npm run lint:check
+npm run lint:check
 
-# npm run lint:fix
+npm run lint:fix
 
-# npm run format:write
+npm run format:write
+
+npm run todo

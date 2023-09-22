@@ -123,7 +123,17 @@ export const useLintStagedPrompt: PromptObject = {
   )}? (recommended)`,
   initial: 'Yes',
   active: 'Yes',
-  inactive: `No use ${blue('npm')}`,
+  inactive: `No`,
+};
+
+export const useImageOptimisationPrompt: PromptObject = {
+  onState: onPromptState,
+  type: 'toggle',
+  name: 'useImageOptimisation',
+  message: `Will you be using ${blue('Next')}'s image optimisation? `,
+  initial: 'No',
+  active: 'Yes',
+  inactive: `No`,
 };
 
 export const useSelectedDependenciesPrompt: PromptObject = {

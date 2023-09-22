@@ -21,6 +21,7 @@ export enum PackageManagerSaveDevKind {
 export type UsePackageManagerType = {
   packageManager: PackageManagerKind;
   root: string;
+  stdio?: 'overlapped' | 'ignore' | 'inherit' | 'pipe';
 };
 
 export type AddToDependenciesType = {
@@ -42,7 +43,7 @@ export type PackageManagerType = {
 
 const usePackageManager = ({
   packageManager: kind,
-  root,
+  root, // stdio = undefined,
 }: UsePackageManagerType) => {
   const cmds = {
     add:
@@ -65,9 +66,11 @@ const usePackageManager = ({
       if (isDevDependencies) deps.push(cmds.saveDev);
 
       await execa(kind, [cmds.add, ...deps], {
+        // TODO - figure a way of outputting process AND controlling ora spinner
         // stdio: 'inherit',
         cwd: root,
       });
+      // console.log({ stdio });
     } catch (error: unknown) {
       throw new Error(`${error}`);
     }

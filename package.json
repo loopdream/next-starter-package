@@ -7,7 +7,7 @@
   "scripts": {
     "build": "npx tsc",
     "build:rollup": "rollup -c && tsc",
-    "dev:start": "node --loader ts-node/esm ./src/index.ts",
+    "dev:start": "node --no-warnings --loader ts-node/esm ./src/index.ts",
     "dev:build-start": "npm run build && node ./dist/index.js",
     "format:check": "prettier --check .",
     "format:write": "prettier --write .",
@@ -17,7 +17,8 @@
     "postinstall": "husky install",
     "prepack": "pinst --disable",
     "postpack": "pinst --enable",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "todo": "leasot 'src/**/*.ts' --exit-nicely"
   },
   "keywords": [],
   "author": "",
@@ -33,6 +34,7 @@
     "eslint": "^8.48.0",
     "eslint-config-prettier": "^9.0.0",
     "husky": "^8.0.0",
+    "leasot": "^13.3.0",
     "pinst": "^3.0.0",
     "prettier": "^3.0.3",
     "rollup": "^3.29.2",

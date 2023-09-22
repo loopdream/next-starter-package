@@ -19,6 +19,7 @@ import {
   usePrettierPrompt,
   useSelectedDependenciesPrompt,
   useStorybookPrompt,
+  useImageOptimisationPrompt,
 } from './prompts.js';
 
 import {
@@ -69,6 +70,7 @@ program
 
     const choices = await prompts([
       useNextStandalonePrompt,
+      useImageOptimisationPrompt,
       usePrettierPrompt,
       useJestRTLPrompt,
       useLintStagedPrompt,
@@ -88,6 +90,13 @@ program
     };
 
     await configureNext(configureProps);
+
+    if (choices.useImageOptimisation) {
+      // https://nextjs.org/docs/app/building-your-application/optimizing/images
+      await packageManager.addToDependencies({
+        dependencies: ['prettier'],
+      });
+    }
 
     if (choices.usePrettier) {
       await configurePrettier(configureProps);
