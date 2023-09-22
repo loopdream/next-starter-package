@@ -8,7 +8,7 @@ import prompt from 'prompts';
 
 import { usePackageManager, readmeGen } from './utils/index.js';
 
-import nextra from './configurations/index.js';
+import nextra from './nextra/index.js';
 import questions from './questions.js';
 
 console.log('\n', figlet.textSync('Nextra'), '\n\n');
