@@ -10,7 +10,7 @@
     "target": "ES2020"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "tmp", "src/configs"],
+  "exclude": ["node_modules", "dist", "tmp", "src/templates"],
   "ts-node": {
     "esm": true,
     "compilerOptions": {

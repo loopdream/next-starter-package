@@ -3,14 +3,20 @@ import path from 'path';
 
 import oops from './oops.js';
 
-const readmeGen = (root: string) => {
-  const markdownArr = [] as string[];
+export default class ReadmeGen {
+  root: string;
+  markdownArr: string[];
 
-  const addMarkdown = async (filepath: string) => {
+  constructor(root: string) {
+    this.root = root;
+    this.markdownArr = [];
+  }
+
+  addMarkdown = async (filepath: string) => {
     if (fs.existsSync(filepath)) {
       try {
         const md = await fs.promises.readFile(filepath, 'utf8');
-        markdownArr.push(md);
+        this.markdownArr.push(md);
       } catch (error) {
         oops();
         throw new Error(`${error}`);
@@ -18,22 +24,15 @@ const readmeGen = (root: string) => {
     }
   };
 
-  const generate = async () => {
+  generate = async () => {
     try {
       await fs.promises.writeFile(
-        path.join(root, 'README.md'),
-        markdownArr.join('\n\n')
+        path.join(this.root, 'README.md'),
+        this.markdownArr.join('\n\n')
       );
     } catch (error) {
       oops();
       throw new Error(`${error}`);
     }
   };
-
-  return {
-    addMarkdown,
-    generate,
-  };
-};
-
-export default readmeGen;
+}

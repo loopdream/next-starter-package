@@ -6,7 +6,7 @@ import { program } from 'commander';
 import figlet from 'figlet';
 import prompt from 'prompts';
 
-import { usePackageManager, readmeGen } from './utils/index.js';
+import { usePackageManager, ReadmeGen } from './utils/index.js';
 
 import nextra from './nextra/index.js';
 import questions from './questions.js';
@@ -34,7 +34,7 @@ program
     const configsPath = path.resolve(path.join('src', 'templates'));
     const markdownPath = path.resolve(path.join('src', 'markdown'));
 
-    const readme = readmeGen(root);
+    const readme = new ReadmeGen(root);
 
     const { packageManagerChoice } = await prompt(
       questions.packageManagerPrompt
