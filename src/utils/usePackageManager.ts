@@ -42,66 +42,63 @@ export type PackageManagerType = {
 };
 
 class PackageManager {
-  packageManagerKind: PackageManagerKindEnum;
-  root: string;
+  private packageManagerKind: PackageManagerKindEnum;
+  private root: string;
 
-  constructor({
-    packageManagerKind,
-    root, // stdio = undefined
-  }: PackageManagerPropsType) {
-    this.packageManagerKind = packageManagerKind;
-    this.root = root;
+  constructor(props: PackageManagerPropsType) {
+    this.packageManagerKind = props.packageManagerKind;
+    this.root = props.root;
   }
 
-  public getKind = () => this.packageManagerKind && this.packageManagerKind;
+  public getKind(): PackageManagerKindEnum {
+    return this.packageManagerKind;
+  }
 
-  public getCmds = () => {
-    return (
-      this.packageManagerKind && {
-        add:
-          this.packageManagerKind === PackageManagerKindEnum.NPM
-            ? PackageManagerAddEnum.INSTALL
-            : PackageManagerAddEnum.ADD,
-        saveDev:
-          this.packageManagerKind === PackageManagerKindEnum.YARN
-            ? PackageManagerSaveDevEnum.DEV
-            : PackageManagerSaveDevEnum.SAVE_DEV,
-      }
-    );
-  };
+  public getCmds(): {
+    add: PackageManagerAddEnum;
+    saveDev: PackageManagerSaveDevEnum;
+  } {
+    return {
+      add:
+        this.packageManagerKind === PackageManagerKindEnum.NPM
+          ? PackageManagerAddEnum.INSTALL
+          : PackageManagerAddEnum.ADD,
+      saveDev:
+        this.packageManagerKind === PackageManagerKindEnum.YARN
+          ? PackageManagerSaveDevEnum.DEV
+          : PackageManagerSaveDevEnum.SAVE_DEV,
+    };
+  }
 
-  public addToDependencies = async ({
+  public async addToDependencies({
     dependencies,
     isDevDependencies = false,
-  }: AddToDependenciesType) => {
-    const { execa } = await import('execa');
+  }: AddToDependenciesType): Promise<void> {
     try {
+      const { execa } = await import('execa');
+      const { add, saveDev } = this.getCmds();
       const deps = [...dependencies];
 
-      const cmds = this.getCmds();
+      if (isDevDependencies) deps.push(saveDev);
 
-      if (isDevDependencies) deps.push(cmds.saveDev);
-
-      await execa(this.packageManagerKind, [cmds.add, ...deps], {
+      await execa(this.packageManagerKind, [add, ...deps], {
         // TODO - figure a way of outputting process AND controlling ora spinner
         // stdio: 'inherit',
         cwd: this.root,
       });
-    } catch (error: unknown) {
+    } catch (error) {
       throw new Error(`${error}`);
     }
-  };
+  }
 
-  public addToScripts = async (scripts: AddToScriptsType) => {
+  public async addToScripts(scripts: AddToScriptsType): Promise<void> {
     try {
+      const packageFilePath = path.join(this.root, 'package.json');
       const packageFileJson = await fs.promises.readFile(
-        path.join(this.root, 'package.json'),
+        packageFilePath,
         'utf8'
       );
-
       const packageFile = JSON.parse(packageFileJson);
-
-      delete packageFile.scripts.lint; // delete next's lint setup script
 
       packageFile.scripts = {
         ...packageFile.scripts,
@@ -109,13 +106,13 @@ class PackageManager {
       };
 
       await fs.promises.writeFile(
-        path.join(this.root, 'package.json'),
+        packageFilePath,
         JSON.stringify(packageFile, null, 2) + os.EOL
       );
-    } catch (error: unknown) {
+    } catch (error) {
       throw new Error(`${error}`);
     }
-  };
+  }
 }
 
 export default PackageManager;
