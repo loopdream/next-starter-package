@@ -2,16 +2,13 @@ import path from 'path';
 import fs from 'fs';
 import ora from 'ora';
 
-import { oops, PackageManagerType } from '../utils/index.js';
-import { NextConfigType } from './createNextApp.js';
+import { oops } from '../utils/index.js';
 
 const configureEnvVars = async ({
   configsPath,
   root,
 }: {
   configsPath: string;
-  nextConfig: NextConfigType;
-  packageManager: PackageManagerType;
   root: string;
 }) => {
   const addEnvSpinner = ora({

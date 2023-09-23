@@ -6,14 +6,9 @@ import { program } from 'commander';
 import figlet from 'figlet';
 import prompt from 'prompts';
 
-import {
-  PackageManager,
-  PackageManagerKindEnum,
-  ReadmeGen,
-  goodbye,
-} from './utils/index.js';
+import { PackageManager, goodbye } from './utils/index.js';
 
-import nextra from './nextra/index.js';
+import { Nextra } from './nextra/index.js';
 import questions from './questions.js';
 
 console.log('\n', figlet.textSync('Nextra'), '\n\n');
@@ -39,23 +34,23 @@ program
     const configsPath = path.resolve(path.join('src', 'templates'));
     const markdownPath = path.resolve(path.join('src', 'markdown'));
 
-    const readme = new ReadmeGen(root);
-
     const { packageManagerChoice } = await prompt(
       questions.packageManagerPrompt
     );
 
     const packageManager = new PackageManager({
-      packageManagerKind: packageManagerChoice as PackageManagerKindEnum,
+      packageManagerKind: packageManagerChoice,
       root,
     });
 
-    const nextConfig = await nextra.createNextApp({
-      packageManagerKind: packageManager.getKind(),
+    const nextraa = new Nextra({
+      configsPath,
+      packageManager,
       root,
     });
 
-    readme.addMarkdown(path.join(markdownPath, 'next.md'));
+    await nextraa.createNextApp();
+    await nextraa.addMarkdown(path.join(markdownPath, 'next.md'));
 
     const answers = await prompt([
       questions.useNextStandalone,
@@ -82,15 +77,7 @@ Thanks for using Nextra!
 `);
     }
 
-    const configureProps = {
-      answers,
-      configsPath,
-      nextConfig,
-      packageManager,
-      root,
-    };
-
-    await nextra.configureNext(configureProps);
+    await nextraa.configure().next();
 
     if (answers.useNextImageOptimisation) {
       // https://nextjs.org/docs/app/building-your-application/optimizing/images
@@ -100,58 +87,58 @@ Thanks for using Nextra!
     }
 
     if (answers.usePrettier) {
-      await nextra.configurePrettier(configureProps);
-      await readme.addMarkdown(path.join(markdownPath, 'prettier.md'));
+      await nextraa.configure().prettier();
+      await nextraa.addMarkdown(path.join(markdownPath, 'prettier.md'));
     }
 
     if (answers.useJestRTL) {
-      await nextra.configureJestRTL(configureProps);
-      await readme.addMarkdown(path.join(markdownPath, 'jestRTL.md'));
+      await nextraa.configure().jestRTL();
+      await nextraa.addMarkdown(path.join(markdownPath, 'jestRTL.md'));
     }
 
     if (answers.useCypress) {
-      await nextra.configureCypress(configureProps);
-      await readme.addMarkdown(path.join(markdownPath, 'cypress.md'));
+      await nextraa.configure().cypress();
+      await nextraa.addMarkdown(path.join(markdownPath, 'cypress.md'));
     }
 
     if (answers.useLintStaged) {
-      await nextra.configureLintStaged(configureProps);
-      await readme.addMarkdown(path.join(markdownPath, 'lint-staged.md'));
+      await nextraa.configure().lintStaged();
+      await nextraa.addMarkdown(path.join(markdownPath, 'lint-staged.md'));
     }
 
     if (answers.useHusky) {
-      await nextra.configureGitHusky(configureProps);
-      await readme.addMarkdown(path.join(markdownPath, 'git.md'));
-      await readme.addMarkdown(path.join(markdownPath, 'husky.md'));
+      await nextraa.configure().gitHusky();
+      await nextraa.addMarkdown(path.join(markdownPath, 'git.md'));
+      await nextraa.addMarkdown(path.join(markdownPath, 'husky.md'));
     }
 
     if (answers.useStorybook) {
-      await nextra.configureStorybook(configureProps);
-      await readme.addMarkdown(path.join(markdownPath, 'storybook.md'));
+      await nextraa.configure().storybook();
+      await nextraa.addMarkdown(path.join(markdownPath, 'storybook.md'));
     }
 
     if (answers.useDocker) {
-      await nextra.configureDocker(configureProps);
-      await nextra.configureEnvVars(configureProps);
-      await readme.addMarkdown(path.join(markdownPath, 'docker.md'));
+      await nextraa.configure().docker();
+      await nextraa.configure().envVars();
+      await nextraa.addMarkdown(path.join(markdownPath, 'docker.md'));
     }
 
     if (answers.useSelectedDependencies.length > 0) {
-      await nextra.configureSelectedDependencies({
-        ...configureProps,
-        selectedDependencies: answers.useSelectedDependencies,
-      });
-      await readme.addMarkdown(
+      await nextraa
+        .configure()
+        .selectedDependencies(answers.useSelectedDependencies);
+
+      await nextraa.addMarkdown(
         path.join(markdownPath, 'selected-dependencies.md')
       );
     }
 
     if (answers.usePrettier) {
       // clean up ie format files - maybe other stuff TBC
-      await nextra.cleanUp(configureProps);
+      await nextraa.configure().cleanUp();
     }
 
-    await readme.generate();
+    await nextraa.generateMarkdown();
   });
 
 program.parse();
