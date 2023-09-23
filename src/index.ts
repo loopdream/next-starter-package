@@ -6,7 +6,7 @@ import { program } from 'commander';
 import figlet from 'figlet';
 import prompt from 'prompts';
 
-import { usePackageManager, ReadmeGen } from './utils/index.js';
+import { usePackageManager, ReadmeGen, goodbye } from './utils/index.js';
 
 import nextra from './nextra/index.js';
 import questions from './questions.js';
@@ -60,6 +60,18 @@ program
       questions.useCypress,
       questions.useSelectedDependencies,
     ]);
+
+    const hasAnswers =
+      Object.values(answers).filter((c: boolean) => c === true).length > 1;
+
+    if (!hasAnswers) {
+      // nothing to configure!
+      goodbye();
+      return console.log(`
+Looks like you've passed on all the Netxra configuration options. Maybe next time! 
+Thanks for using Nextra!
+`);
+    }
 
     const configureProps = {
       answers,
@@ -126,7 +138,7 @@ program
     }
 
     if (answers.usePrettier) {
-      // clean up === format files - maybe other stuff TBC
+      // clean up ie format files - maybe other stuff TBC
       await nextra.cleanUp(configureProps);
     }
 

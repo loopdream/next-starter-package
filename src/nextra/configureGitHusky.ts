@@ -9,7 +9,8 @@ const configureGitHusky = async ({
   packageManager: PackageManagerType;
   root: string;
 }) => {
-  const { execa } = await import('execa');
+  const { $ } = await import('execa');
+  const execa = $({ cwd: root });
 
   const addHuskySpinner = ora({
     indent: 2,
@@ -17,21 +18,18 @@ const configureGitHusky = async ({
   }).start();
 
   try {
-    await execa(`git`, [`init`], { cwd: root });
+    await execa`git init`;
 
     if (packageManager.kind === PackageManagerKind.YARN) {
-      await execa(`yarn`, [`dlx`, `husky-init`, `--yarn2`], { cwd: root });
-      await execa(`yarn`, [], { cwd: root });
+      await execa`yarn dlx husky-init --yarn2 && yarn`;
     }
 
     if (packageManager.kind === PackageManagerKind.PNPM) {
-      await execa(`pnpm`, [`dlx`, `husky-init`], { cwd: root });
-      await execa(`pnpm`, [`install`], { cwd: root });
+      await execa`pnpm dlx husky-init && pnpm install`;
     }
 
     if (packageManager.kind === PackageManagerKind.NPM) {
-      await execa(`npx`, [`husky-init`], { cwd: root });
-      await execa(`npm`, [`install`], { cwd: root });
+      await execa`npx husky-init && npm install`;
     }
 
     addHuskySpinner.succeed();

@@ -4,18 +4,19 @@ import { oops, PackageManagerType } from '../utils/index.js';
 
 const cleanUp = async ({
   root,
+  packageManager,
 }: {
   root: string;
   packageManager: PackageManagerType;
-  configsPath: string;
 }) => {
   const addFormatSpinner = ora({
     indent: 2,
     text: 'Cleaning up',
   }).start();
-  const { execa } = await import('execa');
+  const { $ } = await import('execa');
+
   try {
-    await execa(`npm`, [`run`, `format:write`], { cwd: root });
+    await $({ cwd: root })`${packageManager.kind} run format:write`;
 
     addFormatSpinner.succeed();
   } catch (error) {

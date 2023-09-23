@@ -20,15 +20,11 @@ const createNextApp = async ({
 }) => {
   try {
     console.log(`\n`);
-    const { execa } = await import('execa');
 
-    await execa(
-      `npx`,
-      [`create-next-app@latest`, root, `--use-${packageManager.kind}`],
-      {
-        stdio: 'inherit',
-      }
-    );
+    const { $ } = await import('execa');
+    const execa = $({ stdio: 'inherit' });
+
+    await execa`npx create-next-app@latest ${root} --use-${packageManager.kind}`;
   } catch (error) {
     oops();
     throw new Error(`\n${error}`);

@@ -4,15 +4,15 @@ import path from 'path';
 import oops from './oops.js';
 
 export default class ReadmeGen {
-  root: string;
-  markdownArr: string[];
+  private root: string;
+  private markdownArr: string[];
 
   constructor(root: string) {
     this.root = root;
     this.markdownArr = [];
   }
 
-  addMarkdown = async (filepath: string) => {
+  public addMarkdown = async (filepath: string) => {
     if (fs.existsSync(filepath)) {
       try {
         const md = await fs.promises.readFile(filepath, 'utf8');
@@ -24,7 +24,7 @@ export default class ReadmeGen {
     }
   };
 
-  generate = async () => {
+  public generate = async () => {
     try {
       await fs.promises.writeFile(
         path.join(this.root, 'README.md'),
