@@ -7,6 +7,7 @@
   "scripts": {
     "build": "npx tsc",
     "build:rollup": "rollup -c && tsc",
+    "start:build": "node ./dist/bundle.js",
     "dev:start": "node --no-warnings --loader ts-node/esm ./src/index.ts",
     "dev:build-start": "npm run build && node ./dist/index.js",
     "format:check": "prettier --check .",
@@ -24,6 +25,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.4",
+    "@rollup/plugin-node-resolve": "^15.2.1",
     "@trivago/prettier-plugin-sort-imports": "^4.2.0",
     "@types/figlet": "^1.5.6",
     "@types/node": "^20.5.9",
