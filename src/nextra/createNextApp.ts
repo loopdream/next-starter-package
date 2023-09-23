@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 
-import { oops, PackageManagerType } from '../utils/index.js';
+import { oops, PackageManagerKindEnum } from '../utils/index.js';
 
 export interface NextConfigType {
   appRouter: boolean;
@@ -12,10 +12,10 @@ export interface NextConfigType {
 }
 
 const createNextApp = async ({
-  packageManager,
+  packageManagerKind,
   root,
 }: {
-  packageManager: PackageManagerType;
+  packageManagerKind: PackageManagerKindEnum;
   root: string;
 }) => {
   try {
@@ -24,7 +24,7 @@ const createNextApp = async ({
     const { $ } = await import('execa');
     const execa = $({ stdio: 'inherit' });
 
-    await execa`npx create-next-app@latest ${root} --use-${packageManager.kind}`;
+    await execa`npx create-next-app@latest ${root} --use-${packageManagerKind}`;
   } catch (error) {
     oops();
     throw new Error(`\n${error}`);

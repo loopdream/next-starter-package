@@ -16,7 +16,7 @@ const cleanUp = async ({
   const { $ } = await import('execa');
 
   try {
-    await $({ cwd: root })`${packageManager.kind} run format:write`;
+    await $({ cwd: root })`${packageManager.getKind()} run format:write`;
 
     addFormatSpinner.succeed();
   } catch (error) {

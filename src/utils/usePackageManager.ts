@@ -2,26 +2,26 @@ import path from 'path';
 import os from 'os';
 import fs from 'fs';
 
-export enum PackageManagerKind {
+export enum PackageManagerKindEnum {
   NPM = 'npm',
   YARN = 'yarn',
   PNPM = 'pnpm',
 }
 
-export enum PackageManagerAddKind {
+export enum PackageManagerAddEnum {
   ADD = 'add',
   INSTALL = 'install',
 }
 
-export enum PackageManagerSaveDevKind {
+export enum PackageManagerSaveDevEnum {
   DEV = '--dev',
   SAVE_DEV = '--save-dev',
 }
 
-export type UsePackageManagerType = {
-  packageManager: PackageManagerKind;
+export type PackageManagerPropsType = {
+  packageManagerKind: PackageManagerKindEnum;
   root: string;
-  stdio?: 'overlapped' | 'ignore' | 'inherit' | 'pipe';
+  // stdio?: 'overlapped' | 'ignore' | 'inherit' | 'pipe';
 };
 
 export type AddToDependenciesType = {
@@ -34,52 +34,68 @@ export type AddToScriptsType = Record<string, string>;
 export type PackageManagerType = {
   addToDependencies: (o: AddToDependenciesType) => Promise<void>;
   addToScripts: (a: AddToScriptsType) => Promise<void>;
-  cmds: {
-    add: PackageManagerAddKind;
-    saveDev: PackageManagerSaveDevKind;
+  getCmds: () => {
+    add: PackageManagerAddEnum;
+    saveDev: PackageManagerSaveDevEnum;
   };
-  kind: PackageManagerKind;
+  getKind: () => PackageManagerKindEnum;
 };
 
-const usePackageManager = ({
-  packageManager: kind,
-  root, // stdio = undefined,
-}: UsePackageManagerType) => {
-  const cmds = {
-    add:
-      kind === PackageManagerKind.NPM
-        ? PackageManagerAddKind.INSTALL
-        : PackageManagerAddKind.ADD,
-    saveDev:
-      kind === PackageManagerKind.YARN
-        ? PackageManagerSaveDevKind.DEV
-        : PackageManagerSaveDevKind.SAVE_DEV,
+class PackageManager {
+  packageManagerKind: PackageManagerKindEnum;
+  root: string;
+
+  constructor({
+    packageManagerKind,
+    root, // stdio = undefined
+  }: PackageManagerPropsType) {
+    this.packageManagerKind = packageManagerKind;
+    this.root = root;
+  }
+
+  public getKind = () => this.packageManagerKind && this.packageManagerKind;
+
+  public getCmds = () => {
+    return (
+      this.packageManagerKind && {
+        add:
+          this.packageManagerKind === PackageManagerKindEnum.NPM
+            ? PackageManagerAddEnum.INSTALL
+            : PackageManagerAddEnum.ADD,
+        saveDev:
+          this.packageManagerKind === PackageManagerKindEnum.YARN
+            ? PackageManagerSaveDevEnum.DEV
+            : PackageManagerSaveDevEnum.SAVE_DEV,
+      }
+    );
   };
 
-  const addToDependencies = async ({
+  public addToDependencies = async ({
     dependencies,
     isDevDependencies = false,
   }: AddToDependenciesType) => {
     const { execa } = await import('execa');
     try {
       const deps = [...dependencies];
+
+      const cmds = this.getCmds();
+
       if (isDevDependencies) deps.push(cmds.saveDev);
 
-      await execa(kind, [cmds.add, ...deps], {
+      await execa(this.packageManagerKind, [cmds.add, ...deps], {
         // TODO - figure a way of outputting process AND controlling ora spinner
         // stdio: 'inherit',
-        cwd: root,
+        cwd: this.root,
       });
-      // console.log({ stdio });
     } catch (error: unknown) {
       throw new Error(`${error}`);
     }
   };
 
-  const addToScripts = async (scripts: AddToScriptsType) => {
+  public addToScripts = async (scripts: AddToScriptsType) => {
     try {
       const packageFileJson = await fs.promises.readFile(
-        path.join(root, 'package.json'),
+        path.join(this.root, 'package.json'),
         'utf8'
       );
 
@@ -93,20 +109,13 @@ const usePackageManager = ({
       };
 
       await fs.promises.writeFile(
-        path.join(root, 'package.json'),
+        path.join(this.root, 'package.json'),
         JSON.stringify(packageFile, null, 2) + os.EOL
       );
     } catch (error: unknown) {
       throw new Error(`${error}`);
     }
   };
+}
 
-  return {
-    addToDependencies,
-    addToScripts,
-    cmds,
-    kind,
-  } as PackageManagerType;
-};
-
-export default usePackageManager;
+export default PackageManager;

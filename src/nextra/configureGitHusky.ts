@@ -1,6 +1,6 @@
 import ora from 'ora';
 
-import { PackageManagerType, PackageManagerKind } from '../utils/index.js';
+import { PackageManagerType, PackageManagerKindEnum } from '../utils/index.js';
 
 const configureGitHusky = async ({
   packageManager,
@@ -20,15 +20,15 @@ const configureGitHusky = async ({
   try {
     await execa`git init`;
 
-    if (packageManager.kind === PackageManagerKind.YARN) {
+    if (packageManager.getKind() === PackageManagerKindEnum.YARN) {
       await execa`yarn dlx husky-init --yarn2 && yarn`;
     }
 
-    if (packageManager.kind === PackageManagerKind.PNPM) {
+    if (packageManager.getKind() === PackageManagerKindEnum.PNPM) {
       await execa`pnpm dlx husky-init && pnpm install`;
     }
 
-    if (packageManager.kind === PackageManagerKind.NPM) {
+    if (packageManager.getKind() === PackageManagerKindEnum.NPM) {
       await execa`npx husky-init && npm install`;
     }
 

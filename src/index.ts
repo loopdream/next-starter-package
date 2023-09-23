@@ -6,7 +6,12 @@ import { program } from 'commander';
 import figlet from 'figlet';
 import prompt from 'prompts';
 
-import { usePackageManager, ReadmeGen, goodbye } from './utils/index.js';
+import {
+  PackageManager,
+  PackageManagerKindEnum,
+  ReadmeGen,
+  goodbye,
+} from './utils/index.js';
 
 import nextra from './nextra/index.js';
 import questions from './questions.js';
@@ -40,12 +45,16 @@ program
       questions.packageManagerPrompt
     );
 
-    const packageManager = usePackageManager({
-      packageManager: packageManagerChoice,
+    const packageManager = new PackageManager({
+      packageManagerKind: packageManagerChoice as PackageManagerKindEnum,
       root,
     });
 
-    const nextConfig = await nextra.createNextApp({ root, packageManager });
+    const nextConfig = await nextra.createNextApp({
+      packageManagerKind: packageManager.getKind(),
+      root,
+    });
+
     readme.addMarkdown(path.join(markdownPath, 'next.md'));
 
     const answers = await prompt([
