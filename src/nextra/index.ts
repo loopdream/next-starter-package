@@ -28,7 +28,6 @@ export class Nextra {
     this.configsPath = configsPath;
     this.root = root; // root of affected next directory
 
-    // TODO: fix readmeGen not working
     this.readmeGen = new readmeGen(this.root);
     this.packageManager = new PackageManager({
       packageManagerKind: packageManagerChoice,
