@@ -1,7 +1,8 @@
 import path from 'path';
 import fs from 'fs';
 
-import { oops, PackageManagerKindEnum } from '../utils/index.js';
+import { oops } from '../../utils/index.js';
+import { PackageManagerKindEnum } from '../usePackageManager.js';
 
 export interface NextConfigType {
   appRouter: boolean;

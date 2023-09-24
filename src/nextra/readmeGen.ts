@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import oops from './oops.js';
+import oops from '../utils/oops.js';
 
 export default class ReadmeGen {
   private root: string;

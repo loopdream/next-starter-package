@@ -2,16 +2,19 @@ import path from 'path';
 import fs from 'fs';
 import ora from 'ora';
 
-import { oops, PackageManagerType } from '../utils/index.js';
+import { oops } from '../../utils/index.js';
+import { PackageManagerType } from '../usePackageManager.js';
 
 const configureNext = async ({
   configsPath,
   packageManager,
   root,
+  useNextImageOptimisation,
 }: {
   configsPath: string;
   packageManager: PackageManagerType;
   root: string;
+  useNextImageOptimisation: boolean;
 }) => {
   const addStandaloneSpinner = ora({
     indent: 2,
@@ -31,6 +34,13 @@ const configureNext = async ({
       'build:standalone': 'BUILD_STANDALONE=true next build',
       'start:standalone': 'node ./.next/standalone/server.js',
     });
+
+    if (useNextImageOptimisation) {
+      // https://nextjs.org/docs/app/building-your-application/optimizing/images
+      await packageManager.addToDependencies({
+        dependencies: ['sharp'],
+      });
+    }
 
     addStandaloneSpinner.succeed();
   } catch (error) {

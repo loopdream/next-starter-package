@@ -1,6 +1,9 @@
 import ora from 'ora';
 
-import { PackageManagerType, PackageManagerKindEnum } from '../utils/index.js';
+import {
+  PackageManagerType,
+  PackageManagerKindEnum,
+} from '../usePackageManager.js';
 
 const configureGitHusky = async ({
   packageManager,
@@ -10,7 +13,6 @@ const configureGitHusky = async ({
   root: string;
 }) => {
   const { $ } = await import('execa');
-  const execa = $({ cwd: root });
 
   const addHuskySpinner = ora({
     indent: 2,
@@ -18,6 +20,7 @@ const configureGitHusky = async ({
   }).start();
 
   try {
+    const execa = $({ cwd: root });
     await execa`git init`;
 
     if (packageManager.getKind() === PackageManagerKindEnum.YARN) {

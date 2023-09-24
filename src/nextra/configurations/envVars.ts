@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import ora from 'ora';
 
-import { oops } from '../utils/index.js';
+import { oops } from '../../utils/index.js';
 
 const configureEnvVars = async ({
   configsPath,

@@ -1,7 +1,8 @@
 import ora from 'ora';
 import prompts from 'prompts';
 
-import { oops, PackageManagerType } from '../utils/index.js';
+import { oops } from '../../utils/index.js';
+import { PackageManagerType } from '../usePackageManager.js';
 
 const configureSelectedPackages = async ({
   packageManager,

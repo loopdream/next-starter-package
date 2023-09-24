@@ -1,5 +1,6 @@
 import picocolors from 'picocolors';
 import { PromptObject } from 'prompts';
+import { PackageManagerKindEnum } from './nextra/usePackageManager.js';
 
 const { blue } = picocolors;
 
@@ -20,12 +21,12 @@ export const packageManagerPrompt: PromptObject = {
   name: 'packageManagerChoice',
   message: 'Pick a package manager',
   choices: [
-    { title: 'Npm', value: 'npm' },
+    { title: 'Npm', value: PackageManagerKindEnum.NPM },
     {
       title: 'Yarn',
-      value: 'yarn',
+      value: PackageManagerKindEnum.YARN,
     },
-    { title: 'Pnpm', value: 'pnpm' },
+    { title: 'Pnpm', value: PackageManagerKindEnum.PNPM },
   ],
   initial: 0,
 };

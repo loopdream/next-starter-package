@@ -6,7 +6,7 @@ import { program } from 'commander';
 import figlet from 'figlet';
 import prompt from 'prompts';
 
-import { PackageManager, goodbye } from './utils/index.js';
+import { goodbye } from './utils/index.js';
 
 import { Nextra } from './nextra/index.js';
 import questions from './questions.js';
@@ -32,25 +32,18 @@ program
 
     const root = path.resolve(projectDirectoryPath);
     const configsPath = path.resolve(path.join('src', 'templates'));
-    const markdownPath = path.resolve(path.join('src', 'markdown'));
 
     const { packageManagerChoice } = await prompt(
       questions.packageManagerPrompt
     );
 
-    const packageManager = new PackageManager({
-      packageManagerKind: packageManagerChoice,
-      root,
-    });
-
-    const nextraa = new Nextra({
+    const nextra = new Nextra({
       configsPath,
-      packageManager,
+      packageManagerChoice,
       root,
     });
 
-    await nextraa.createNextApp();
-    await nextraa.addMarkdown(path.join(markdownPath, 'next.md'));
+    await nextra.createNextApp();
 
     const answers = await prompt([
       questions.useNextStandalone,
@@ -68,7 +61,9 @@ program
     const hasAnswers =
       Object.values(answers).filter((c: boolean) => c === true).length > 1;
 
-    if (!hasAnswers) {
+    if (hasAnswers) {
+      nextra.setPromptAnswers(answers);
+    } else {
       // nothing to configure!
       goodbye();
       return console.log(`
@@ -77,68 +72,32 @@ Thanks for using Nextra!
 `);
     }
 
-    await nextraa.configure().next();
+    await nextra.configureNext();
 
-    if (answers.useNextImageOptimisation) {
-      // https://nextjs.org/docs/app/building-your-application/optimizing/images
-      await packageManager.addToDependencies({
-        dependencies: ['sharp'],
-      });
-    }
+    if (answers.usePrettier) await nextra.configurePrettier();
 
-    if (answers.usePrettier) {
-      await nextraa.configure().prettier();
-      await nextraa.addMarkdown(path.join(markdownPath, 'prettier.md'));
-    }
+    if (answers.useJestRTL) await nextra.configureJestRTL();
 
-    if (answers.useJestRTL) {
-      await nextraa.configure().jestRTL();
-      await nextraa.addMarkdown(path.join(markdownPath, 'jestRTL.md'));
-    }
+    if (answers.useCypress) await nextra.configureCypress();
 
-    if (answers.useCypress) {
-      await nextraa.configure().cypress();
-      await nextraa.addMarkdown(path.join(markdownPath, 'cypress.md'));
-    }
+    if (answers.useLintStaged) await nextra.configureLintStaged();
 
-    if (answers.useLintStaged) {
-      await nextraa.configure().lintStaged();
-      await nextraa.addMarkdown(path.join(markdownPath, 'lint-staged.md'));
-    }
+    if (answers.useHusky) await nextra.configureGitHusky();
 
-    if (answers.useHusky) {
-      await nextraa.configure().gitHusky();
-      await nextraa.addMarkdown(path.join(markdownPath, 'git.md'));
-      await nextraa.addMarkdown(path.join(markdownPath, 'husky.md'));
-    }
-
-    if (answers.useStorybook) {
-      await nextraa.configure().storybook();
-      await nextraa.addMarkdown(path.join(markdownPath, 'storybook.md'));
-    }
+    if (answers.useStorybook) await nextra.configureStorybook();
 
     if (answers.useDocker) {
-      await nextraa.configure().docker();
-      await nextraa.configure().envVars();
-      await nextraa.addMarkdown(path.join(markdownPath, 'docker.md'));
+      await nextra.configureDocker();
+      await nextra.configureEnvVars();
     }
 
     if (answers.useSelectedDependencies.length > 0) {
-      await nextraa
-        .configure()
-        .selectedDependencies(answers.useSelectedDependencies);
-
-      await nextraa.addMarkdown(
-        path.join(markdownPath, 'selected-dependencies.md')
+      await nextra.configureSelectedDependencies(
+        answers.useSelectedDependencies
       );
     }
 
-    if (answers.usePrettier) {
-      // clean up ie format files - maybe other stuff TBC
-      await nextraa.configure().cleanUp();
-    }
-
-    await nextraa.generateMarkdown();
+    if (answers.usePrettier) await nextra.cleanUp();
   });
 
 program.parse();

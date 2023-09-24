@@ -1,6 +1,7 @@
 import ora from 'ora';
 
-import { oops, PackageManagerType } from '../utils/index.js';
+import { oops } from '../../utils/index.js';
+import { PackageManagerType } from '../usePackageManager.js';
 
 const cleanUp = async ({
   root,
