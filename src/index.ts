@@ -6,7 +6,7 @@ import { program } from 'commander';
 import figlet from 'figlet';
 import prompt from 'prompts';
 
-import { goodbye } from './utils/index.js';
+import { goodbye } from './utils.js';
 
 import { Nextra } from './nextra/index.js';
 import questions from './questions.js';
@@ -73,18 +73,28 @@ Thanks for using Nextra!
     }
 
     await nextra.configureNext();
+    const nextConfig = nextra.getNextConfig();
 
-    if (answers.usePrettier) await nextra.configurePrettier();
+    if (answers.usePrettier) {
+      await nextra.configurePrettier();
+    }
 
-    if (answers.useJestRTL) await nextra.configureJestRTL();
+    if (answers.useJestRTL) {
+      await nextra.configureJestRTL();
+    }
 
-    if (answers.useCypress) await nextra.configureCypress();
+    if (answers.useCypress) {
+      await nextra.configureCypress();
+    }
 
-    if (answers.useLintStaged) await nextra.configureLintStaged();
+    if ((nextConfig.eslint || answers.usePrettier) && answers.useLintStaged) {
+      await nextra.configureLintStaged();
+    }
 
-    if (answers.useHusky) await nextra.configureGitHusky();
-
-    if (answers.useStorybook) await nextra.configureStorybook();
+    if (answers.useHusky)
+      if (answers.useStorybook) {
+        await nextra.configureStorybook();
+      }
 
     if (answers.useDocker) {
       await nextra.configureDocker();
@@ -97,7 +107,9 @@ Thanks for using Nextra!
       );
     }
 
-    if (answers.usePrettier) await nextra.cleanUp();
+    if (answers.usePrettier) {
+      await nextra.cleanUp();
+    }
   });
 
 program.parse();

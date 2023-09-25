@@ -2,8 +2,8 @@ import path from 'path';
 import fs from 'fs';
 import ora from 'ora';
 
-import { oops } from '../../utils/index.js';
-import { PackageManagerType } from '../usePackageManager.js';
+import { oops } from '../../utils.js';
+import { PackageManagerType } from '../PackageManager.js';
 import { NextConfigType } from './createNextApp.js';
 
 const configureJestRTL = async ({

@@ -5,10 +5,10 @@ import prompts from 'prompts';
 
 import configurations, { NextConfigType } from './configurations/index.js';
 
-import PackageManager, { PackageManagerKindEnum } from './usePackageManager.js';
+import PackageManager, { PackageManagerKindEnum } from './PackageManager.js';
 import readmeGen from './readmeGen.js';
 
-type NextraType = {
+type NextraPropsType = {
   configsPath: string;
   root: string;
   packageManagerChoice: PackageManagerKindEnum;
@@ -24,7 +24,7 @@ export class Nextra {
   private readmeGen = {} as readmeGen;
   private root;
 
-  constructor({ configsPath, packageManagerChoice, root }: NextraType) {
+  constructor({ configsPath, packageManagerChoice, root }: NextraPropsType) {
     this.configsPath = configsPath;
     this.root = root; // root of affected next directory
 
@@ -58,6 +58,10 @@ export class Nextra {
       packageManagerKind: this.packageManager.getKind(),
       root: this.root,
     });
+  };
+
+  public getNextConfig = () => {
+    return this.nextConfig;
   };
 
   public configureCypress = async () => {

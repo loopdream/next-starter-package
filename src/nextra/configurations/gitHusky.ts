@@ -3,7 +3,7 @@ import ora from 'ora';
 import {
   PackageManagerType,
   PackageManagerKindEnum,
-} from '../usePackageManager.js';
+} from '../PackageManager.js';
 
 const configureGitHusky = async ({
   packageManager,
