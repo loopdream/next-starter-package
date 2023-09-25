@@ -30,17 +30,13 @@ program
       projectDirectoryPath = path.join('tmp', projectName);
     }
 
-    const root = path.resolve(projectDirectoryPath);
-    const configsPath = path.resolve(path.join('src', 'templates'));
-
     const { packageManagerChoice } = await prompt(
       questions.packageManagerPrompt
     );
 
     const nextra = new Nextra({
-      configsPath,
+      projectDirectoryPath,
       packageManagerChoice,
-      root,
     });
 
     const nextConfig = await nextra.createNextApp();

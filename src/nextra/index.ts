@@ -1,52 +1,37 @@
 import path from 'path';
 import fs from 'fs';
-
 import prompts from 'prompts';
 
+import { oops } from '../utils.js';
 import configurations, { NextConfigType } from './configurations/index.js';
 
 import PackageManager, { PackageManagerKindEnum } from './PackageManager.js';
-import readmeGen from './readmeGen.js';
 
 type NextraPropsType = {
-  configsPath: string;
-  root: string;
+  projectDirectoryPath: string;
   packageManagerChoice: PackageManagerKindEnum;
 };
 
 export class Nextra {
-  private configsPath;
-  private markdownFilePaths = {} as Record<string, string>;
-
+  private root: string;
+  private configsPath: string;
+  private markdownDirPath: string;
+  private readeMarkdownArr: string[];
   private nextConfig = {} as NextConfigType;
   private packageManager = {} as PackageManager;
   private promptAnswers = {} as prompts.Answers<string>;
-  private readmeGen = {} as readmeGen;
-  private root;
 
-  constructor({ configsPath, packageManagerChoice, root }: NextraPropsType) {
-    this.configsPath = configsPath;
-    this.root = root; // root of affected next directory
+  constructor({ projectDirectoryPath, packageManagerChoice }: NextraPropsType) {
+    this.configsPath = path.resolve(path.join('src', 'templates'));
+    this.markdownDirPath = path.resolve(path.join('src', 'markdown'));
+    this.root = path.resolve(projectDirectoryPath);
+    this.readeMarkdownArr = [];
 
-    this.readmeGen = new readmeGen(this.root);
     this.packageManager = new PackageManager({
       packageManagerKind: packageManagerChoice,
-      root,
+      root: this.root,
     });
-
-    this.setMarkdownFilePaths();
   }
-
-  private setMarkdownFilePaths = async () => {
-    const markdownDirPath = path.resolve(path.join('src', 'markdown'));
-    const markdownFilenames = await fs.promises.readdir(markdownDirPath);
-
-    this.markdownFilePaths = markdownFilenames.reduce((acc, filename) => {
-      const filenameWithoutExtention = filename.split('.')[0];
-      const filePath = path.join(markdownDirPath, filename);
-      return { ...acc, [filenameWithoutExtention]: filePath };
-    }, {});
-  };
 
   public setPromptAnswers = (answers: prompts.Answers<string>) => {
     if (!answers) throw new Error('Nextra: answers is undefined');
@@ -54,10 +39,14 @@ export class Nextra {
   };
 
   public createNextApp = async () => {
+    const packageManagerKind = this.packageManager.getKind();
+    const { root } = this;
+
     this.nextConfig = await configurations.createNextApp({
-      packageManagerKind: this.packageManager.getKind(),
-      root: this.root,
+      packageManagerKind,
+      root,
     });
+
     return this.nextConfig;
   };
 
@@ -66,91 +55,81 @@ export class Nextra {
   };
 
   public configureCypress = async () => {
+    const { configsPath, packageManager, root } = this;
     await configurations.cypress({
-      configsPath: this.configsPath,
-      packageManager: this.packageManager,
-      root: this.root,
+      configsPath,
+      packageManager,
+      root,
     });
-    await this.readmeGen.addMarkdown(this.markdownFilePaths.cypress);
+    this.addToReadme('cypress');
   };
 
   public configureDocker = async () => {
-    await configurations.docker({
-      configsPath: this.configsPath,
-      root: this.root,
-    });
-
-    await this.readmeGen.addMarkdown(this.markdownFilePaths.docker);
+    const { configsPath, root } = this;
+    await configurations.docker({ configsPath, root });
+    this.addToReadme('docker');
   };
 
   public configureEnvVars = async () => {
-    await configurations.envVars({
-      configsPath: this.configsPath,
-      root: this.root,
-    });
+    const { configsPath, root } = this;
+    await configurations.envVars({ configsPath, root });
   };
 
   public configureGitHusky = async () => {
-    await configurations.gitHusky({
-      packageManager: this.packageManager,
-      root: this.root,
-    });
+    const { packageManager, root } = this;
+    await configurations.gitHusky({ packageManager, root });
 
-    await this.readmeGen.addMarkdown(this.markdownFilePaths.gitHusky);
-    await this.readmeGen.addMarkdown(this.markdownFilePaths.husky);
+    this.addToReadme('git');
+    this.addToReadme('husky');
   };
 
   public configureJestRTL = async () => {
+    const { configsPath, nextConfig, packageManager, root } = this;
     await configurations.jestRTL({
-      configsPath: this.configsPath,
-      nextConfig: this.nextConfig,
-      packageManager: this.packageManager,
-      root: this.root,
+      configsPath,
+      nextConfig,
+      packageManager,
+      root,
     });
-
-    await this.readmeGen.addMarkdown(this.markdownFilePaths.jestRTL);
+    this.addToReadme('jestRTL');
   };
 
   public configureLintStaged = async () => {
+    const { configsPath, packageManager, root } = this;
     await configurations.lintStaged({
-      configsPath: this.configsPath,
-      packageManager: this.packageManager,
-      root: this.root,
+      configsPath,
+      packageManager,
+      root,
     });
-
-    await this.readmeGen.addMarkdown(this.markdownFilePaths.lintStaged);
+    this.addToReadme('lint-staged');
   };
 
   public configureNext = async () => {
+    const { configsPath, packageManager, root } = this;
     await configurations.next({
-      configsPath: this.configsPath,
-      packageManager: this.packageManager,
-      root: this.root,
+      configsPath,
+      packageManager,
+      root,
       useNextImageOptimisation: this.promptAnswers.useNextImageOptimisation,
     });
-
-    await this.readmeGen.addMarkdown(this.markdownFilePaths.next);
+    this.addToReadme('next');
   };
 
   public configureStorybook = async () => {
-    await configurations.storybook({
-      configsPath: this.configsPath,
-      packageManager: this.packageManager,
-      root: this.root,
-    });
-
-    await this.readmeGen.addMarkdown(this.markdownFilePaths.storybook);
+    const { configsPath, packageManager, root } = this;
+    await configurations.storybook({ configsPath, packageManager, root });
+    this.addToReadme('storybook');
   };
 
   public configurePrettier = async () => {
+    const { configsPath, nextConfig, packageManager, root } = this;
     await configurations.prettier({
-      configsPath: this.configsPath,
-      nextConfig: this.nextConfig,
-      packageManager: this.packageManager,
-      root: this.root,
+      configsPath,
+      nextConfig,
+      packageManager,
+      root,
     });
-
-    await this.readmeGen.addMarkdown(this.markdownFilePaths.prettier);
+    this.addToReadme('prettier');
   };
 
   public configureSelectedDependencies = async (
@@ -160,10 +139,7 @@ export class Nextra {
       packageManager: this.packageManager,
       selectedDependencies,
     });
-
-    await this.readmeGen.addMarkdown(
-      this.markdownFilePaths.selectedDependencies
-    );
+    this.addToReadme('selected-dependencies');
   };
 
   public cleanUp = async () => {
@@ -173,6 +149,30 @@ export class Nextra {
       root: this.root,
     });
 
-    await this.readmeGen.generate();
+    await this.generateReadme();
+  };
+
+  private addToReadme = async (markdownFileName: string) => {
+    const filepath = path.join(this.markdownDirPath, `${markdownFileName}.md`);
+
+    if (fs.existsSync(filepath)) {
+      try {
+        const markdown = await fs.promises.readFile(filepath, 'utf8');
+        this.readeMarkdownArr.push(markdown);
+      } catch (error) {
+        oops();
+        throw new Error(`${error}`);
+      }
+    }
+  };
+
+  private generateReadme = async () => {
+    try {
+      const markdown = this.readeMarkdownArr.join('\n\n');
+      await fs.promises.writeFile(path.join(this.root, 'README.md'), markdown);
+    } catch (error) {
+      oops();
+      throw new Error(`${error}`);
+    }
   };
 }
