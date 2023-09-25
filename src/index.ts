@@ -90,10 +90,13 @@ Thanks for using Nextra!
       await nextra.configureLintStaged();
     }
 
-    if (answers.useHusky)
-      if (answers.useStorybook) {
-        await nextra.configureStorybook();
-      }
+    if (answers.useHusky) {
+      await nextra.configureGitHusky();
+    }
+
+    if (answers.useStorybook) {
+      await nextra.configureStorybook();
+    }
 
     if (answers.useDocker) {
       await nextra.configureDocker();
