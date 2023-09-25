@@ -135,19 +135,18 @@ export class Nextra {
   public configureSelectedDependencies = async (
     selectedDependencies: prompts.Answers<string>
   ) => {
+    const { packageManager } = this;
     await configurations.selectedDependencies({
-      packageManager: this.packageManager,
+      packageManager,
       selectedDependencies,
     });
     this.addToReadme('selected-dependencies');
   };
 
   public cleanUp = async () => {
+    const { packageManager, root } = this;
     // clean up ie format files + write Readme - maybe other stuff TBC
-    await configurations.cleanUp({
-      packageManager: this.packageManager,
-      root: this.root,
-    });
+    await configurations.cleanUp({ packageManager, root });
 
     await this.generateReadme();
   };
