@@ -43,7 +43,7 @@ program
       root,
     });
 
-    await nextra.createNextApp();
+    const nextConfig = await nextra.createNextApp();
 
     const answers = await prompt([
       questions.useNextStandalone,
@@ -73,7 +73,6 @@ Thanks for using Nextra!
     }
 
     await nextra.configureNext();
-    const nextConfig = nextra.getNextConfig();
 
     if (answers.usePrettier) {
       await nextra.configurePrettier();

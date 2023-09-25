@@ -58,6 +58,7 @@ export class Nextra {
       packageManagerKind: this.packageManager.getKind(),
       root: this.root,
     });
+    return this.nextConfig;
   };
 
   public getNextConfig = () => {
