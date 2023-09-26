@@ -31,7 +31,7 @@ const configureSelectedPackages = async ({
     if (devDependencies.length > 0)
       await packageManager.addToDependencies({
         dependencies: devDependencies,
-        isDevDependencies: true,
+        devDependencies: true,
       });
 
     addSelectedPackagesSpinner.succeed();

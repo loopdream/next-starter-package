@@ -30,9 +30,12 @@ const configureNext = async ({
       path.join(root, `next.config.js`)
     );
 
+    const pm = packageManager.getKind();
     await packageManager.addToScripts({
       'build:standalone': 'BUILD_STANDALONE=true next build',
       'start:standalone': 'node ./.next/standalone/server.js',
+      'build-start': `next build && next start`,
+      'build-start:standalone': `${pm} run build:standalone && ${pm} run start:standalone`,
     });
 
     if (useNextImageOptimisation) {

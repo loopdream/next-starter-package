@@ -26,7 +26,7 @@ export type PackageManagerPropsType = {
 
 export type AddToDependenciesType = {
   dependencies: string[];
-  isDevDependencies?: boolean;
+  devDependencies?: boolean;
 };
 
 export type AddToScriptsType = Record<string, string>;
@@ -72,16 +72,15 @@ class PackageManager {
 
   public async addToDependencies({
     dependencies,
-    isDevDependencies = false,
+    devDependencies = false,
   }: AddToDependenciesType): Promise<void> {
     try {
       const { execa } = await import('execa');
       const { add, saveDev } = this.getCmds();
-      const deps = [...dependencies];
 
-      if (isDevDependencies) deps.push(saveDev);
+      if (devDependencies) dependencies.push(saveDev);
 
-      await execa(this.packageManagerKind, [add, ...deps], {
+      await execa(this.getKind(), [add, ...dependencies], {
         // TODO - figure a way of outputting process AND controlling ora spinner
         // stdio: 'inherit',
         cwd: this.root,

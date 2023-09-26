@@ -37,7 +37,7 @@ const configureJestRTL = async ({
 
     await packageManager.addToDependencies({
       dependencies,
-      isDevDependencies: true,
+      devDependencies: true,
     });
 
     await fs.promises.cp(

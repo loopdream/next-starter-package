@@ -38,7 +38,7 @@ const configurePrettier = async ({
 
     await packageManager.addToDependencies({
       dependencies,
-      isDevDependencies: true,
+      devDependencies: true,
     });
 
     const saveConfigs = [

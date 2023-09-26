@@ -24,7 +24,7 @@ const configureLintStaged = async ({
 
     await packageManager.addToDependencies({
       dependencies: ['lint-staged'],
-      isDevDependencies: true,
+      devDependencies: true,
     });
 
     await fs.promises.cp(

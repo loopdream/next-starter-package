@@ -22,7 +22,7 @@ const configureCypress = async ({
   try {
     await packageManager.addToDependencies({
       dependencies: ['cypress'],
-      isDevDependencies: true,
+      devDependencies: true,
     });
 
     await fs.promises.cp(
