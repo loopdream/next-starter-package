@@ -60,11 +60,11 @@ class PackageManager {
   } {
     return {
       add:
-        this.packageManagerKind === PackageManagerKindEnum.NPM
+        this.getKind() === PackageManagerKindEnum.NPM
           ? PackageManagerAddEnum.INSTALL
           : PackageManagerAddEnum.ADD,
       saveDev:
-        this.packageManagerKind === PackageManagerKindEnum.YARN
+        this.getKind() === PackageManagerKindEnum.YARN
           ? PackageManagerSaveDevEnum.DEV
           : PackageManagerSaveDevEnum.SAVE_DEV,
     };
