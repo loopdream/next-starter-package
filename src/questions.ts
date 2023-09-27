@@ -1,6 +1,6 @@
 import picocolors from 'picocolors';
 import { PromptObject } from 'prompts';
-import { PackageManagerKindEnum } from './nextra/PackageManager.js';
+import { PackageManagerKindEnum } from './PackageManager.js';
 
 const { blue } = picocolors;
 
@@ -27,14 +27,15 @@ export const packageManagerPrompt: PromptObject = {
       value: PackageManagerKindEnum.YARN,
     },
     { title: 'Pnpm', value: PackageManagerKindEnum.PNPM },
+    { title: 'Bun', value: PackageManagerKindEnum.BUN },
   ],
   initial: 0,
 };
 
-export const useNextStandalone: PromptObject = {
+export const configureNextStandalone: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'useNextStandalone',
+  name: 'configureNextStandalone',
   message: `Would you like to configure ${blue(
     'Next'
   )} for standalone production builds?`,
@@ -43,10 +44,10 @@ export const useNextStandalone: PromptObject = {
   inactive: `No`,
 };
 
-export const usePrettier: PromptObject = {
+export const configurePrettier: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'usePrettier',
+  name: 'configurePrettier',
   message: `Would you like to install and configure ${blue(
     'Prettier'
   )}? (recommended)`,
@@ -55,10 +56,10 @@ export const usePrettier: PromptObject = {
   inactive: `No`,
 };
 
-export const useStorybook: PromptObject = {
+export const configureStorybook: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'useStorybook',
+  name: 'configureStorybook',
   message: `Would you like to install and configure ${blue(
     'Storybook'
   )}? (recommended)`,
@@ -67,10 +68,10 @@ export const useStorybook: PromptObject = {
   inactive: `No`,
 };
 
-export const useDocker: PromptObject = {
+export const configureDocker: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'useDocker',
+  name: 'configureDocker',
   message: `Would you like to add ${blue(
     'Docker'
   )} configuration? (recommended)`,
@@ -79,10 +80,10 @@ export const useDocker: PromptObject = {
   inactive: `No`,
 };
 
-export const useJestRTL: PromptObject = {
+export const configureJestRTL: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'useJestRTL',
+  name: 'configureJestRTL',
   message: `Would you like to install and configure ${blue(
     'Jest'
   )} and ${`React Testing Library`}? (recommended)`,
@@ -91,10 +92,10 @@ export const useJestRTL: PromptObject = {
   inactive: `No`,
 };
 
-export const useCypress: PromptObject = {
+export const configureCypress: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'useCypress',
+  name: 'configureCypress',
   message: `Would you like to install and configure ${blue(
     'Cypress'
   )}? (recommended)`,
@@ -103,10 +104,10 @@ export const useCypress: PromptObject = {
   inactive: `No`,
 };
 
-export const useHusky: PromptObject = {
+export const configureHusky: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'useHusky',
+  name: 'configureHusky',
   message: `Would you like to install and configure ${blue('Git')} and ${blue(
     'Husky'
   )}? (recommended)`,
@@ -115,10 +116,10 @@ export const useHusky: PromptObject = {
   inactive: `No`,
 };
 
-export const useLintStaged: PromptObject = {
+export const configureLintStaged: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'useLintStaged',
+  name: 'configureLintStaged',
   message: `Would you like to install and configure ${blue(
     'Lint Staged'
   )}? (recommended)`,
@@ -127,10 +128,10 @@ export const useLintStaged: PromptObject = {
   inactive: `No`,
 };
 
-export const useNextImageOptimisation: PromptObject = {
+export const configureNextImageOptimisation: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'useNextImageOptimisation',
+  name: 'configureNextImageOptimisation',
   message: `Will you be using ${blue('Next')}'s image optimisation? `,
   initial: 'No',
   active: 'Yes',
@@ -414,10 +415,10 @@ export const choices: ChoiceType[] = [
   },
 ];
 
-export const useSelectedDependencies: PromptObject = {
+export const configureSelectedDependencies: PromptObject = {
   onState: onPromptState,
   type: 'multiselect',
-  name: 'useSelectedDependencies',
+  name: 'configureSelectedDependencies',
   message: 'Install some popular packages?',
   choices: choices,
   hint: '- Space to select. Return to submit',
@@ -425,14 +426,14 @@ export const useSelectedDependencies: PromptObject = {
 
 export default {
   packageManagerPrompt,
-  useCypress,
-  useDocker,
-  useHusky,
-  useNextImageOptimisation,
-  useJestRTL,
-  useLintStaged,
-  useNextStandalone,
-  usePrettier,
-  useSelectedDependencies,
-  useStorybook,
+  configureCypress,
+  configureDocker,
+  configureHusky,
+  configureNextImageOptimisation,
+  configureJestRTL,
+  configureLintStaged,
+  configureNextStandalone,
+  configurePrettier,
+  configureSelectedDependencies,
+  configureStorybook,
 };

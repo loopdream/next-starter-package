@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import ora from 'ora';
 
-import { oops } from '../../utils.js';
+import { oops } from '../utils.js';
 import { PackageManagerType } from '../PackageManager.js';
 import { NextConfigType } from './createNextApp.js';
 
@@ -33,7 +33,7 @@ const configureJestRTL = async ({
       'eslint-plugin-testing-library',
     ];
 
-    // if (!useNextStandalone) dependencies.push(packageManager.cmds.saveDev);
+    // if (!configureNextStandalone) dependencies.push(packageManager.cmds.saveDev);
 
     await packageManager.addToDependencies({
       dependencies,

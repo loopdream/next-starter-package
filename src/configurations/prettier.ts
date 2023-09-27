@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import ora from 'ora';
 
-import { oops } from '../../utils.js';
+import { oops } from '../utils.js';
 import { PackageManagerType } from '../PackageManager.js';
 import { NextConfigType } from './createNextApp.js';
 
@@ -31,7 +31,7 @@ const configurePrettier = async ({
 
     if (!nextConfig.eslint) dependencies.push('eslint');
 
-    // if (!useNextStandalone)
+    // if (!configureNextStandalone)
     //   // when installing Next with standalone flag there no need to install dependencies as devDependencies in package file
     //   // https://nextjs.org/docs/pages/api-reference/next-config-js/output
     //   dependencies.push(packageManagerSaveDev);

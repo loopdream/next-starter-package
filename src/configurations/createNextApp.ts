@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 
-import { oops } from '../../utils.js';
+import { oops } from '../utils.js';
 import { PackageManagerKindEnum } from '../PackageManager.js';
 
 export interface NextConfigType {

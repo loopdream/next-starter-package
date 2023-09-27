@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import ora from 'ora';
 
-import { oops } from '../../utils.js';
+import { oops } from '../utils.js';
 import { PackageManagerType } from '../PackageManager.js';
 
 const configureStorybook = async ({

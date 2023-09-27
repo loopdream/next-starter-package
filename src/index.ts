@@ -8,7 +8,7 @@ import prompt from 'prompts';
 
 import { goodbye } from './utils.js';
 
-import { Nextra } from './nextra/index.js';
+import Nextra from './Nextra.js';
 import questions from './questions.js';
 
 console.log('\n', figlet.textSync('Nextra'), '\n\n');
@@ -42,21 +42,21 @@ program
     const nextConfig = await nextra.createNextApp();
 
     const answers = await prompt([
-      questions.useNextStandalone,
-      questions.useNextImageOptimisation,
-      questions.usePrettier,
-      questions.useJestRTL,
-      questions.useLintStaged,
-      questions.useStorybook,
-      questions.useHusky,
-      questions.useDocker,
-      questions.useCypress,
-      questions.useSelectedDependencies,
+      questions.configureNextStandalone,
+      questions.configureNextImageOptimisation,
+      questions.configurePrettier,
+      questions.configureJestRTL,
+      questions.configureLintStaged,
+      questions.configureStorybook,
+      questions.configureHusky,
+      questions.configureDocker,
+      questions.configureCypress,
+      questions.configureSelectedDependencies,
     ]);
 
     const hasAnswers =
       Object.values(answers).includes(true) ||
-      answers.useSelectedDependencies.length > 0;
+      answers.configureSelectedDependencies.length > 0;
 
     if (hasAnswers) {
       nextra.setPromptAnswers(answers);
@@ -71,38 +71,41 @@ program
 
     await nextra.configureNext();
 
-    if (answers.usePrettier) {
+    if (answers.configurePrettier) {
       await nextra.configurePrettier();
     }
 
-    if (answers.useJestRTL) {
+    if (answers.configureJestRTL) {
       await nextra.configureJestRTL();
     }
 
-    if (answers.useCypress) {
+    if (answers.configureCypress) {
       await nextra.configureCypress();
     }
 
-    if ((nextConfig.eslint || answers.usePrettier) && answers.useLintStaged) {
+    if (
+      (nextConfig.eslint || answers.configurePrettier) &&
+      answers.configureLintStaged
+    ) {
       await nextra.configureLintStaged();
     }
 
-    if (answers.useHusky) {
+    if (answers.configureHusky) {
       await nextra.configureGitHusky();
     }
 
-    if (answers.useStorybook) {
+    if (answers.configureStorybook) {
       await nextra.configureStorybook();
     }
 
-    if (answers.useDocker) {
+    if (answers.configureDocker) {
       await nextra.configureDocker();
       await nextra.configureEnvVars();
     }
 
-    if (answers.useSelectedDependencies.length > 0) {
+    if (answers.configureSelectedDependencies.length > 0) {
       await nextra.configureSelectedDependencies(
-        answers.useSelectedDependencies
+        answers.configureSelectedDependencies
       );
     }
 

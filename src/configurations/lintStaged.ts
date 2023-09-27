@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import ora from 'ora';
 
-import { oops } from '../../utils.js';
+import { oops } from '../utils.js';
 import { PackageManagerType } from '../PackageManager.js';
 
 const configureLintStaged = async ({
@@ -20,7 +20,7 @@ const configureLintStaged = async ({
   }).start();
 
   try {
-    // if (!useNextStandalone) deps.push(packageManager.cmds.saveDev);
+    // if (!configureNextStandalone) deps.push(packageManager.cmds.saveDev);
 
     await packageManager.addToDependencies({
       dependencies: ['lint-staged'],

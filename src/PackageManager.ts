@@ -6,6 +6,7 @@ export enum PackageManagerKindEnum {
   NPM = 'npm',
   YARN = 'yarn',
   PNPM = 'pnpm',
+  BUN = 'bun',
 }
 
 export enum PackageManagerAddEnum {
@@ -81,7 +82,6 @@ class PackageManager {
       if (devDependencies) dependencies.push(saveDev);
 
       await execa(this.getKind(), [add, ...dependencies], {
-        // TODO - figure a way of outputting process AND controlling ora spinner
         // stdio: 'inherit',
         cwd: this.root,
       });

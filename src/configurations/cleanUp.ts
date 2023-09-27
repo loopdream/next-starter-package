@@ -1,14 +1,14 @@
 import ora from 'ora';
 
-import { oops } from '../../utils.js';
-import { PackageManagerType } from '../PackageManager.js';
+import { oops } from '../utils.js';
+import { PackageManagerKindEnum } from '../PackageManager.js';
 
 const cleanUp = async ({
   root,
-  packageManager,
+  packageManagerKind,
 }: {
   root: string;
-  packageManager: PackageManagerType;
+  packageManagerKind: PackageManagerKindEnum;
 }) => {
   const addFormatSpinner = ora({
     indent: 2,
@@ -17,7 +17,7 @@ const cleanUp = async ({
   const { $ } = await import('execa');
 
   try {
-    await $({ cwd: root })`${packageManager.getKind()} run format:write`;
+    await $({ cwd: root })`${packageManagerKind} run format:write`;
 
     addFormatSpinner.succeed();
   } catch (error) {

@@ -3,9 +3,9 @@ import fs from 'fs';
 import prompts from 'prompts';
 import { markdownTable } from 'markdown-table';
 
-import { oops } from '../utils.js';
+import { oops } from './utils.js';
 import configurations, { NextConfigType } from './configurations/index.js';
-import { ChoiceValuesType } from '../questions.js';
+import { ChoiceValuesType } from './questions.js';
 
 import PackageManager, { PackageManagerKindEnum } from './PackageManager.js';
 
@@ -14,7 +14,7 @@ type NextraPropsType = {
   packageManagerChoice: PackageManagerKindEnum;
 };
 
-export class Nextra {
+class Nextra {
   private root: string;
   private configsPath: string;
   private markdownDirPath: string;
@@ -23,14 +23,17 @@ export class Nextra {
   private packageManager = {} as PackageManager;
   private promptAnswers = {} as prompts.Answers<string>;
 
-  constructor({ projectDirectoryPath, packageManagerChoice }: NextraPropsType) {
+  constructor({
+    projectDirectoryPath,
+    packageManagerChoice: packageManagerKind,
+  }: NextraPropsType) {
     this.configsPath = path.resolve(path.join('src', 'templates'));
     this.markdownDirPath = path.resolve(path.join('src', 'markdown'));
     this.root = path.resolve(projectDirectoryPath);
     this.readmeMarkdownArr = [];
 
     this.packageManager = new PackageManager({
-      packageManagerKind: packageManagerChoice,
+      packageManagerKind,
       root: this.root,
     });
   }
@@ -59,7 +62,7 @@ export class Nextra {
       packageManager: this.packageManager,
       root: this.root,
     });
-    await this.addMarkdownToReadme('cypress');
+    await this.addMarkdownFragmentToReadmeArr('cypress');
   };
 
   public configureDocker = async () => {
@@ -67,22 +70,24 @@ export class Nextra {
       configsPath: this.configsPath,
       root: this.root,
     });
-    await this.addMarkdownToReadme('docker');
+    await this.addMarkdownFragmentToReadmeArr('docker');
   };
 
   public configureEnvVars = async () => {
-    const { configsPath, root } = this;
-    await configurations.envVars({ configsPath, root });
+    await configurations.envVars({
+      configsPath: this.configsPath,
+      root: this.root,
+    });
   };
 
   public configureGitHusky = async () => {
     await configurations.gitHusky({
-      packageManager: this.packageManager,
+      packageManagerKind: this.packageManager.getKind(),
       root: this.root,
     });
 
-    await this.addMarkdownToReadme('git');
-    await this.addMarkdownToReadme('husky');
+    await this.addMarkdownFragmentToReadmeArr('git');
+    await this.addMarkdownFragmentToReadmeArr('husky');
   };
 
   public configureJestRTL = async () => {
@@ -92,7 +97,7 @@ export class Nextra {
       packageManager: this.packageManager,
       root: this.root,
     });
-    await this.addMarkdownToReadme('jestRTL');
+    await this.addMarkdownFragmentToReadmeArr('jestRTL');
   };
 
   public configureLintStaged = async () => {
@@ -101,7 +106,7 @@ export class Nextra {
       packageManager: this.packageManager,
       root: this.root,
     });
-    await this.addMarkdownToReadme('lint-staged');
+    await this.addMarkdownFragmentToReadmeArr('lint-staged');
   };
 
   public configureNext = async () => {
@@ -109,9 +114,10 @@ export class Nextra {
       configsPath: this.configsPath,
       packageManager: this.packageManager,
       root: this.root,
-      useNextImageOptimisation: this.promptAnswers.useNextImageOptimisation,
+      configureNextImageOptimisation:
+        this.promptAnswers.configureNextImageOptimisation,
     });
-    await this.addMarkdownToReadme('next');
+    await this.addMarkdownFragmentToReadmeArr('next');
   };
 
   public configureStorybook = async () => {
@@ -120,7 +126,7 @@ export class Nextra {
       packageManager: this.packageManager,
       root: this.root,
     });
-    await this.addMarkdownToReadme('storybook');
+    await this.addMarkdownFragmentToReadmeArr('storybook');
   };
 
   public configurePrettier = async () => {
@@ -130,17 +136,19 @@ export class Nextra {
       packageManager: this.packageManager,
       root: this.root,
     });
-    await this.addMarkdownToReadme('prettier');
+    await this.addMarkdownFragmentToReadmeArr('prettier');
   };
 
   public configureSelectedDependencies = async (
-    selectedDependencies: ChoiceValuesType[]
+    selectedDependencies: [] | ChoiceValuesType[]
   ) => {
+    if (!selectedDependencies || selectedDependencies.length === 0) return;
+
     await configurations.selectedDependencies({
       packageManager: this.packageManager,
       selectedDependencies,
     });
-    await this.addMarkdownToReadme('selected-dependencies');
+    await this.addMarkdownFragmentToReadmeArr('selected-dependencies');
 
     // list the selected dependency packages in the readme as a table
     const tableHeader = ['Package name', 'Package description', 'Type'];
@@ -160,7 +168,7 @@ export class Nextra {
     // clean up ie format files + write Readme - maybe other stuff TBC
     if (this.promptAnswers.configurePrettier) {
       await configurations.cleanUp({
-        packageManager: this.packageManager,
+        packageManagerKind: this.packageManager.getKind(),
         root: this.root,
       });
     }
@@ -168,7 +176,7 @@ export class Nextra {
     await this.generateReadme();
   };
 
-  private addMarkdownToReadme = async (markdownFileName: string) => {
+  private addMarkdownFragmentToReadmeArr = async (markdownFileName: string) => {
     const filepath = path.join(this.markdownDirPath, `${markdownFileName}.md`);
 
     if (fs.existsSync(filepath)) {
@@ -192,3 +200,5 @@ export class Nextra {
     }
   };
 }
+
+export default Nextra;
