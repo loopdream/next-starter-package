@@ -1,9 +1,11 @@
 import path from 'path';
 import fs from 'fs';
 import prompts from 'prompts';
+import { markdownTable } from 'markdown-table';
 
 import { oops } from '../utils.js';
 import configurations, { NextConfigType } from './configurations/index.js';
+import { ChoiceValuesType } from '../questions.js';
 
 import PackageManager, { PackageManagerKindEnum } from './PackageManager.js';
 
@@ -16,7 +18,7 @@ export class Nextra {
   private root: string;
   private configsPath: string;
   private markdownDirPath: string;
-  private readeMarkdownArr: string[];
+  private readmeMarkdownArr: string[];
   private nextConfig = {} as NextConfigType;
   private packageManager = {} as PackageManager;
   private promptAnswers = {} as prompts.Answers<string>;
@@ -25,7 +27,7 @@ export class Nextra {
     this.configsPath = path.resolve(path.join('src', 'templates'));
     this.markdownDirPath = path.resolve(path.join('src', 'markdown'));
     this.root = path.resolve(projectDirectoryPath);
-    this.readeMarkdownArr = [];
+    this.readmeMarkdownArr = [];
 
     this.packageManager = new PackageManager({
       packageManagerKind: packageManagerChoice,
@@ -39,12 +41,9 @@ export class Nextra {
   };
 
   public createNextApp = async () => {
-    const packageManagerKind = this.packageManager.getKind();
-    const { root } = this;
-
     this.nextConfig = await configurations.createNextApp({
-      packageManagerKind,
-      root,
+      packageManagerKind: this.packageManager.getKind(),
+      root: this.root,
     });
 
     return this.nextConfig;
@@ -55,19 +54,20 @@ export class Nextra {
   };
 
   public configureCypress = async () => {
-    const { configsPath, packageManager, root } = this;
     await configurations.cypress({
-      configsPath,
-      packageManager,
-      root,
+      configsPath: this.configsPath,
+      packageManager: this.packageManager,
+      root: this.root,
     });
-    this.addToReadme('cypress');
+    await this.addMarkdownToReadme('cypress');
   };
 
   public configureDocker = async () => {
-    const { configsPath, root } = this;
-    await configurations.docker({ configsPath, root });
-    this.addToReadme('docker');
+    await configurations.docker({
+      configsPath: this.configsPath,
+      root: this.root,
+    });
+    await this.addMarkdownToReadme('docker');
   };
 
   public configureEnvVars = async () => {
@@ -76,88 +76,105 @@ export class Nextra {
   };
 
   public configureGitHusky = async () => {
-    const { packageManager, root } = this;
-    await configurations.gitHusky({ packageManager, root });
+    await configurations.gitHusky({
+      packageManager: this.packageManager,
+      root: this.root,
+    });
 
-    this.addToReadme('git');
-    this.addToReadme('husky');
+    await this.addMarkdownToReadme('git');
+    await this.addMarkdownToReadme('husky');
   };
 
   public configureJestRTL = async () => {
-    const { configsPath, nextConfig, packageManager, root } = this;
     await configurations.jestRTL({
-      configsPath,
-      nextConfig,
-      packageManager,
-      root,
+      configsPath: this.configsPath,
+      nextConfig: this.nextConfig,
+      packageManager: this.packageManager,
+      root: this.root,
     });
-    this.addToReadme('jestRTL');
+    await this.addMarkdownToReadme('jestRTL');
   };
 
   public configureLintStaged = async () => {
-    const { configsPath, packageManager, root } = this;
     await configurations.lintStaged({
-      configsPath,
-      packageManager,
-      root,
+      configsPath: this.configsPath,
+      packageManager: this.packageManager,
+      root: this.root,
     });
-    this.addToReadme('lint-staged');
+    await this.addMarkdownToReadme('lint-staged');
   };
 
   public configureNext = async () => {
-    const { configsPath, packageManager, root } = this;
     await configurations.next({
-      configsPath,
-      packageManager,
-      root,
+      configsPath: this.configsPath,
+      packageManager: this.packageManager,
+      root: this.root,
       useNextImageOptimisation: this.promptAnswers.useNextImageOptimisation,
     });
-    this.addToReadme('next');
+    await this.addMarkdownToReadme('next');
   };
 
   public configureStorybook = async () => {
-    const { configsPath, packageManager, root } = this;
-    await configurations.storybook({ configsPath, packageManager, root });
-    this.addToReadme('storybook');
+    await configurations.storybook({
+      configsPath: this.configsPath,
+      packageManager: this.packageManager,
+      root: this.root,
+    });
+    await this.addMarkdownToReadme('storybook');
   };
 
   public configurePrettier = async () => {
-    const { configsPath, nextConfig, packageManager, root } = this;
     await configurations.prettier({
-      configsPath,
-      nextConfig,
-      packageManager,
-      root,
+      configsPath: this.configsPath,
+      nextConfig: this.nextConfig,
+      packageManager: this.packageManager,
+      root: this.root,
     });
-    this.addToReadme('prettier');
+    await this.addMarkdownToReadme('prettier');
   };
 
   public configureSelectedDependencies = async (
-    selectedDependencies: prompts.Answers<string>
+    selectedDependencies: ChoiceValuesType[]
   ) => {
-    const { packageManager } = this;
     await configurations.selectedDependencies({
-      packageManager,
+      packageManager: this.packageManager,
       selectedDependencies,
     });
-    this.addToReadme('selected-dependencies');
+    await this.addMarkdownToReadme('selected-dependencies');
+
+    // list the selected dependency packages in the readme as a table
+    const tableHeader = ['Package name', 'Package description', 'Type'];
+    const tableData = selectedDependencies.map(
+      ({ module, github, description, saveDev }) => [
+        `[${module}](${github})`,
+        description,
+        saveDev ? '`devDependency`' : '`dependency`',
+      ]
+    );
+
+    const table = markdownTable([tableHeader, ...tableData]);
+    this.readmeMarkdownArr.push(table);
   };
 
   public cleanUp = async () => {
-    const { packageManager, root } = this;
     // clean up ie format files + write Readme - maybe other stuff TBC
-    await configurations.cleanUp({ packageManager, root });
+    if (this.promptAnswers.configurePrettier) {
+      await configurations.cleanUp({
+        packageManager: this.packageManager,
+        root: this.root,
+      });
+    }
 
     await this.generateReadme();
   };
 
-  private addToReadme = async (markdownFileName: string) => {
+  private addMarkdownToReadme = async (markdownFileName: string) => {
     const filepath = path.join(this.markdownDirPath, `${markdownFileName}.md`);
 
     if (fs.existsSync(filepath)) {
       try {
         const markdown = await fs.promises.readFile(filepath, 'utf8');
-        this.readeMarkdownArr.push(markdown);
+        this.readmeMarkdownArr.push(markdown);
       } catch (error) {
         oops();
         throw new Error(`${error}`);
@@ -167,7 +184,7 @@ export class Nextra {
 
   private generateReadme = async () => {
     try {
-      const markdown = this.readeMarkdownArr.join('\n\n');
+      const markdown = this.readmeMarkdownArr.join('\n\n');
       await fs.promises.writeFile(path.join(this.root, 'README.md'), markdown);
     } catch (error) {
       oops();

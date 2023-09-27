@@ -55,7 +55,8 @@ program
     ]);
 
     const hasAnswers =
-      Object.values(answers).filter((c: boolean) => c === true).length > 1;
+      Object.values(answers).includes(true) ||
+      answers.useSelectedDependencies.length > 0;
 
     if (hasAnswers) {
       nextra.setPromptAnswers(answers);
@@ -63,9 +64,9 @@ program
       // nothing to configure!
       goodbye();
       return console.log(`
-Looks like you've passed on all the Netxra configuration options. Maybe next time! 
-Thanks for using Nextra!
-`);
+    Looks like you've passed on all the Netxra configuration options. Maybe next time!
+    Thanks for using Nextra!
+    `);
     }
 
     await nextra.configureNext();
@@ -105,7 +106,7 @@ Thanks for using Nextra!
       );
     }
 
-    if (answers.usePrettier) {
+    if (hasAnswers) {
       await nextra.cleanUp();
     }
   });
