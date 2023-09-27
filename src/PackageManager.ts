@@ -75,6 +75,7 @@ class PackageManager {
     dependencies,
     devDependencies = false,
   }: AddToDependenciesType): Promise<void> {
+    if (!Array.isArray(dependencies) || dependencies.length === 0) return;
     try {
       const { execa } = await import('execa');
       const { add, saveDev } = this.getCmds();
