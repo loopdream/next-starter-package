@@ -74,18 +74,20 @@ class PackageManager {
   public async addToDependencies({
     dependencies,
     devDependencies = false,
-  }: AddToDependenciesType): Promise<void> {
+  }: AddToDependenciesType) {
     if (!Array.isArray(dependencies) || dependencies.length === 0) return;
     try {
       const { execa } = await import('execa');
       const { add, saveDev } = this.getCmds();
+      const deps = [...dependencies];
 
-      if (devDependencies) dependencies.push(saveDev);
+      if (devDependencies) deps.push(saveDev);
 
-      await execa(this.getKind(), [add, ...dependencies], {
-        // stdio: 'inherit',
+      const { stdout } = await execa(this.getKind(), [add, ...deps], {
         cwd: this.root,
       });
+
+      return stdout;
     } catch (error) {
       throw new Error(`${error}`);
     }

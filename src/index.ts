@@ -69,6 +69,14 @@ program
     `);
     }
 
+    console.log(`
+    
+Using ${packageManagerChoice}.
+
+Configuring project with following configurations:  
+
+`);
+
     await nextra.configureNext();
 
     if (answers.configurePrettier) {

@@ -32,6 +32,7 @@ class Nextra {
   private nextConfig = {} as NextJsConfigType;
   private packageManager = {} as PackageManager;
   private promptAnswers = {} as prompts.Answers<string>;
+  private spinner;
 
   constructor({
     projectDirectoryPath,
@@ -41,7 +42,7 @@ class Nextra {
     this.markdownDirPath = path.resolve(path.join('src', 'markdown'));
     this.root = path.resolve(projectDirectoryPath);
     this.readmeMarkdownArr = [];
-
+    this.spinner = ora();
     this.packageManager = new PackageManager({
       packageManagerKind,
       root: this.root,
@@ -49,7 +50,6 @@ class Nextra {
   }
 
   public setPromptAnswers = (answers: prompts.Answers<string>) => {
-    if (!answers) throw new Error('Nextra: answers is undefined');
     this.promptAnswers = answers;
   };
 
@@ -91,7 +91,7 @@ class Nextra {
   };
 
   public configureCypress = async () => {
-    const spinner = ora({ indent: 2, text: 'Configuring Cypress' }).start();
+    this.spinner.start('Configuring Cypress');
 
     try {
       await this.packageManager.addToDependencies({
@@ -103,37 +103,31 @@ class Nextra {
       await this.packageManager.addToScripts({ e2e: 'cypress run' });
       await this.addMarkdownFragmentToReadmeArr('cypress');
 
-      spinner.succeed();
+      this.spinner.succeed();
     } catch (error) {
-      spinner.fail();
+      this.spinner.fail();
       oops();
       throw new Error(`\n${error}`);
     }
   };
 
   public configureDocker = async () => {
-    const spinner = ora({
-      indent: 2,
-      text: 'Configuring Docker',
-    }).start();
+    this.spinner.start('Configuring Docker');
 
     try {
       await this.copyTemplate(['docker-compose.yml', 'Dockerfile', 'Makefile']);
       await this.addMarkdownFragmentToReadmeArr('docker');
 
-      spinner.succeed();
+      this.spinner.succeed();
     } catch (error) {
-      spinner.fail();
+      this.spinner.fail();
       oops();
       throw new Error(`\n${error}`);
     }
   };
 
   public configureEnvVars = async () => {
-    const spinner = ora({
-      indent: 2,
-      text: 'Configuring Environment variables',
-    }).start();
+    this.spinner.start('Configuring Environment variables');
 
     try {
       const envFiles = ['.env.example', '.env.local', '.env'].map((file) =>
@@ -154,9 +148,9 @@ class Nextra {
         );
       }
 
-      spinner.succeed();
+      this.spinner.succeed();
     } catch (error) {
-      spinner.fail();
+      this.spinner.fail();
       oops();
       throw new Error(`\n${error}`);
     }
@@ -166,10 +160,7 @@ class Nextra {
     const $execa = $({ cwd: this.root });
     const pm = this.packageManager.getKind();
 
-    const spinner = ora({
-      indent: 2,
-      text: 'Configuring Git and Husky',
-    }).start();
+    this.spinner.start('Configuring Git and Husky');
 
     try {
       await $execa`git init`;
@@ -193,18 +184,15 @@ class Nextra {
       await this.addMarkdownFragmentToReadmeArr('git');
       await this.addMarkdownFragmentToReadmeArr('husky');
 
-      spinner.succeed();
+      this.spinner.succeed();
     } catch (error) {
-      spinner.fail();
+      this.spinner.fail();
       throw new Error(`${error}`);
     }
   };
 
   public configureJestRTL = async () => {
-    const spinner = ora({
-      indent: 2,
-      text: 'Configuring Jest and React Testing Library',
-    }).start();
+    this.spinner.start('Configuring Jest and React Testing Library');
 
     try {
       await this.packageManager.addToDependencies({
@@ -236,19 +224,16 @@ class Nextra {
 
       await this.addMarkdownFragmentToReadmeArr('jestRTL');
 
-      spinner.succeed();
+      this.spinner.succeed();
     } catch (error) {
-      spinner.fail();
+      this.spinner.fail();
       oops();
       throw new Error(`\n${error}`);
     }
   };
 
   public configureLintStaged = async () => {
-    const spinner = ora({
-      indent: 2,
-      text: 'Configuring Lint-staged',
-    }).start();
+    this.spinner.start('Configuring Lint-staged');
 
     try {
       await this.packageManager.addToDependencies({
@@ -265,28 +250,22 @@ class Nextra {
 
       await this.addMarkdownFragmentToReadmeArr('lint-staged');
 
-      spinner.succeed();
+      this.spinner.succeed();
     } catch (error) {
-      spinner.fail();
+      this.spinner.fail();
       oops();
       throw new Error(`\n${error}`);
     }
   };
 
   public configureNext = async () => {
-    const spinner = ora({
-      indent: 2,
-      text: 'Configuring next standalone production builds',
-    }).start();
+    this.spinner.start('Configuring next standalone production builds');
 
     try {
       // add standalone next config and build/start scripts
       // https://nextjs.org/docs/pages/api-reference/next-config-js/output
 
       const pm = this.packageManager.getKind();
-
-      await this.copyTemplate('next.config.js');
-
       await this.packageManager.addToScripts({
         'build:standalone': 'BUILD_STANDALONE=true next build',
         'start:standalone': 'node ./.next/standalone/server.js',
@@ -301,21 +280,20 @@ class Nextra {
         });
       }
 
+      await this.copyTemplate('next.config.js');
+
       await this.addMarkdownFragmentToReadmeArr('next');
 
-      spinner.succeed();
+      this.spinner.succeed();
     } catch (error) {
-      spinner.fail();
+      this.spinner.fail();
       oops();
       throw new Error(`\n${error}`);
     }
   };
 
   public configureStorybook = async () => {
-    const addStorybookSpinner = ora({
-      indent: 2,
-      text: 'Configuring Storybook',
-    }).start();
+    this.spinner.start('Configuring Storybook');
 
     try {
       await this.packageManager.addToDependencies({
@@ -343,19 +321,16 @@ class Nextra {
 
       await this.addMarkdownFragmentToReadmeArr('storybook');
 
-      addStorybookSpinner.succeed();
+      this.spinner.succeed();
     } catch (error) {
-      addStorybookSpinner.fail();
+      this.spinner.fail();
       oops();
       throw new Error(`\n${error}`);
     }
   };
 
   public configurePrettier = async () => {
-    const spinner = ora({
-      indent: 2,
-      text: 'Configuring Eslint and Prettier',
-    }).start();
+    this.spinner.start('Configuring Eslint and Prettier');
 
     try {
       const dependencies = [
@@ -372,10 +347,10 @@ class Nextra {
       });
 
       const copyConfigs = [
-        this.copyTemplate('.eslintrc.json'),
-        this.copyTemplate('.prettierrc.json'),
-        this.copyTemplate('.prettierignore'),
-      ];
+        '.eslintrc.json',
+        '.prettierrc.json',
+        '.prettierignore',
+      ].map((config) => this.copyTemplate(config));
 
       await Promise.all(copyConfigs);
 
@@ -388,9 +363,9 @@ class Nextra {
 
       await this.addMarkdownFragmentToReadmeArr('prettier');
 
-      spinner.succeed();
+      this.spinner.succeed();
     } catch (error) {
-      spinner.fail();
+      this.spinner.fail();
       oops();
       throw new Error(`\n${error}`);
     }
@@ -401,10 +376,7 @@ class Nextra {
   ) => {
     if (!selectedDependencies || selectedDependencies.length === 0) return;
 
-    const spinner = ora({
-      indent: 2,
-      text: 'Adding selected packages',
-    }).start();
+    this.spinner.start('Configuring selected packages');
 
     try {
       const dependencies = selectedDependencies
@@ -441,9 +413,9 @@ class Nextra {
       const table = markdownTable([tableHeader, ...tableData]);
       this.readmeMarkdownArr.push(table);
 
-      spinner.succeed();
+      this.spinner.succeed();
     } catch (error) {
-      spinner.fail();
+      this.spinner.fail();
       oops();
       throw new Error(`\n${error}`);
     }
@@ -451,9 +423,7 @@ class Nextra {
 
   public cleanUp = async () => {
     // clean up ie format files + write Readme - maybe other stuff TBC
-
-    const spinner = ora({ indent: 2, text: 'Cleaning up' }).start();
-
+    this.spinner.start('Cleaning up');
     try {
       if (this.promptAnswers.configurePrettier) {
         await $({
@@ -463,9 +433,9 @@ class Nextra {
 
       await this.generateReadme();
 
-      spinner.succeed();
+      this.spinner.succeed();
     } catch (error) {
-      spinner.fail();
+      this.spinner.fail();
       oops();
       throw new Error(`\n${error}`);
     }
@@ -500,7 +470,7 @@ class Nextra {
     recursive: boolean = false
   ) => {
     if (typeof template === 'string') {
-      await fs.promises.cp(
+      return await fs.promises.cp(
         path.join(this.configsPath, template),
         path.join(this.root, template),
         { recursive }
@@ -515,7 +485,7 @@ class Nextra {
         )
       );
 
-      await Promise.all(copyFiles);
+      return await Promise.all(copyFiles);
     }
   };
 }
