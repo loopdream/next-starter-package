@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import ora from 'ora';
+import picocolors from 'picocolors';
 import { $ } from 'execa';
 
 import prompts from 'prompts';
@@ -24,6 +25,7 @@ export interface NextJsConfigType {
   typescript: boolean;
 }
 
+const { green } = picocolors;
 class Nextra {
   private root: string;
   private configsPath: string;
@@ -94,18 +96,17 @@ class Nextra {
     this.spinner.start('Configuring Cypress');
 
     try {
-      await this.packageManager.addToDependencies({
-        dependencies: ['cypress'],
-        devDependencies: true,
-      });
+      await this.packageManager.addToDependencies(['cypress'], true);
 
       await this.copyTemplate('cypress', true);
-      await this.packageManager.addToScripts({ e2e: 'cypress run' });
+      //await this.packageManager.addToScripts({ e2e: 'cypress run' });
+      await this.packageManager.addToPackage('scripts', { e2e: 'cypress run' });
+
       await this.addMarkdownFragmentToReadmeArr('cypress');
 
       this.spinner.succeed();
     } catch (error) {
-      this.spinner.fail();
+      this.spinner.fail('Error configuring Cypress');
       oops();
       throw new Error(`\n${error}`);
     }
@@ -120,24 +121,28 @@ class Nextra {
 
       this.spinner.succeed();
     } catch (error) {
-      this.spinner.fail();
+      this.spinner.fail('Error configuring Docker');
       oops();
       throw new Error(`\n${error}`);
     }
   };
 
-  public configureEnvVars = async () => {
-    this.spinner.start('Configuring Environment variables');
+  public configureEnvVars = async (dotEnvFileArr: string[]) => {
+    this.spinner.start('Adding Environment variables');
 
     try {
-      const envFiles = ['.env.example', '.env.local', '.env'].map((file) =>
-        fs.promises.cp(
-          path.join(this.configsPath, '.env.example'),
-          path.join(this.root, file)
-        )
+      // const copyEnvFiles = dotEnvFileArr.map((file) =>
+      //   fs.promises.cp(
+      //     path.join(this.configsPath, '.env.example'),
+      //     path.join(this.root, file)
+      //   )
+      // );
+
+      const copyEnvFiles = dotEnvFileArr.map(
+        (file) => $`touch ${path.join(this.root, file)}`
       );
 
-      await Promise.all(envFiles);
+      await Promise.all(copyEnvFiles);
 
       if (fs.existsSync(path.join(this.root, '.gitignore'))) {
         await fs.promises.appendFile(
@@ -150,7 +155,7 @@ class Nextra {
 
       this.spinner.succeed();
     } catch (error) {
-      this.spinner.fail();
+      this.spinner.fail('Error adding Environment variables');
       oops();
       throw new Error(`\n${error}`);
     }
@@ -184,9 +189,26 @@ class Nextra {
       await this.addMarkdownFragmentToReadmeArr('git');
       await this.addMarkdownFragmentToReadmeArr('husky');
 
+      // rewrite husky pre-commit commands based on choices
+      const huskyPreCommitStr =
+        `#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"` +
+        (this.nextConfig.eslint
+          ? `\n\nnpm run lint:check\n\nnpm run lint:fix`
+          : '') +
+        (this.promptAnswers.configurePrettier
+          ? `\n\nnpm run format:write`
+          : '');
+
+      await fs.promises.writeFile(
+        path.join(this.root, '.husky', 'pre-commit'),
+        huskyPreCommitStr,
+        'utf8'
+      );
+
       this.spinner.succeed();
     } catch (error) {
-      this.spinner.fail();
+      this.spinner.fail('Error configuring Git and Husky');
+      oops();
       throw new Error(`${error}`);
     }
   };
@@ -195,8 +217,8 @@ class Nextra {
     this.spinner.start('Configuring Jest and React Testing Library');
 
     try {
-      await this.packageManager.addToDependencies({
-        dependencies: [
+      await this.packageManager.addToDependencies(
+        [
           'jest',
           'jest-environment-jsdom',
           '@testing-library/jest-dom',
@@ -205,8 +227,8 @@ class Nextra {
           'cypress',
           'eslint-plugin-testing-library',
         ],
-        devDependencies: true,
-      });
+        true
+      );
 
       await this.copyTemplate('jest.config.js');
 
@@ -217,7 +239,7 @@ class Nextra {
         );
       }
 
-      await this.packageManager.addToScripts({
+      await this.packageManager.addToPackage('scripts', {
         test: 'jest --watch',
         'test:ci': 'jest --ci',
       });
@@ -226,7 +248,7 @@ class Nextra {
 
       this.spinner.succeed();
     } catch (error) {
-      this.spinner.fail();
+      this.spinner.fail('Error configuring Jest and React Testing Library');
       oops();
       throw new Error(`\n${error}`);
     }
@@ -236,14 +258,11 @@ class Nextra {
     this.spinner.start('Configuring Lint-staged');
 
     try {
-      await this.packageManager.addToDependencies({
-        dependencies: ['lint-staged'],
-        devDependencies: true,
-      });
+      await this.packageManager.addToDependencies(['lint-staged'], true);
 
       await this.copyTemplate('.lintstagedrc');
 
-      await this.packageManager.addToScripts({
+      await this.packageManager.addToPackage('scripts', {
         storybook: 'storybook dev -p 6006',
         'build-storybook': 'storybook build',
       });
@@ -252,7 +271,7 @@ class Nextra {
 
       this.spinner.succeed();
     } catch (error) {
-      this.spinner.fail();
+      this.spinner.fail('Error configuring Lint-staged');
       oops();
       throw new Error(`\n${error}`);
     }
@@ -266,7 +285,8 @@ class Nextra {
       // https://nextjs.org/docs/pages/api-reference/next-config-js/output
 
       const pm = this.packageManager.getKind();
-      await this.packageManager.addToScripts({
+
+      await this.packageManager.addToPackage('scripts', {
         'build:standalone': 'BUILD_STANDALONE=true next build',
         'start:standalone': 'node ./.next/standalone/server.js',
         'build-start': `next build && next start`,
@@ -275,9 +295,7 @@ class Nextra {
 
       // https://nextjs.org/docs/app/building-your-application/optimizing/images
       if (this.promptAnswers.configureNextImageOptimisation) {
-        await this.packageManager.addToDependencies({
-          dependencies: ['sharp'],
-        });
+        await this.packageManager.addToDependencies(['sharp']);
       }
 
       await this.copyTemplate('next.config.js');
@@ -286,7 +304,7 @@ class Nextra {
 
       this.spinner.succeed();
     } catch (error) {
-      this.spinner.fail();
+      this.spinner.fail('Error configuring next standalone production builds');
       oops();
       throw new Error(`\n${error}`);
     }
@@ -296,8 +314,8 @@ class Nextra {
     this.spinner.start('Configuring Storybook');
 
     try {
-      await this.packageManager.addToDependencies({
-        dependencies: [
+      await this.packageManager.addToDependencies(
+        [
           '@storybook/addon-essentials',
           '@storybook/addon-interactions',
           '@storybook/addon-links',
@@ -309,12 +327,12 @@ class Nextra {
           'eslint-plugin-storybook',
           'storybook',
         ],
-        devDependencies: true,
-      });
+        true
+      );
 
       await this.copyTemplate('.storybook', true);
 
-      await this.packageManager.addToScripts({
+      await this.packageManager.addToPackage('scripts', {
         storybook: 'storybook dev -p 6006',
         'build-storybook': 'storybook build',
       });
@@ -323,7 +341,7 @@ class Nextra {
 
       this.spinner.succeed();
     } catch (error) {
-      this.spinner.fail();
+      this.spinner.fail('Error configuring Storybook');
       oops();
       throw new Error(`\n${error}`);
     }
@@ -341,10 +359,7 @@ class Nextra {
 
       if (!this.nextConfig.eslint) dependencies.push('eslint');
 
-      await this.packageManager.addToDependencies({
-        dependencies,
-        devDependencies: true,
-      });
+      await this.packageManager.addToDependencies(dependencies, true);
 
       const copyConfigs = [
         '.eslintrc.json',
@@ -354,7 +369,7 @@ class Nextra {
 
       await Promise.all(copyConfigs);
 
-      await this.packageManager.addToScripts({
+      await this.packageManager.addToPackage('scripts', {
         'lint:check': 'eslint .',
         'lint:fix': 'eslint --fix .',
         'format:check': 'prettier --check .',
@@ -365,7 +380,7 @@ class Nextra {
 
       this.spinner.succeed();
     } catch (error) {
-      this.spinner.fail();
+      this.spinner.fail('Error configuring Eslint and Prettier');
       oops();
       throw new Error(`\n${error}`);
     }
@@ -388,14 +403,11 @@ class Nextra {
         .map(({ module }) => module);
 
       if (dependencies.length > 0) {
-        await this.packageManager.addToDependencies({ dependencies });
+        await this.packageManager.addToDependencies(dependencies);
       }
 
       if (devDependencies.length > 0) {
-        await this.packageManager.addToDependencies({
-          dependencies: devDependencies,
-          devDependencies: true,
-        });
+        await this.packageManager.addToDependencies(devDependencies, true);
       }
 
       await this.addMarkdownFragmentToReadmeArr('selected-dependencies');
@@ -415,7 +427,7 @@ class Nextra {
 
       this.spinner.succeed();
     } catch (error) {
-      this.spinner.fail();
+      this.spinner.fail('Error configuring selected packages');
       oops();
       throw new Error(`\n${error}`);
     }
@@ -439,6 +451,14 @@ class Nextra {
       oops();
       throw new Error(`\n${error}`);
     }
+
+    return this.configurationMessage();
+  };
+
+  private configurationMessage = () => {
+    return `${green(
+      'Success!'
+    )} The following configurations were made: TBC... `;
   };
 
   private addMarkdownFragmentToReadmeArr = async (markdownFileName: string) => {

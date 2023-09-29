@@ -32,17 +32,32 @@ export const packageManagerPrompt: PromptObject = {
   initial: 0,
 };
 
-export const configureNextStandalone: PromptObject = {
+export const configureDotEnvFiles: PromptObject = {
   onState: onPromptState,
-  type: 'toggle',
-  name: 'configureNextStandalone',
-  message: `Would you like to configure ${blue(
-    'Next'
-  )} for standalone production builds?`,
-  initial: 'Yes',
-  active: 'Yes',
-  inactive: `No`,
+  type: 'multiselect',
+  name: 'configureDotEnvFiles',
+  message: 'Select .env* files to install',
+  choices: [
+    { title: '.env.example', value: '.env.example' },
+    { title: '.env', value: '.env' },
+    { title: '.env.local', value: '.env.local' },
+    { title: '.env.developement', value: '.env.developement' },
+    { title: '.env.production', value: '.env.production' },
+  ],
+  initial: 0,
 };
+
+// export const configureNextStandalone: PromptObject = {
+//   onState: onPromptState,
+//   type: 'toggle',
+//   name: 'configureNextStandalone',
+//   message: `Would you like to configure ${blue(
+//     'Next'
+//   )} for standalone production builds?`,
+//   initial: 'Yes',
+//   active: 'Yes',
+//   inactive: `No`,
+// };
 
 export const configurePrettier: PromptObject = {
   onState: onPromptState,
@@ -436,4 +451,5 @@ export default {
   configurePrettier,
   configureSelectedDependencies,
   configureStorybook,
+  configureDotEnvFiles,
 };

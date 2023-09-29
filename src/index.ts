@@ -42,21 +42,22 @@ program
     const nextConfig = await nextra.createNextApp();
 
     const answers = await prompt([
-      questions.configureNextStandalone,
       questions.configureNextImageOptimisation,
       questions.configurePrettier,
       questions.configureJestRTL,
       questions.configureLintStaged,
+      questions.configureCypress,
       questions.configureStorybook,
       questions.configureHusky,
       questions.configureDocker,
-      questions.configureCypress,
+      questions.configureDotEnvFiles,
       questions.configureSelectedDependencies,
     ]);
 
     const hasAnswers =
       Object.values(answers).includes(true) ||
-      answers.configureSelectedDependencies.length > 0;
+      answers.configureSelectedDependencies.length > 0 ||
+      answers.configureDotEnvFiles.length > 0;
 
     if (hasAnswers) {
       nextra.setPromptAnswers(answers);
@@ -108,7 +109,10 @@ Configuring project with following configurations:
 
     if (answers.configureDocker) {
       await nextra.configureDocker();
-      await nextra.configureEnvVars();
+    }
+
+    if (answers.configureDotEnvFiles.length > 0) {
+      await nextra.configureEnvVars(answers.configureDotEnvFiles);
     }
 
     if (answers.configureSelectedDependencies.length > 0) {
@@ -117,9 +121,8 @@ Configuring project with following configurations:
       );
     }
 
-    if (hasAnswers) {
-      await nextra.cleanUp();
-    }
+    const configurationMessage = await nextra.cleanUp();
+    console.log(`\n` + configurationMessage);
   });
 
 program.parse();

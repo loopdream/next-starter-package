@@ -1,6 +1,7 @@
 import path from 'path';
 import os from 'os';
 import fs from 'fs';
+import { execa } from 'execa';
 
 export enum PackageManagerKindEnum {
   NPM = 'npm',
@@ -22,33 +23,19 @@ export enum PackageManagerSaveDevEnum {
 export type PackageManagerPropsType = {
   packageManagerKind: PackageManagerKindEnum;
   root: string;
-  // stdio?: 'overlapped' | 'ignore' | 'inherit' | 'pipe';
 };
 
-export type AddToDependenciesType = {
-  dependencies: string[];
-  devDependencies?: boolean;
-};
-
-export type AddToScriptsType = Record<string, string>;
-
-export type PackageManagerType = {
-  addToDependencies: (o: AddToDependenciesType) => Promise<void>;
-  addToScripts: (a: AddToScriptsType) => Promise<void>;
-  getCmds: () => {
-    add: PackageManagerAddEnum;
-    saveDev: PackageManagerSaveDevEnum;
-  };
-  getKind: () => PackageManagerKindEnum;
-};
+export type AddToPackageType = Record<string, string | Record<string, string>>;
 
 class PackageManager {
   private packageManagerKind: PackageManagerKindEnum;
-  private root: string;
+  private cwd: string;
+  private packageFilePath: string;
 
-  constructor(props: PackageManagerPropsType) {
-    this.packageManagerKind = props.packageManagerKind;
-    this.root = props.root;
+  constructor({ packageManagerKind, root }: PackageManagerPropsType) {
+    this.packageManagerKind = packageManagerKind;
+    this.cwd = root;
+    this.packageFilePath = path.join(this.cwd, 'package.json');
   }
 
   public getKind(): PackageManagerKindEnum {
@@ -59,32 +46,32 @@ class PackageManager {
     add: PackageManagerAddEnum;
     saveDev: PackageManagerSaveDevEnum;
   } {
+    const pm = this.getKind();
     return {
       add:
-        this.getKind() === PackageManagerKindEnum.NPM
+        pm === PackageManagerKindEnum.NPM
           ? PackageManagerAddEnum.INSTALL
           : PackageManagerAddEnum.ADD,
       saveDev:
-        this.getKind() === PackageManagerKindEnum.YARN
-          ? PackageManagerSaveDevEnum.DEV
-          : PackageManagerSaveDevEnum.SAVE_DEV,
+        pm === PackageManagerKindEnum.YARN || PackageManagerKindEnum.BUN
+          ? PackageManagerSaveDevEnum.DEV // --dev
+          : PackageManagerSaveDevEnum.SAVE_DEV, // --save-dev
     };
   }
 
-  public async addToDependencies({
-    dependencies,
-    devDependencies = false,
-  }: AddToDependenciesType) {
+  public async addToDependencies(
+    dependencies: string[],
+    devDependencies: boolean = false
+  ) {
     if (!Array.isArray(dependencies) || dependencies.length === 0) return;
     try {
-      const { execa } = await import('execa');
       const { add, saveDev } = this.getCmds();
       const deps = [...dependencies];
 
       if (devDependencies) deps.push(saveDev);
 
       const { stdout } = await execa(this.getKind(), [add, ...deps], {
-        cwd: this.root,
+        cwd: this.cwd,
       });
 
       return stdout;
@@ -93,22 +80,23 @@ class PackageManager {
     }
   }
 
-  public async addToScripts(scripts: AddToScriptsType): Promise<void> {
+  public async addToPackage(
+    property: string,
+    values: AddToPackageType
+  ): Promise<void> {
     try {
-      const packageFilePath = path.join(this.root, 'package.json');
-      const packageFileJson = await fs.promises.readFile(
-        packageFilePath,
-        'utf8'
-      );
-      const packageFile = JSON.parse(packageFileJson);
+      const packageFile = await fs.promises
+        .readFile(this.packageFilePath, 'utf8')
+        .then((file) => JSON.parse(file));
 
-      packageFile.scripts = {
-        ...packageFile.scripts,
-        ...scripts,
-      };
+      if (property in packageFile) {
+        packageFile[property] = { ...packageFile[property], ...values };
+      } else {
+        packageFile[property] = { ...values };
+      }
 
       await fs.promises.writeFile(
-        packageFilePath,
+        this.packageFilePath,
         JSON.stringify(packageFile, null, 2) + os.EOL
       );
     } catch (error) {
