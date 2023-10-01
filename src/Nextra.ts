@@ -26,6 +26,7 @@ export interface NextJsConfigType {
 }
 
 const { green } = picocolors;
+
 class Nextra {
   private root: string;
   private configsPath: string;
@@ -96,7 +97,7 @@ class Nextra {
     this.spinner.start('Configuring Cypress');
 
     try {
-      await this.packageManager.addToDependencies(['cypress'], true);
+      await this.packageManager.addToDevDependencies(['cypress']);
 
       await this.copyTemplate('cypress', true);
       //await this.packageManager.addToScripts({ e2e: 'cypress run' });
@@ -217,18 +218,15 @@ class Nextra {
     this.spinner.start('Configuring Jest and React Testing Library');
 
     try {
-      await this.packageManager.addToDependencies(
-        [
-          'jest',
-          'jest-environment-jsdom',
-          '@testing-library/jest-dom',
-          '@testing-library/user-event',
-          '@testing-library/react',
-          'cypress',
-          'eslint-plugin-testing-library',
-        ],
-        true
-      );
+      await this.packageManager.addToDevDependencies([
+        'jest',
+        'jest-environment-jsdom',
+        '@testing-library/jest-dom',
+        '@testing-library/user-event',
+        '@testing-library/react',
+        'cypress',
+        'eslint-plugin-testing-library',
+      ]);
 
       await this.copyTemplate('jest.config.js');
 
@@ -258,7 +256,7 @@ class Nextra {
     this.spinner.start('Configuring Lint-staged');
 
     try {
-      await this.packageManager.addToDependencies(['lint-staged'], true);
+      await this.packageManager.addToDevDependencies(['lint-staged']);
 
       await this.copyTemplate('.lintstagedrc');
 
@@ -276,6 +274,8 @@ class Nextra {
       throw new Error(`\n${error}`);
     }
   };
+
+  public configureEslint = async () => {};
 
   public configureNext = async () => {
     this.spinner.start('Configuring next standalone production builds');
@@ -314,21 +314,18 @@ class Nextra {
     this.spinner.start('Configuring Storybook');
 
     try {
-      await this.packageManager.addToDependencies(
-        [
-          '@storybook/addon-essentials',
-          '@storybook/addon-interactions',
-          '@storybook/addon-links',
-          '@storybook/addon-onboarding',
-          '@storybook/blocks',
-          '@storybook/nextjs',
-          '@storybook/react',
-          '@storybook/testing-library',
-          'eslint-plugin-storybook',
-          'storybook',
-        ],
-        true
-      );
+      await this.packageManager.addToDevDependencies([
+        '@storybook/addon-essentials',
+        '@storybook/addon-interactions',
+        '@storybook/addon-links',
+        '@storybook/addon-onboarding',
+        '@storybook/blocks',
+        '@storybook/nextjs',
+        '@storybook/react',
+        '@storybook/testing-library',
+        'eslint-plugin-storybook',
+        'storybook',
+      ]);
 
       await this.copyTemplate('.storybook', true);
 
@@ -359,7 +356,7 @@ class Nextra {
 
       if (!this.nextConfig.eslint) dependencies.push('eslint');
 
-      await this.packageManager.addToDependencies(dependencies, true);
+      await this.packageManager.addToDevDependencies(dependencies);
 
       const copyConfigs = [
         '.eslintrc.json',
@@ -407,7 +404,7 @@ class Nextra {
       }
 
       if (devDependencies.length > 0) {
-        await this.packageManager.addToDependencies(devDependencies, true);
+        await this.packageManager.addToDevDependencies(devDependencies);
       }
 
       await this.addMarkdownFragmentToReadmeArr('selected-dependencies');
@@ -452,10 +449,10 @@ class Nextra {
       throw new Error(`\n${error}`);
     }
 
-    return this.configurationMessage();
+    return this.configurationCompleteMessage();
   };
 
-  private configurationMessage = () => {
+  private configurationCompleteMessage = () => {
     return `${green(
       'Success!'
     )} The following configurations were made: TBC... `;

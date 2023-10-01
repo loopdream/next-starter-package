@@ -8,4 +8,6 @@ npm run lint:fix
 
 npm run format:write
 
+npm run build --noEmit 
+
 npm run todo

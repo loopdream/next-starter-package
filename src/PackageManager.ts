@@ -61,14 +61,14 @@ class PackageManager {
 
   public async addToDependencies(
     dependencies: string[],
-    devDependencies: boolean = false
+    addToDependencies: boolean = false
   ) {
     if (!Array.isArray(dependencies) || dependencies.length === 0) return;
     try {
       const { add, saveDev } = this.getCmds();
       const deps = [...dependencies];
 
-      if (devDependencies) deps.push(saveDev);
+      if (addToDependencies) deps.push(saveDev);
 
       const { stdout } = await execa(this.getKind(), [add, ...deps], {
         cwd: this.cwd,
@@ -78,6 +78,10 @@ class PackageManager {
     } catch (error) {
       throw new Error(`${error}`);
     }
+  }
+
+  public async addToDevDependencies(dependencies: string[]) {
+    return this.addToDependencies(dependencies, true);
   }
 
   public async addToPackage(

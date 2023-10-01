@@ -121,8 +121,8 @@ Configuring project with following configurations:
       );
     }
 
-    const configurationMessage = await nextra.cleanUp();
-    console.log(`\n` + configurationMessage);
+    const configurationCompleteMessage = await nextra.cleanUp();
+    console.log(`\n` + configurationCompleteMessage);
   });
 
 program.parse();

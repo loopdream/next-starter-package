@@ -447,7 +447,6 @@ export default {
   configureNextImageOptimisation,
   configureJestRTL,
   configureLintStaged,
-  configureNextStandalone,
   configurePrettier,
   configureSelectedDependencies,
   configureStorybook,
