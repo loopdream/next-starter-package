@@ -8,7 +8,7 @@ import prompt from 'prompts';
 
 import { goodbye } from './utils.js';
 
-import Nextra from './Nextra.js';
+import Configurator from './Configurator.js';
 import questions from './questions.js';
 
 console.log('\n', figlet.textSync('Nextra'), '\n\n');
@@ -34,12 +34,10 @@ program
       questions.packageManagerPrompt
     );
 
-    const nextra = new Nextra({
+    const configurator = new Configurator({
       projectDirectoryPath,
       packageManagerChoice,
     });
-
-    const nextConfig = await nextra.createNextApp();
 
     const answers = await prompt([
       questions.configureNextImageOptimisation,
@@ -60,7 +58,7 @@ program
       answers.configureDotEnvFiles.length > 0;
 
     if (hasAnswers) {
-      nextra.setPromptAnswers(answers);
+      configurator.setPromptAnswers(answers);
     } else {
       // nothing to configure!
       goodbye();
@@ -78,51 +76,51 @@ Configuring project with following configurations:
 
 `);
 
-    await nextra.configureNext();
+    await configurator.configure();
 
-    if (answers.configurePrettier) {
-      await nextra.configurePrettier();
-    }
+    // if (answers.configurePrettier) {
+    //   await nextra.configurePrettier();
+    // }
 
-    if (answers.configureJestRTL) {
-      await nextra.configureJestRTL();
-    }
+    // if (answers.configureJestRTL) {
+    //   await nextra.configureJestRTL();
+    // }
 
-    if (answers.configureCypress) {
-      await nextra.configureCypress();
-    }
+    // if (answers.configureCypress) {
+    //   await nextra.configureCypress();
+    // }
 
-    if (
-      (nextConfig.eslint || answers.configurePrettier) &&
-      answers.configureLintStaged
-    ) {
-      await nextra.configureLintStaged();
-    }
+    // if (
+    //   (nextConfig.eslint || answers.configurePrettier) &&
+    //   answers.configureLintStaged
+    // ) {
+    //   await nextra.configureLintStaged();
+    // }
 
-    if (answers.configureHusky) {
-      await nextra.configureGitHusky();
-    }
+    // if (answers.configureHusky) {
+    //   await nextra.configureGitHusky();
+    // }
 
-    if (answers.configureStorybook) {
-      await nextra.configureStorybook();
-    }
+    // if (answers.configureStorybook) {
+    //   await nextra.configureStorybook();
+    // }
 
-    if (answers.configureDocker) {
-      await nextra.configureDocker();
-    }
+    // if (answers.configureDocker) {
+    //   await nextra.configureDocker();
+    // }
 
-    if (answers.configureDotEnvFiles.length > 0) {
-      await nextra.configureEnvVars(answers.configureDotEnvFiles);
-    }
+    // if (answers.configureDotEnvFiles.length > 0) {
+    //   await nextra.configureEnvVars(answers.configureDotEnvFiles);
+    // }
 
-    if (answers.configureSelectedDependencies.length > 0) {
-      await nextra.configureSelectedDependencies(
-        answers.configureSelectedDependencies
-      );
-    }
+    // if (answers.configureSelectedDependencies.length > 0) {
+    //   await nextra.configureSelectedDependencies(
+    //     answers.configureSelectedDependencies
+    //   );
+    // }
 
-    const configurationCompleteMessage = await nextra.cleanUp();
-    console.log(`\n` + configurationCompleteMessage);
+    // const configurationCompleteMessage = await nextra.cleanUp();
+    // console.log(`\n` + configurationCompleteMessage);
   });
 
 program.parse();
