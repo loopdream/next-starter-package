@@ -45,6 +45,7 @@ class Configurator {
   private spinner;
   private use = {
     cypress: false,
+    docker: false,
     eslint: false,
     husky: false,
     jest: false,
@@ -54,6 +55,7 @@ class Configurator {
     storybook: false,
     tsEslint: false,
     typescript: false,
+    selectedDependencies: false,
   };
   private configurationObjects = {
     configDirectories: [],
@@ -214,7 +216,6 @@ class Configurator {
             '@testing-library/jest-dom',
             '@testing-library/user-event',
             '@testing-library/react',
-            'cypress',
             'eslint-plugin-testing-library',
           ]
         : []),
@@ -252,7 +253,42 @@ class Configurator {
 
     this.configurationObjects.markdown = markdowns;
 
+    this.setUse();
+
     return this.configurationObjects;
+  };
+
+  private setUse = () => {
+    const {
+      configureCypress: cypress,
+      configureDocker: docker,
+      configureHusky: husky,
+      configureJestRTL: reactTestingLibrary,
+      configurePrettier: prettier,
+      configureSelectedDependencies: selectedDependencies,
+      configureStorybook: storybook,
+      configureLintStaged: lintStaged,
+    } = this.promptAnswers;
+
+    const { typescript, eslint } = this.nextConfig;
+    const { packageDevDependencies } = this.configurationObjects;
+
+    this.use = {
+      cypress,
+      eslint,
+      docker,
+      husky,
+      jest: reactTestingLibrary, // TODO make Jest a seperate prompt choice
+      lintStaged,
+      prettier: prettier && packageDevDependencies.includes('prettier'),
+      reactTestingLibrary,
+      storybook,
+      tsEslint:
+        eslint &&
+        packageDevDependencies.includes('eslint-plugin-testing-library'),
+      typescript,
+      selectedDependencies,
+    };
   };
 
   public installConfigureGitHusky = async () => {

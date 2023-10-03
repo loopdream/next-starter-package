@@ -15,12 +15,6 @@ export enum PackageManagerAddEnum {
   INSTALL = 'install',
 }
 
-export enum PackageManagerSaveDevEnum {
-  DEV = '--dev',
-  SAVE_DEV = '--save-dev',
-  ONLY_DEV = '--only=dev',
-}
-
 export type PackageManagerPropsType = {
   packageManagerKind: PackageManagerKindEnum;
   root: string;
