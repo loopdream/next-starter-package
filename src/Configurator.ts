@@ -124,7 +124,7 @@ class Configurator {
     if (this.promptAnswers.configureNextImageOptimisation) {
       this.configurationObjects.packageDependencies.push('sharp');
     }
-    await this.addMarkdownFragmentToMarkdownArr('jestRTL');
+    await this.addMarkdownFragmentToMarkdownArr('next');
 
     // CYPRESS
     if (configureCypress) {
@@ -142,7 +142,7 @@ class Configurator {
       this.configurationObjects.configFiles.push(
         ...['docker-compose.yml', 'Dockerfile', 'Makefile']
       );
-      this.addMarkdownFragmentToMarkdownArr('cypdockerress');
+      this.addMarkdownFragmentToMarkdownArr('docker');
     }
 
     // PRETTIER
