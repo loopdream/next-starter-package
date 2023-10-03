@@ -520,16 +520,14 @@ class Configurator {
     if (this.promptAnswers.configurePrettier) {
       await $({
         cwd: this.root,
-      })`${this.packageManager.getKind()} run format:write`
-        .then(() => this.spinner.succeed())
-        .catch((error) => {
-          this.spinner.fail();
-          oops();
-          console.log(`${error}`);
-        });
+      })`${this.packageManager.getKind()} run format:write`.catch((error) => {
+        this.spinner.fail();
+        oops();
+        console.log(`${error}`);
+      });
     }
 
-    if (this.spinner.isSpinning) this.spinner.succeed();
+    this.spinner.succeed();
 
     return this.configurationCompleteMessage();
   };
