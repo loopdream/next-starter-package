@@ -9,6 +9,7 @@ import prompts from 'prompts';
 import { oops } from './utils.js';
 
 import PackageManager, { PackageManagerKindEnum } from './PackageManager.js';
+import { configureLintStaged } from './questions.js';
 
 type NextraPropsType = {
   projectDirectoryPath: string;
@@ -42,13 +43,25 @@ class Configurator {
   private packageManager = {} as PackageManager;
   private promptAnswers = {} as prompts.Answers<string>;
   private spinner;
+  private use = {
+    cypress: false,
+    eslint: false,
+    husky: false,
+    jest: false,
+    lintStaged: false,
+    prettier: false,
+    reactTestingLibrary: false,
+    storybook: false,
+    tsEslint: false,
+    typescript: false,
+  };
   private configurationObjects = {
-    markdown: [],
-    configFiles: [],
     configDirectories: [],
-    packageScripts: {},
+    configFiles: [],
+    markdown: [],
     packageDependencies: [],
     packageDevDependencies: [],
+    packageScripts: {},
   } as ConfigurationObjectsType;
 
   constructor({
@@ -64,6 +77,15 @@ class Configurator {
       root: this.root,
     });
   }
+
+  public run = async () => {
+    await this.prepare()
+      .then(() => this.configurePackageFile())
+      .then(() => this.installDependencies())
+      .then(() => this.buildConfigs())
+      .then(() => this.generateReadme())
+      .then(() => this.cleanUp());
+  };
 
   public setPromptAnswers = (answers: prompts.Answers<string>) => {
     this.promptAnswers = answers;
@@ -84,16 +106,19 @@ class Configurator {
   };
 
   public getNextConfig = () => {
-    const artifactExists = (fileName: string) =>
+    if (Object.keys(this.nextConfig).length > 1) {
+      return this.nextConfig;
+    }
+
+    const exists = (fileName: string) =>
       fs.existsSync(path.join(this.root, fileName));
 
-    const typescript = artifactExists('tsconfig.json') || false;
+    const typescript = exists('tsconfig.json') || false;
     this.nextConfig = {
-      appRouter: !artifactExists('src/pages') || false,
-      eslint: artifactExists('.eslintrc.json') || false,
-      tailwind:
-        artifactExists(`tailwind.config.${typescript ? 'ts' : 'js'}`) || false,
-      srcDir: artifactExists('src') || false,
+      appRouter: !exists('src/pages') || false,
+      eslint: exists('.eslintrc.json') || false,
+      tailwind: exists(`tailwind.config.${typescript ? 'ts' : 'js'}`) || false,
+      srcDir: exists('src') || false,
       typescript,
     };
 
@@ -112,129 +137,120 @@ class Configurator {
       configureStorybook,
     } = this.promptAnswers;
 
-    // Next updates to default config
-    this.configurationObjects.configFiles.push('next.config.js');
+    const configFiles = [
+      'next.config.js',
+      ...(configureDocker
+        ? ['docker-compose.yml', 'Dockerfile', 'Makefile']
+        : []),
+      ...(configurePrettier ? ['.prettierrc.json', '.prettierignore'] : []),
+      ...(configureJestRTL ? ['jest.config.js'] : []),
+    ];
+
+    this.configurationObjects.configFiles.push(...configFiles);
+
+    const configDirectories = [
+      ...(configureCypress ? ['cypress'] : []),
+      ...(configureStorybook ? ['.storybook'] : []),
+    ];
+
+    this.configurationObjects.configDirectories.push(...configDirectories);
+
     this.configurationObjects.packageScripts = {
-      ...this.configurationObjects.packageScripts,
       'build:standalone': 'BUILD_STANDALONE=true next build',
       'start:standalone': 'node ./.next/standalone/server.js',
       'build-start': `next build && next start`,
       'build-start:standalone': `${pm} run build:standalone && ${pm} run start:standalone`,
+      ...(configurePrettier
+        ? {
+            'format:check': 'prettier --check .',
+            'format:write': 'prettier --write .',
+          }
+        : {}),
+      ...(configureJestRTL
+        ? {
+            test: 'jest',
+            'test:watch': 'jest --watch',
+            'test:coverage': 'jest --coverage',
+            'test:ci': 'jest --ci --coverage',
+          }
+        : {}),
+      ...(configureCypress ? { e2e: 'cypress run' } : {}),
+      ...(configureStorybook
+        ? {
+            storybook: 'storybook dev -p 6006',
+            'build-storybook': 'storybook build',
+          }
+        : {}),
     };
-    if (this.promptAnswers.configureNextImageOptimisation) {
-      this.configurationObjects.packageDependencies.push('sharp');
-    }
-    await this.addMarkdownFragmentToMarkdownArr('next');
 
-    // CYPRESS
-    if (configureCypress) {
-      this.configurationObjects.configDirectories.push('cypress');
-      this.configurationObjects.packageDevDependencies.push('cypress');
-      this.configurationObjects.packageScripts = {
-        ...this.configurationObjects.packageScripts,
-        e2e: 'cypress run',
-      };
-      await this.addMarkdownFragmentToMarkdownArr('cypress');
-    }
+    const dependencies = [
+      ...(this.promptAnswers.configureNextImageOptimisation ? ['sharp'] : []),
+    ];
 
-    // DOCKER
-    if (configureDocker) {
-      this.configurationObjects.configFiles.push(
-        ...['docker-compose.yml', 'Dockerfile', 'Makefile']
+    this.configurationObjects.packageDependencies.push(...dependencies);
+
+    const devDependencies = [
+      ...(configureCypress ? ['cypress'] : []),
+      ...(!this.nextConfig.eslint ? ['eslint'] : []),
+      ...(configurePrettier ? ['prettier', 'eslint-config-prettier'] : []),
+      ...(configureStorybook
+        ? [
+            '@storybook/addon-essentials',
+            '@storybook/addon-interactions',
+            '@storybook/addon-links',
+            '@storybook/addon-onboarding',
+            '@storybook/blocks',
+            '@storybook/nextjs',
+            '@storybook/react',
+            '@storybook/testing-library',
+            'eslint-plugin-storybook',
+            'storybook',
+          ]
+        : []),
+      ...(configureJestRTL
+        ? [
+            'jest',
+            'jest-environment-jsdom',
+            '@testing-library/jest-dom',
+            '@testing-library/user-event',
+            '@testing-library/react',
+            'cypress',
+            'eslint-plugin-testing-library',
+          ]
+        : []),
+    ];
+
+    this.configurationObjects.packageDevDependencies.push(...devDependencies);
+
+    if (configureSelectedDependencies?.length > 0) {
+      this.configurationObjects.packageDependencies.push(
+        ...configureSelectedDependencies
+          .filter(({ saveDev }: { saveDev: boolean }) => !saveDev)
+          .map(({ module }: { module: string }) => module)
       );
-      this.addMarkdownFragmentToMarkdownArr('docker');
-    }
 
-    // PRETTIER
-    if (configurePrettier) {
-      this.configurationObjects.configFiles.push(
-        ...['.prettierrc.json', '.prettierignore']
-      );
       this.configurationObjects.packageDevDependencies.push(
-        ...['prettier', 'eslint-config-prettier']
+        ...configureSelectedDependencies
+          .filter(({ saveDev }: { saveDev: boolean }) => saveDev)
+          .map(({ module }: { module: string }) => module)
       );
-      if (!this.nextConfig.eslint) {
-        this.configurationObjects.packageDevDependencies.push('eslint');
-      }
-      this.configurationObjects.packageScripts = {
-        ...this.configurationObjects.packageScripts,
-        'format:check': 'prettier --check .',
-        'format:write': 'prettier --write .',
-      };
-      await this.addMarkdownFragmentToMarkdownArr('prettier');
     }
 
-    // STORYBOOK
-    if (configureStorybook) {
-      this.configurationObjects.configDirectories.push('.storybook');
-      this.configurationObjects.packageDevDependencies.push(
-        ...[
-          '@storybook/addon-essentials',
-          '@storybook/addon-interactions',
-          '@storybook/addon-links',
-          '@storybook/addon-onboarding',
-          '@storybook/blocks',
-          '@storybook/nextjs',
-          '@storybook/react',
-          '@storybook/testing-library',
-          'eslint-plugin-storybook',
-          'storybook',
-        ]
-      );
-      this.configurationObjects.packageScripts = {
-        ...this.configurationObjects.packageScripts,
-        storybook: 'storybook dev -p 6006',
-        'build-storybook': 'storybook build',
-      };
-      await this.addMarkdownFragmentToMarkdownArr('storybook');
-    }
+    const markdownFiles = [
+      'next.md',
+      ...(configureCypress ? ['cypress.md'] : []),
+      ...(configureDocker ? ['docker.md'] : []),
+      ...(configurePrettier ? ['prettier.md'] : []),
+      ...(configureStorybook ? ['storybook.md'] : []),
+      ...(configureJestRTL ? ['jestRTL.md'] : []),
+      ...(configureLintStaged ? ['lint-staged.md'] : []),
+      ...(configureHusky ? ['git.md', 'husky.md'] : []),
+      ...(configureLintStaged ? ['selected-dependencies.md'] : []),
+    ];
 
-    // JEST / RTL
-    if (configureJestRTL) {
-      this.configurationObjects.configFiles.push('jest.config.js');
-      this.configurationObjects.packageDevDependencies.push(
-        ...[
-          'jest',
-          'jest-environment-jsdom',
-          '@testing-library/jest-dom',
-          '@testing-library/user-event',
-          '@testing-library/react',
-          'cypress',
-          'eslint-plugin-testing-library',
-        ]
-      );
-      this.configurationObjects.packageScripts = {
-        ...this.configurationObjects.packageScripts,
-        test: 'jest',
-        'test:watch': 'jest --watch',
-        'test:coverage': 'jest --coverage',
-        'test:ci': 'jest --ci --coverage',
-      };
-      await this.addMarkdownFragmentToMarkdownArr('jestRTL');
-    }
+    const markdowns = await this.getFromFiles(markdownFiles);
 
-    // HUSKY
-    if (configureHusky) {
-      await this.addMarkdownFragmentToMarkdownArr('git');
-      await this.addMarkdownFragmentToMarkdownArr('husky');
-    }
-
-    // SELECTED DEPENDENCIES
-    if (
-      configureSelectedDependencies &&
-      configureSelectedDependencies.length > 0
-    ) {
-      const dependencies = this.promptAnswers.configureSelectedDependencies
-        .filter(({ saveDev }: { saveDev: boolean }) => !saveDev)
-        .map(({ module }: { module: string }) => module);
-
-      const devDependencies = this.promptAnswers.configureSelectedDependencies
-        .filter(({ saveDev }: { saveDev: boolean }) => saveDev)
-        .map(({ module }: { module: string }) => module);
-
-      this.configurationObjects.packageDependencies.push(...dependencies);
-      this.configurationObjects.packageDevDependencies.push(...devDependencies);
-    }
+    this.configurationObjects.markdown = markdowns;
 
     return this.configurationObjects;
   };
@@ -245,21 +261,20 @@ class Configurator {
 
     this.spinner.start('Configuring Git and Husky');
 
-    await $execa`git init`;
+    await $execa`git init`.catch((error) => {
+      oops();
+      this.spinner.fail();
+      throw new Error(`${error}`);
+    });
 
-    let huskyInit = 'npx husky-init && npm install';
-
-    if (pm === PackageManagerKindEnum.YARN) {
-      huskyInit = 'yarn dlx husky-init --yarn2 && yarn';
-    }
-
-    if (pm === PackageManagerKindEnum.PNPM) {
-      huskyInit = 'pnpm dlx husky-init && pnpm install';
-    }
-
-    if (pm === PackageManagerKindEnum.BUN) {
-      huskyInit = 'bunx husky-init && bun install';
-    }
+    const huskyInit =
+      pm === PackageManagerKindEnum.YARN
+        ? `yarn dlx husky-init --yarn2 && yarn`
+        : pm === PackageManagerKindEnum.PNPM
+        ? `pnpm dlx husky-init && pnpm install`
+        : pm === PackageManagerKindEnum.BUN
+        ? 'bunx husky-init && bun install'
+        : 'npx husky-init && npm install';
 
     await $execa`${huskyInit}`.catch((error) => {
       oops();
@@ -313,24 +328,51 @@ class Configurator {
 
   public configurePackageFile = async () => {
     const { configureLintStaged, configurePrettier } = this.promptAnswers;
-    const { packageScripts } = this.configurationObjects;
+    const { packageScripts, packageDevDependencies } =
+      this.configurationObjects;
+
+    const hasPrettier =
+      configurePrettier && packageDevDependencies.includes('prettier');
+
+    const hasEslint =
+      this.nextConfig.eslint || packageDevDependencies.includes('eslint');
+
+    const hasTsEslint = packageDevDependencies.includes(
+      '@typescript-eslint/eslint-plugin'
+    );
+
+    const hasJest = packageDevDependencies.includes('jest');
 
     // package scripts
     await this.packageManager.addToPackage('scripts', packageScripts);
 
     // lint-staged
-    if ((configureLintStaged && this.nextConfig.eslint) || configurePrettier) {
-      const lintStaged: Record<string, string[]> = {
-        '**/*.{js,jsx}': ['lint:check', 'lint:fix', 'format:write'],
-        '**/*.{ts,tsx}': [
-          'lint:check',
-          'lint:fix',
-          'format:write',
-          'build --noEmit',
+    if (
+      configureLintStaged &&
+      (hasEslint || hasTsEslint || hasPrettier || hasJest)
+    ) {
+      let lintStaged: Record<string, string[]> = {
+        '**/*.{js,jsx}': [
+          ...(hasPrettier ? ['format:write'] : []),
+          ...(hasEslint ? ['lint:check', 'lint:fix'] : []),
+          ...(hasJest ? ['test'] : []),
         ],
-        '**/*.css': ['format:write', 'stylelint'],
         '**/*.{md, yml, yaml}': ['format:write'],
+        '**/*.css': ['format:write'],
       };
+
+      if (hasTsEslint) {
+        lintStaged = {
+          ...lintStaged,
+          '**/*.{ts,tsx}': [
+            ...(hasPrettier ? ['format:write'] : []),
+            ...(hasTsEslint ? ['lint:check', 'lint:fix'] : []),
+            ...(hasJest ? ['test'] : []),
+            'build --noEmit',
+          ],
+        };
+      }
+
       await this.packageManager.addToPackage('lint-staged', lintStaged);
     }
   };
@@ -340,16 +382,19 @@ class Configurator {
     const { packageDevDependencies } = this.configurationObjects;
 
     const hasPrettier =
-      configurePrettier && packageDevDependencies.includes('prettier');
+      configurePrettier &&
+      packageDevDependencies.includes('prettier') &&
+      packageDevDependencies.includes('eslint-config-prettier');
+
     const hasTsEslint = packageDevDependencies.includes(
-      'eslint-config-prettier'
+      '@typescript-eslint/eslint-plugin'
     );
+
+    const hasRTL = packageDevDependencies.includes('@testing-library/react');
 
     const hasStorybook =
       configureStorybook &&
       packageDevDependencies.includes('eslint-plugin-storybook');
-
-    const hasRTL = packageDevDependencies.includes('@testing-library/react');
 
     if (!this.nextConfig.eslint || !configurePrettier) return;
 
@@ -458,23 +503,19 @@ class Configurator {
     )} The following configurations were made: TBC... `;
   };
 
-  private addMarkdownFragmentToMarkdownArr = async (
-    markdownFileName: string
-  ) => {
-    const markdownFilePath = path.join(
-      this.markdownDirPath,
-      `${markdownFileName}.md`
+  private getFromFiles = async (filenames: string[]) => {
+    const filePaths = filenames.map((filename) =>
+      path.join(this.markdownDirPath, filename)
     );
 
-    if (fs.existsSync(markdownFilePath)) {
-      await fs.promises
-        .readFile(markdownFilePath, 'utf8')
-        .then((markdown) => this.configurationObjects.markdown.push(markdown))
-        .catch((error) => {
-          oops();
-          throw new Error(`${error}`);
-        });
-    }
+    const readFiles = filePaths.map((filePath) =>
+      fs.readFileSync(filePath, 'utf8')
+    );
+
+    return await Promise.all(readFiles).catch((error) => {
+      oops();
+      throw new Error(`${error}`);
+    });
   };
 
   public generateReadme = async () => {

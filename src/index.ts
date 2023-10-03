@@ -60,15 +60,15 @@ program
       answers.configureSelectedDependencies.length > 0 ||
       answers.configureDotEnvFiles.length > 0;
 
-    if (hasAnswers) {
-      configurator.setPromptAnswers(answers);
-    } else {
+    if (!hasAnswers) {
       // nothing to configure!
       goodbye();
       return console.log(
         `Looks like you've passed on all the Netxra configuration options. Maybe next time!`
       );
     }
+
+    configurator.setPromptAnswers(answers);
 
     console.log(`
     
@@ -78,13 +78,7 @@ Configuring project with following configurations:
 
 `);
 
-    await configurator
-      .prepare()
-      .then(() => configurator.configurePackageFile())
-      .then(() => configurator.installDependencies())
-      .then(() => configurator.buildConfigs())
-      .then(() => configurator.generateReadme())
-      .then(() => configurator.cleanUp());
+    await configurator.run();
   });
 
 program.parse();
