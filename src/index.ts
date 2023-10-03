@@ -39,6 +39,9 @@ program
       packageManagerChoice,
     });
 
+    // const nextConfig =
+    await configurator.createNextApp();
+
     const answers = await prompt([
       questions.configureNextImageOptimisation,
       questions.configurePrettier,
@@ -62,10 +65,9 @@ program
     } else {
       // nothing to configure!
       goodbye();
-      return console.log(`
-    Looks like you've passed on all the Netxra configuration options. Maybe next time!
-    Thanks for using Nextra!
-    `);
+      return console.log(
+        `Looks like you've passed on all the Netxra configuration options. Maybe next time!`
+      );
     }
 
     console.log(`
@@ -76,51 +78,13 @@ Configuring project with following configurations:
 
 `);
 
-    await configurator.configure();
-
-    // if (answers.configurePrettier) {
-    //   await nextra.configurePrettier();
-    // }
-
-    // if (answers.configureJestRTL) {
-    //   await nextra.configureJestRTL();
-    // }
-
-    // if (answers.configureCypress) {
-    //   await nextra.configureCypress();
-    // }
-
-    // if (
-    //   (nextConfig.eslint || answers.configurePrettier) &&
-    //   answers.configureLintStaged
-    // ) {
-    //   await nextra.configureLintStaged();
-    // }
-
-    // if (answers.configureHusky) {
-    //   await nextra.configureGitHusky();
-    // }
-
-    // if (answers.configureStorybook) {
-    //   await nextra.configureStorybook();
-    // }
-
-    // if (answers.configureDocker) {
-    //   await nextra.configureDocker();
-    // }
-
-    // if (answers.configureDotEnvFiles.length > 0) {
-    //   await nextra.configureEnvVars(answers.configureDotEnvFiles);
-    // }
-
-    // if (answers.configureSelectedDependencies.length > 0) {
-    //   await nextra.configureSelectedDependencies(
-    //     answers.configureSelectedDependencies
-    //   );
-    // }
-
-    // const configurationCompleteMessage = await nextra.cleanUp();
-    // console.log(`\n` + configurationCompleteMessage);
+    await configurator
+      .prepare()
+      .then(() => configurator.configurePackageFile())
+      .then(() => configurator.installDependencies())
+      .then(() => configurator.buildConfigs())
+      .then(() => configurator.generateReadme())
+      .then(() => configurator.cleanUp());
   });
 
 program.parse();
