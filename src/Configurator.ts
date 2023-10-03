@@ -33,6 +33,21 @@ export interface ConfigurationObjectsType {
   packageDevDependencies: string[];
 }
 
+export interface UseType {
+  cypress: boolean;
+  docker: boolean;
+  eslint: boolean;
+  husky: boolean;
+  jest: boolean;
+  lintStaged: boolean;
+  prettier: boolean;
+  reactTestingLibrary: boolean;
+  storybook: boolean;
+  tsEslint: boolean;
+  typescript: boolean;
+  selectedDependencies: boolean;
+}
+
 const { green } = picocolors;
 
 class Configurator {
@@ -42,29 +57,9 @@ class Configurator {
   private nextConfig = {} as NextJsConfigType;
   private packageManager = {} as PackageManager;
   private promptAnswers = {} as prompts.Answers<string>;
+  private use = {} as UseType;
+  private configurationObjects = {} as ConfigurationObjectsType;
   private spinner;
-  private use = {
-    cypress: false,
-    docker: false,
-    eslint: false,
-    husky: false,
-    jest: false,
-    lintStaged: false,
-    prettier: false,
-    reactTestingLibrary: false,
-    storybook: false,
-    tsEslint: false,
-    typescript: false,
-    selectedDependencies: false,
-  };
-  private configurationObjects = {
-    configDirectories: [],
-    configFiles: [],
-    markdown: [],
-    packageDependencies: [],
-    packageDevDependencies: [],
-    packageScripts: {},
-  } as ConfigurationObjectsType;
 
   constructor({
     projectDirectoryPath,
@@ -139,7 +134,7 @@ class Configurator {
       configureStorybook,
     } = this.promptAnswers;
 
-    const configFiles = [
+    this.configurationObjects.configFiles = [
       'next.config.js',
       ...(configureDocker
         ? ['docker-compose.yml', 'Dockerfile', 'Makefile']
@@ -148,14 +143,10 @@ class Configurator {
       ...(configureJestRTL ? ['jest.config.js'] : []),
     ];
 
-    this.configurationObjects.configFiles.push(...configFiles);
-
-    const configDirectories = [
+    this.configurationObjects.configDirectories = [
       ...(configureCypress ? ['cypress'] : []),
       ...(configureStorybook ? ['.storybook'] : []),
     ];
-
-    this.configurationObjects.configDirectories.push(...configDirectories);
 
     this.configurationObjects.packageScripts = {
       'build:standalone': 'BUILD_STANDALONE=true next build',
@@ -185,15 +176,17 @@ class Configurator {
         : {}),
     };
 
-    const dependencies = [
+    this.configurationObjects.packageDependencies = [
       ...(this.promptAnswers.configureNextImageOptimisation ? ['sharp'] : []),
     ];
 
-    this.configurationObjects.packageDependencies.push(...dependencies);
-
-    const devDependencies = [
+    this.configurationObjects.packageDevDependencies = [
       ...(configureCypress ? ['cypress'] : []),
       ...(!this.nextConfig.eslint ? ['eslint'] : []),
+      ...(this.nextConfig.typescript && this.nextConfig.eslint
+        ? ['@typescript-eslint/eslint-plugin']
+        : []),
+      ...(configureLintStaged ? ['lint-staged'] : []),
       ...(configurePrettier ? ['prettier', 'eslint-config-prettier'] : []),
       ...(configureStorybook
         ? [
@@ -220,8 +213,6 @@ class Configurator {
           ]
         : []),
     ];
-
-    this.configurationObjects.packageDevDependencies.push(...devDependencies);
 
     if (configureSelectedDependencies?.length > 0) {
       this.configurationObjects.packageDependencies.push(
@@ -260,40 +251,38 @@ class Configurator {
 
   private setUse = () => {
     const {
-      configureCypress: cypress,
       configureDocker: docker,
       configureHusky: husky,
-      configureJestRTL: reactTestingLibrary,
-      configurePrettier: prettier,
       configureSelectedDependencies: selectedDependencies,
-      configureStorybook: storybook,
-      configureLintStaged: lintStaged,
     } = this.promptAnswers;
 
     const { typescript, eslint } = this.nextConfig;
     const { packageDevDependencies } = this.configurationObjects;
 
     this.use = {
-      cypress,
+      cypress: packageDevDependencies.includes('cypress'),
       eslint,
       docker,
       husky,
-      jest: reactTestingLibrary, // TODO make Jest a seperate prompt choice
-      lintStaged,
-      prettier: prettier && packageDevDependencies.includes('prettier'),
-      reactTestingLibrary,
-      storybook,
+      jest: packageDevDependencies.includes('jest'), // TODO make Jest a seperate prompt choice
+      lintStaged: packageDevDependencies.includes('lint-staged'),
+      prettier: packageDevDependencies.includes('prettier'),
+      reactTestingLibrary: packageDevDependencies.includes(
+        '@testing-library/react'
+      ),
+      storybook: packageDevDependencies.includes('storybook'),
       tsEslint:
         eslint &&
         packageDevDependencies.includes('eslint-plugin-testing-library'),
       typescript,
-      selectedDependencies,
+      selectedDependencies: selectedDependencies?.length > 0,
     };
   };
 
   public installConfigureGitHusky = async () => {
     const $execa = $({ cwd: this.root });
     const pm = this.packageManager.getKind();
+    const { use } = this;
 
     this.spinner.start('Configuring Git and Husky');
 
@@ -319,12 +308,24 @@ class Configurator {
     });
 
     // rewrite husky pre-commit commands based on choices
-    const huskyPreCommitStr =
-      `#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"` +
-      (this.nextConfig.eslint
-        ? `\n\nnpm run lint:check\n\nnpm run lint:fix`
-        : '') +
-      (this.promptAnswers.configurePrettier ? `\n\nnpm run format:write` : '');
+    let huskyPreCommitStr = `#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"`;
+
+    if (use.husky && use.lintStaged) {
+      huskyPreCommitStr += `\n\${pm} run lint-staged`;
+    } else {
+      if (use.eslint) {
+        huskyPreCommitStr += `\n\${pm} run format:write`;
+      }
+
+      if (use.prettier) {
+        huskyPreCommitStr +=
+          `\n\${pm} run lint:check` + `\n\${pm} run lint:fix`;
+      }
+
+      if (use.typescript) {
+        huskyPreCommitStr += `\n\${pm} run build --no-emit`;
+      }
+    }
 
     await fs.promises
       .writeFile(
