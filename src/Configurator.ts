@@ -297,32 +297,36 @@ class Configurator {
       huskyInit = $execa`bunx husky-init && bun install`;
     }
 
-    await huskyInit;
+    await huskyInit.catch((error) => {
+      oops();
+      this.spinner.fail();
+      throw new Error(`${error}`);
+    });
 
-    // rewrite husky pre-commit commands based on choices
-    let huskyPreCommitFile = `#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"`;
+    let huskyPreCommit =
+      `#!/usr/bin/env sh` + `\n` + `. "$(dirname -- "$0")/_/husky.sh"`;
 
     if (husky && lintStaged) {
-      huskyPreCommitFile += `$\n\n{pm} run lint-staged`;
+      huskyPreCommit += `\n\n` + `${pm} run lint-staged`;
     } else {
-      if (eslint) {
-        huskyPreCommitFile += `\n\n${pm} run format:write`;
+      if (prettier) {
+        huskyPreCommit += `\n\n` + `${pm} run format:write`;
       }
 
-      if (prettier) {
-        huskyPreCommitFile +=
-          `\n\${pm} run lint:check` + `\n\n${pm} run lint:fix`;
+      if (eslint) {
+        huskyPreCommit +=
+          `\n\n` + `${pm} run lint:check` + `\n\n` + `${pm} run lint:fix`;
       }
 
       if (typescript) {
-        huskyPreCommitFile += `\n\n${pm} run build --no-emit`;
+        huskyPreCommit += `\n\n` + `${pm} run build --no-emit`;
       }
     }
 
     await fs.promises
       .writeFile(
         path.join(this.cwd, '.husky', 'pre-commit'),
-        huskyPreCommitFile,
+        huskyPreCommit,
         'utf8'
       )
       .catch((error) => {
