@@ -382,13 +382,13 @@ class Configurator {
     // lint-staged
     if (lintStaged && (eslint || (eslint && typescript) || prettier || jest)) {
       let lintStaged: Record<string, string[]> = {
+        '**/*.{md, yml, yaml, json}': ['format:write'],
+        '**/*.css': ['format:write'],
         '**/*.{js,jsx}': [
           ...(prettier ? ['format:write'] : []),
           ...(eslint ? ['lint:check', 'lint:fix'] : []),
           ...(jest ? ['test'] : []),
         ],
-        '**/*.{md, yml, yaml, json}': ['format:write'],
-        '**/*.css': ['format:write'],
       };
 
       if (eslint && typescript) {
