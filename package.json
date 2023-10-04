@@ -64,15 +64,5 @@
     "ora": "^7.0.1",
     "picocolors": "^1.0.0",
     "prompts": "^2.4.2"
-  },
-  "lint-staged": {
-    "**/*.[jt]s?(x)": [
-      "prettier --write .",
-      "eslint .",
-      "eslint --fix ."
-    ],
-    "**/*.{md, yml, yaml, json}": [
-      "prettier --write ."
-    ]
   }
 }
