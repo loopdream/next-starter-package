@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   // Lint & Prettify TS and JS files
   '**/*.(ts|tsx|js)': (filenames) => [
     `prettier --write ${filenames.join(' ')}`,
