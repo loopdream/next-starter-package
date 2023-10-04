@@ -1,13 +1,13 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+npx lint-staged
+# npm run lint:check
 
-npm run lint:check
+# npm run lint:fix
 
-npm run lint:fix
+# npm run format:write
 
-npm run format:write
+# npm run build --noEmit 
 
-npm run build --noEmit 
-
-npm run todo
+# npm run todo
