@@ -63,5 +63,20 @@
     "ora": "^7.0.1",
     "picocolors": "^1.0.0",
     "prompts": "^2.4.2"
+  },
+  "lint-staged": {
+    "**/*.{js,jsx}": [
+      "format:write",
+      "lint:check",
+      "lint:fix"
+    ],
+    "**/*.{ts,tsx}": [
+      "format:write",
+      "lint:check",
+      "lint:fix"
+    ],
+    "**/*.{md, yml, yaml, json}": [
+      "format:write"
+    ]
   }
 }

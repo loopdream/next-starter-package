@@ -51,7 +51,7 @@ program
       // nothing to configure!
       goodbye();
       return console.log(
-        `Looks like you've passed on all the Netxra configuration options. Maybe next time!`
+        `Looks like you've passed on all the configuration options. Maybe next time!`
       );
     }
 
