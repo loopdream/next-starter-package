@@ -12,17 +12,17 @@ import PackageManager, { PackageManagerKindEnum } from './PackageManager.js';
 import { ChoiceValuesType } from './prompts.js';
 
 type ConfiguratorPropsType = {
-  projectDirectoryPath: string;
   packageManagerChoice: PackageManagerKindEnum;
+  projectDirectoryPath: string;
 };
 
 export interface ConfigType {
-  markdown: string[];
-  configFiles: string[];
   configDirectories: string[];
-  packageScripts: Record<string, string>;
+  configFiles: string[];
+  markdown: string[];
   packageDependencies: string[];
   packageDevDependencies: string[];
+  packageScripts: Record<string, string>;
 }
 
 export interface OptionsType {
@@ -109,14 +109,11 @@ class Configurator {
       ...this.options,
       ...answers,
     };
-
-    console.log({ options: this.options });
     return this.options;
   };
 
   public createNextApp = async () => {
     const pm = this.packageManager.getKind();
-    console.log(`\n`);
 
     await $({
       stdio: 'inherit',
@@ -135,14 +132,14 @@ class Configurator {
 
   public getNextConfig = () => {
     const exists = (fileName: string) =>
-      fs.existsSync(path.join(this.cwd, fileName));
+      fs.existsSync(path.join(this.cwd, fileName)) || false;
 
-    const typescript = exists('tsconfig.json') || false;
+    const typescript = exists('tsconfig.json');
     return {
-      appRouter: !exists('src/pages') || false,
-      eslint: exists('.eslintrc.json') || false,
-      tailwind: exists(`tailwind.config.${typescript ? 'ts' : 'js'}`) || false,
-      srcDir: exists('src') || false,
+      appRouter: !exists('src/pages'),
+      eslint: exists('.eslintrc.json'),
+      tailwind: exists(`tailwind.config.${typescript ? 'ts' : 'js'}`),
+      srcDir: exists('src'),
       typescript,
     };
   };
@@ -241,14 +238,14 @@ class Configurator {
     if (optionalDependencies?.length > 0) {
       this.config.packageDependencies.push(
         ...optionalDependencies
-          .filter(({ saveDev }: { saveDev: boolean }) => !saveDev)
-          .map(({ module }: { module: string }) => module)
+          .filter(({ saveDev }) => !saveDev)
+          .map(({ module }) => module)
       );
 
       this.config.packageDevDependencies.push(
         ...optionalDependencies
-          .filter(({ saveDev }: { saveDev: boolean }) => saveDev)
-          .map(({ module }: { module: string }) => module)
+          .filter(({ saveDev }) => saveDev)
+          .map(({ module }) => module)
       );
     }
 
