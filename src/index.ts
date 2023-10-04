@@ -55,6 +55,7 @@ program
       );
     }
     // TODO: something
+    // TODO: something 2
     configurator.setOptions(opts);
 
     await configurator.run();
