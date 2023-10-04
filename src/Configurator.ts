@@ -428,7 +428,7 @@ class Configurator {
       plugins: [
         ...(eslint && typescript ? ['@typescript-eslint'] : []),
         ...(reactTestingLibrary ? ['testing-library'] : []),
-      ],
+      ], // TODO: something 0
       extends: [
         'next/core-web-vitals',
         ...(eslint && typescript
