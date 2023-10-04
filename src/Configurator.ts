@@ -346,7 +346,9 @@ class Configurator {
       .sort()
       .join(`\n`);
 
-    console.log(`\n\n` + `Installing Dependencies` + dependencies + `\n\n`);
+    console.log(
+      `\n\n` + `Installing Dependencies` + `\n\n` + dependencies + `\n\n`
+    );
 
     if (packageDependencies.length > 0) {
       await this.packageManager.addToDependencies(packageDependencies);
@@ -358,7 +360,7 @@ class Configurator {
       .join(`\n`);
 
     console.log(
-      `\n\n` + `Installing devDependencies` + devDependencies + `\n\n`
+      `\n\n` + `Installing devDependencies` + `\n\n` + devDependencies + `\n\n`
     );
 
     if (packageDevDependencies.length > 0) {
@@ -381,30 +383,28 @@ class Configurator {
 
     // lint-staged
     if (lintStaged && (eslint || (eslint && typescript) || prettier || jest)) {
-      let lintStaged: Record<string, string[]> = {
-        '**/*.{md, yml, yaml, json}': ['format:write'],
-        '**/*.css': ['format:write'],
-        '**/*.{js,jsx}': [
-          ...(prettier ? ['format:write'] : []),
-          ...(eslint ? ['lint:check', 'lint:fix'] : []),
-          ...(jest ? ['test'] : []),
+      const tsLintStaged = {
+        '**/*.{ts,tsx}': [
+          ...(prettier ? ['npx prettier --write .'] : []),
+          'npx eslint .',
+          'npx eslint --fix .',
+          ...(jest ? ['npx jest --ci'] : []),
+          'tsc --noEmit',
         ],
       };
 
-      if (eslint && typescript) {
-        lintStaged = {
-          ...lintStaged,
-          '**/*.{ts,tsx}': [
-            ...(prettier ? ['format:write'] : []),
-            'lint:check',
-            'lint:fix',
-            ...(jest ? ['test'] : []),
-            'build --noEmit',
-          ],
-        };
-      }
+      const lintStagedScripts = {
+        '**/*.{js,jsx}': [
+          ...(prettier ? ['npx prettier --write .'] : []),
+          ...(eslint ? ['npx eslint .', 'npx eslint --fix .'] : []),
+          ...(jest ? ['npx jest --ci'] : []),
+        ],
+        ...(eslint && typescript ? tsLintStaged : {}),
+        '**/*.{md, yml, yaml, json}': ['npx prettier --write .'],
+        '**/*.css': ['npx prettier --write .'], // TODO: add styledlint
+      };
 
-      await this.packageManager.addToPackage('lint-staged', lintStaged);
+      await this.packageManager.addToPackage('lint-staged', lintStagedScripts);
     }
   };
 
