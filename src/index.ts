@@ -4,12 +4,12 @@ import fs from 'fs';
 
 import { program } from 'commander';
 import figlet from 'figlet';
-import prompt from 'prompts';
+import prompts from 'prompts';
 
 import { goodbye } from './utils.js';
 
 import Configurator from './Configurator.js';
-import questions from './questions.js';
+import { packageManagerPrompt, configurationPrompts } from './prompts.js';
 
 console.log('\n', figlet.textSync('Nextra'), '\n\n');
 
@@ -30,9 +30,7 @@ program
       projectDirectoryPath = path.join('tmp', projectName);
     }
 
-    const { packageManagerChoice } = await prompt(
-      questions.packageManagerPrompt
-    );
+    const { packageManagerChoice } = await prompts(packageManagerPrompt);
 
     const configurator = new Configurator({
       projectDirectoryPath,
@@ -42,26 +40,14 @@ program
     // const nextConfig =
     await configurator.createNextApp();
 
-    const answers = await prompt([
-      questions.nextImageOptimisation,
-      questions.prettier,
-      questions.jest,
-      questions.reactTestingLibrary,
-      questions.lintStaged,
-      questions.cypress,
-      questions.storybook,
-      questions.husky,
-      questions.docker,
-      questions.dotEnvFiles,
-      questions.optionalDependencies,
-    ]);
+    const opts = await prompts(configurationPrompts);
 
-    const hasAnswers =
-      Object.values(answers).includes(true) ||
-      answers.optionalDependencies.length > 0 ||
-      answers.dotEnvFiles.length > 0;
+    const hasOptions =
+      Object.values(opts).includes(true) ||
+      opts.optionalDependencies.length > 0 ||
+      opts.dotEnvFiles.length > 0;
 
-    if (!hasAnswers) {
+    if (!hasOptions) {
       // nothing to configure!
       goodbye();
       return console.log(
@@ -69,7 +55,7 @@ program
       );
     }
 
-    configurator.setOptions(answers);
+    configurator.setOptions(opts);
 
     await configurator.run();
   });

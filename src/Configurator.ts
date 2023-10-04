@@ -9,8 +9,7 @@ import prompts from 'prompts';
 import { oops } from './utils.js';
 
 import PackageManager, { PackageManagerKindEnum } from './PackageManager.js';
-import { lintStaged } from './questions.js';
-import { ChoiceValuesType } from './questions.js';
+import { ChoiceValuesType } from './prompts.js';
 
 type ConfiguratorPropsType = {
   projectDirectoryPath: string;
@@ -98,7 +97,7 @@ class Configurator {
     );
 
     await this.prepare()
-      .then(() => this.configurePackageFile())
+      .then(() => this.installDependencies())
       .then(() => this.buildDependencyConfigs())
       .then(() => this.configurePackageFile())
       .then(() => this.generateReadme())
@@ -156,6 +155,7 @@ class Configurator {
       eslint,
       husky,
       jest,
+      lintStaged,
       nextImageOptimisation,
       optionalDependencies,
       prettier,
@@ -275,7 +275,7 @@ class Configurator {
   public installConfigureGitHusky = async () => {
     const $execa = $({ cwd: this.cwd });
     const pm = this.packageManager.getKind();
-    const { husky, eslint, prettier, typescript } = this.options;
+    const { husky, eslint, lintStaged, prettier, typescript } = this.options;
 
     this.spinner.start('Configuring Git and Husky');
 

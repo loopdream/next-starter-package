@@ -5,7 +5,7 @@ import { PackageManagerKindEnum } from './PackageManager.js';
 const { blue } = picocolors;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const onPromptState = (state: any) => {
+export const onPromptState = (state: any) => {
   if (state.aborted) {
     // If we don't re-enable the terminal cursor before exiting
     // the program, the cursor will remain hidden
@@ -32,7 +32,7 @@ export const packageManagerPrompt: PromptObject = {
   initial: 0,
 };
 
-export const dotEnvFiles: PromptObject = {
+const dotEnvFiles: PromptObject = {
   onState: onPromptState,
   type: 'multiselect',
   name: 'dotEnvFiles',
@@ -47,7 +47,7 @@ export const dotEnvFiles: PromptObject = {
   initial: 0,
 };
 
-export const prettier: PromptObject = {
+const prettier: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'prettier',
@@ -57,7 +57,7 @@ export const prettier: PromptObject = {
   inactive: `No`,
 };
 
-export const storybook: PromptObject = {
+const storybook: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'storybook',
@@ -67,7 +67,7 @@ export const storybook: PromptObject = {
   inactive: `No`,
 };
 
-export const docker: PromptObject = {
+const docker: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'docker',
@@ -77,7 +77,7 @@ export const docker: PromptObject = {
   inactive: `No`,
 };
 
-export const jest: PromptObject = {
+const jest: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'jest',
@@ -87,7 +87,7 @@ export const jest: PromptObject = {
   inactive: `No`,
 };
 
-export const reactTestingLibrary: PromptObject = {
+const reactTestingLibrary: PromptObject = {
   onState: onPromptState,
   type: (prev) => (prev === true ? 'toggle' : null),
   name: 'reactTestingLibrary',
@@ -97,7 +97,7 @@ export const reactTestingLibrary: PromptObject = {
   inactive: `No`,
 };
 
-export const cypress: PromptObject = {
+const cypress: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'cypress',
@@ -107,7 +107,7 @@ export const cypress: PromptObject = {
   inactive: `No`,
 };
 
-export const husky: PromptObject = {
+const husky: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'husky',
@@ -119,7 +119,7 @@ export const husky: PromptObject = {
   inactive: `No`,
 };
 
-export const lintStaged: PromptObject = {
+const lintStaged: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'lintStaged',
@@ -129,7 +129,7 @@ export const lintStaged: PromptObject = {
   inactive: `No`,
 };
 
-export const nextImageOptimisation: PromptObject = {
+const nextImageOptimisation: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
   name: 'nextImageOptimisation',
@@ -151,7 +151,7 @@ export interface ChoiceType {
   value: ChoiceValuesType;
 }
 
-export const choices: ChoiceType[] = [
+const choices: ChoiceType[] = [
   {
     title: 'classnames',
     value: {
@@ -416,7 +416,7 @@ export const choices: ChoiceType[] = [
   },
 ];
 
-export const optionalDependencies: PromptObject = {
+const optionalDependencies: PromptObject = {
   onState: onPromptState,
   type: 'multiselect',
   name: 'optionalDependencies',
@@ -425,17 +425,16 @@ export const optionalDependencies: PromptObject = {
   hint: '- Space to select. Return to submit',
 };
 
-export default {
-  cypress,
-  docker,
-  dotEnvFiles,
-  husky,
-  jest,
-  lintStaged,
+export const configurationPrompts = [
   nextImageOptimisation,
   prettier,
+  jest,
   reactTestingLibrary,
-  optionalDependencies,
+  cypress,
   storybook,
-  packageManagerPrompt,
-};
+  husky,
+  lintStaged,
+  docker,
+  dotEnvFiles,
+  optionalDependencies,
+];
