@@ -70,7 +70,7 @@
       "prettier --write .",
       "eslint .",
       "eslint --fix .",
-      "leasot 'src/**/*.ts' --exit-nicely"
+      "leasot 'src/**/*.[jt]s?(x)' --exit-nicely"
     ],
     "**/*.{md, yml, yaml, json}": [
       "prettier --write ."

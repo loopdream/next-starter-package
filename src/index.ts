@@ -54,7 +54,7 @@ program
         `Looks like you've passed on all the configuration options. Maybe next time!`
       );
     }
-
+    // TODO: something
     configurator.setOptions(opts);
 
     await configurator.run();
