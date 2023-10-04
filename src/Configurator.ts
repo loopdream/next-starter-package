@@ -414,6 +414,7 @@ class Configurator {
 
     if (!eslint) return;
 
+    // TODO: create a configuration for the new eslint config file type
     const eslintrc = {
       cwd: true,
       plugins: [
