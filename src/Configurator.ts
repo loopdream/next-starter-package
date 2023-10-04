@@ -383,28 +383,28 @@ class Configurator {
 
     // lint-staged
     if (lintStaged && (eslint || (eslint && typescript) || prettier || jest)) {
-      const tsLintStaged = {
+      const tsLintStagedCmd = {
         '**/*.{ts,tsx}': [
           ...(prettier ? ['npx prettier --write .'] : []),
-          'npx eslint .',
-          'npx eslint --fix .',
+          ...(eslint ? ['npx eslint .', 'npx eslint --fix .'] : []),
+
           ...(jest ? ['npx jest --ci'] : []),
           'tsc --noEmit',
         ],
       };
 
-      const lintStagedScripts = {
+      const lintStagedCmds = {
         '**/*.{js,jsx}': [
           ...(prettier ? ['npx prettier --write .'] : []),
           ...(eslint ? ['npx eslint .', 'npx eslint --fix .'] : []),
           ...(jest ? ['npx jest --ci'] : []),
         ],
-        ...(eslint && typescript ? tsLintStaged : {}),
+        ...(typescript ? tsLintStagedCmd : {}),
         '**/*.{md, yml, yaml, json}': ['npx prettier --write .'],
         '**/*.css': ['npx prettier --write .'], // TODO: add styledlint
       };
 
-      await this.packageManager.addToPackage('lint-staged', lintStagedScripts);
+      await this.packageManager.addToPackage('lint-staged', lintStagedCmds);
     }
   };
 
