@@ -409,7 +409,7 @@ class Configurator {
         ],
         ...(typescript ? tsLintStagedCmd : {}),
         '**/*.{md, yml, yaml, json}': ['npx prettier --write .'],
-        '**/*.css': ['npx prettier --write .'], // TODO: add styledlint
+        '**/*.{css,scss}': ['npx prettier --write .'], // TODO: add styledlint
       };
 
       await this.packageManager.addToPackage('lint-staged', lintStagedCmds);
