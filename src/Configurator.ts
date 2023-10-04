@@ -9,22 +9,15 @@ import prompts from 'prompts';
 import { oops } from './utils.js';
 
 import PackageManager, { PackageManagerKindEnum } from './PackageManager.js';
-import { configureLintStaged } from './questions.js';
+import { lintStaged } from './questions.js';
+import { ChoiceValuesType } from './questions.js';
 
-type NextraPropsType = {
+type ConfiguratorPropsType = {
   projectDirectoryPath: string;
   packageManagerChoice: PackageManagerKindEnum;
 };
 
-export interface NextJsConfigType {
-  appRouter: boolean;
-  eslint: boolean;
-  srcDir: boolean;
-  tailwind: boolean;
-  typescript: boolean;
-}
-
-export interface ConfigurationObjectsType {
+export interface ConfigType {
   markdown: string[];
   configFiles: string[];
   configDirectories: string[];
@@ -33,59 +26,93 @@ export interface ConfigurationObjectsType {
   packageDevDependencies: string[];
 }
 
-export interface UseType {
+export interface OptionsType {
+  appRouter: boolean;
   cypress: boolean;
   docker: boolean;
+  dotEnvFiles: string[];
   eslint: boolean;
   husky: boolean;
   jest: boolean;
   lintStaged: boolean;
+  optionalDependencies: ChoiceValuesType[];
   prettier: boolean;
   reactTestingLibrary: boolean;
-  storybook: boolean;
-  tsEslint: boolean;
-  typescript: boolean;
   selectedDependencies: boolean;
+  srcDir: boolean;
+  storybook: boolean;
+  tailwind: boolean;
+  typescript: boolean;
+  nextImageOptimisation: boolean;
 }
 
-const { green } = picocolors;
+const { cyan, green, bold } = picocolors;
 
 class Configurator {
-  private root: string;
   private configsPath: string;
+  private config = {} as ConfigType;
+  private cwd: string;
   private markdownDirPath: string;
-  private nextConfig = {} as NextJsConfigType;
+  private options = {
+    appRouter: false,
+    cypress: false,
+    docker: false,
+    dotEnvFiles: [],
+    eslint: false,
+    husky: false,
+    jest: false,
+    lintStaged: false,
+    nextImageOptimisation: false,
+    optionalDependencies: [],
+    prettier: false,
+    reactTestingLibrary: false,
+    selectedDependencies: false,
+    srcDir: false,
+    storybook: false,
+    tailwind: false,
+    typescript: false,
+  } as OptionsType;
   private packageManager = {} as PackageManager;
-  private promptAnswers = {} as prompts.Answers<string>;
-  private use = {} as UseType;
-  private configurationObjects = {} as ConfigurationObjectsType;
   private spinner;
 
   constructor({
     projectDirectoryPath,
     packageManagerChoice: packageManagerKind,
-  }: NextraPropsType) {
+  }: ConfiguratorPropsType) {
     this.configsPath = path.resolve(path.join('src', 'templates'));
     this.markdownDirPath = path.resolve(path.join('src', 'markdown'));
-    this.root = path.resolve(projectDirectoryPath);
+    this.cwd = path.resolve(projectDirectoryPath);
     this.spinner = ora();
     this.packageManager = new PackageManager({
       packageManagerKind,
-      root: this.root,
+      cwd: this.cwd,
     });
   }
 
   public run = async () => {
+    console.log(
+      `Using ${bold(this.packageManager.getKind())}` +
+        `\n\n` +
+        `The configurator will now setup your next project based on your selections.` +
+        `\n\n`
+    );
+
     await this.prepare()
       .then(() => this.configurePackageFile())
-      .then(() => this.installDependencies())
-      .then(() => this.buildConfigs())
+      .then(() => this.buildDependencyConfigs())
+      .then(() => this.configurePackageFile())
       .then(() => this.generateReadme())
       .then(() => this.cleanUp());
   };
 
-  public setPromptAnswers = (answers: prompts.Answers<string>) => {
-    this.promptAnswers = answers;
+  public setOptions = (answers: prompts.Answers<string>) => {
+    this.options = {
+      ...this.options,
+      ...answers,
+    };
+
+    console.log({ options: this.options });
+    return this.options;
   };
 
   public createNextApp = async () => {
@@ -94,72 +121,73 @@ class Configurator {
 
     await $({
       stdio: 'inherit',
-    })`npx create-next-app@latest ${this.root} --use-${pm}`.catch((error) => {
+    })`npx create-next-app@latest ${this.cwd} --use-${pm}`.catch((error) => {
       oops();
       throw new Error(`\n${error}`);
     });
 
-    return this.getNextConfig();
+    this.options = {
+      ...this.options,
+      ...this.getNextConfig(),
+    };
+
+    return this.options;
   };
 
   public getNextConfig = () => {
-    if (Object.keys(this.nextConfig).length > 1) {
-      return this.nextConfig;
-    }
-
     const exists = (fileName: string) =>
-      fs.existsSync(path.join(this.root, fileName));
+      fs.existsSync(path.join(this.cwd, fileName));
 
     const typescript = exists('tsconfig.json') || false;
-    this.nextConfig = {
+    return {
       appRouter: !exists('src/pages') || false,
       eslint: exists('.eslintrc.json') || false,
       tailwind: exists(`tailwind.config.${typescript ? 'ts' : 'js'}`) || false,
       srcDir: exists('src') || false,
       typescript,
     };
-
-    return this.nextConfig;
   };
 
   public prepare = async () => {
     const pm = this.packageManager.getKind();
     const {
-      configureCypress,
-      configureDocker,
-      configureHusky,
-      configureJestRTL,
-      configurePrettier,
-      configureSelectedDependencies,
-      configureStorybook,
-    } = this.promptAnswers;
+      cypress,
+      docker,
+      eslint,
+      husky,
+      jest,
+      nextImageOptimisation,
+      optionalDependencies,
+      prettier,
+      reactTestingLibrary,
+      storybook,
+      typescript,
+    } = this.options;
 
-    this.configurationObjects.configFiles = [
+    this.config.configFiles = [
       'next.config.js',
-      ...(configureDocker
-        ? ['docker-compose.yml', 'Dockerfile', 'Makefile']
-        : []),
-      ...(configurePrettier ? ['.prettierrc.json', '.prettierignore'] : []),
-      ...(configureJestRTL ? ['jest.config.js'] : []),
+      ...(docker ? ['docker-compose.yml', 'Dockerfile', 'Makefile'] : []),
+      ...(prettier ? ['.prettierrc.json', '.prettierignore'] : []),
+      ...(jest ? ['jest.config.js'] : []),
     ];
 
-    this.configurationObjects.configDirectories = [
-      ...(configureCypress ? ['cypress'] : []),
-      ...(configureStorybook ? ['.storybook'] : []),
+    this.config.configDirectories = [
+      ...(cypress ? ['cypress'] : []),
+      ...(storybook ? ['.storybook'] : []),
     ];
 
-    this.configurationObjects.packageScripts = {
+    this.config.packageScripts = {
       'build:standalone': 'BUILD_STANDALONE=true next build',
       'start:standalone': 'node ./.next/standalone/server.js',
       'build-start': `next build && next start`,
       'build-start:standalone': `${pm} run build:standalone && ${pm} run start:standalone`,
-      ...(configurePrettier
+      ...(prettier
         ? {
             'format:check': 'prettier --check .',
             'format:write': 'prettier --write .',
           }
         : {}),
-      ...(configureJestRTL
+      ...(jest
         ? {
             test: 'jest',
             'test:watch': 'jest --watch',
@@ -167,8 +195,8 @@ class Configurator {
             'test:ci': 'jest --ci --coverage',
           }
         : {}),
-      ...(configureCypress ? { e2e: 'cypress run' } : {}),
-      ...(configureStorybook
+      ...(cypress ? { e2e: 'cypress run' } : {}),
+      ...(storybook
         ? {
             storybook: 'storybook dev -p 6006',
             'build-storybook': 'storybook build',
@@ -176,19 +204,16 @@ class Configurator {
         : {}),
     };
 
-    this.configurationObjects.packageDependencies = [
-      ...(this.promptAnswers.configureNextImageOptimisation ? ['sharp'] : []),
+    this.config.packageDependencies = [
+      ...(nextImageOptimisation ? ['sharp'] : []),
     ];
 
-    this.configurationObjects.packageDevDependencies = [
-      ...(configureCypress ? ['cypress'] : []),
-      ...(!this.nextConfig.eslint ? ['eslint'] : []),
-      ...(this.nextConfig.typescript && this.nextConfig.eslint
-        ? ['@typescript-eslint/eslint-plugin']
-        : []),
-      ...(configureLintStaged ? ['lint-staged'] : []),
-      ...(configurePrettier ? ['prettier', 'eslint-config-prettier'] : []),
-      ...(configureStorybook
+    this.config.packageDevDependencies = [
+      ...(cypress ? ['cypress'] : []),
+      ...(eslint && typescript ? ['@typescript-eslint/eslint-plugin'] : []),
+      ...(lintStaged ? ['lint-staged'] : []),
+      ...(prettier ? ['prettier', 'eslint-config-prettier'] : []),
+      ...(storybook
         ? [
             '@storybook/addon-essentials',
             '@storybook/addon-interactions',
@@ -202,10 +227,9 @@ class Configurator {
             'storybook',
           ]
         : []),
-      ...(configureJestRTL
+      ...(jest ? ['jest', 'jest-environment-jsdom'] : []),
+      ...(reactTestingLibrary
         ? [
-            'jest',
-            'jest-environment-jsdom',
             '@testing-library/jest-dom',
             '@testing-library/user-event',
             '@testing-library/react',
@@ -214,15 +238,15 @@ class Configurator {
         : []),
     ];
 
-    if (configureSelectedDependencies?.length > 0) {
-      this.configurationObjects.packageDependencies.push(
-        ...configureSelectedDependencies
+    if (optionalDependencies?.length > 0) {
+      this.config.packageDependencies.push(
+        ...optionalDependencies
           .filter(({ saveDev }: { saveDev: boolean }) => !saveDev)
           .map(({ module }: { module: string }) => module)
       );
 
-      this.configurationObjects.packageDevDependencies.push(
-        ...configureSelectedDependencies
+      this.config.packageDevDependencies.push(
+        ...optionalDependencies
           .filter(({ saveDev }: { saveDev: boolean }) => saveDev)
           .map(({ module }: { module: string }) => module)
       );
@@ -230,59 +254,28 @@ class Configurator {
 
     const markdownFiles = [
       'next.md',
-      ...(configureCypress ? ['cypress.md'] : []),
-      ...(configureDocker ? ['docker.md'] : []),
-      ...(configurePrettier ? ['prettier.md'] : []),
-      ...(configureStorybook ? ['storybook.md'] : []),
-      ...(configureJestRTL ? ['jestRTL.md'] : []),
-      ...(configureLintStaged ? ['lint-staged.md'] : []),
-      ...(configureHusky ? ['git.md', 'husky.md'] : []),
-      ...(configureLintStaged ? ['selected-dependencies.md'] : []),
+      ...(cypress ? ['cypress.md'] : []),
+      ...(docker ? ['docker.md'] : []),
+      ...(prettier ? ['prettier.md'] : []),
+      ...(storybook ? ['storybook.md'] : []),
+      ...(jest ? ['jest.md'] : []),
+      ...(reactTestingLibrary ? ['reactTestingLibrary.md'] : []),
+      ...(lintStaged ? ['lint-staged.md'] : []),
+      ...(husky ? ['git.md', 'husky.md'] : []),
+      ...(lintStaged ? ['selected-dependencies.md'] : []),
     ];
 
-    const markdowns = await this.getFromFiles(markdownFiles);
+    const markdowns = await this.readFromFiles(markdownFiles);
 
-    this.configurationObjects.markdown = markdowns;
+    this.config.markdown = markdowns;
 
-    this.setUse();
-
-    return this.configurationObjects;
-  };
-
-  private setUse = () => {
-    const {
-      configureDocker: docker,
-      configureHusky: husky,
-      configureSelectedDependencies: selectedDependencies,
-    } = this.promptAnswers;
-
-    const { typescript, eslint } = this.nextConfig;
-    const { packageDevDependencies } = this.configurationObjects;
-
-    this.use = {
-      cypress: packageDevDependencies.includes('cypress'),
-      eslint,
-      docker,
-      husky,
-      jest: packageDevDependencies.includes('jest'), // TODO make Jest a seperate prompt choice
-      lintStaged: packageDevDependencies.includes('lint-staged'),
-      prettier: packageDevDependencies.includes('prettier'),
-      reactTestingLibrary: packageDevDependencies.includes(
-        '@testing-library/react'
-      ),
-      storybook: packageDevDependencies.includes('storybook'),
-      tsEslint:
-        eslint &&
-        packageDevDependencies.includes('eslint-plugin-testing-library'),
-      typescript,
-      selectedDependencies: selectedDependencies?.length > 0,
-    };
+    return this.config;
   };
 
   public installConfigureGitHusky = async () => {
-    const $execa = $({ cwd: this.root });
+    const $execa = $({ cwd: this.cwd });
     const pm = this.packageManager.getKind();
-    const { use } = this;
+    const { husky, eslint, prettier, typescript } = this.options;
 
     this.spinner.start('Configuring Git and Husky');
 
@@ -292,45 +285,47 @@ class Configurator {
       throw new Error(`${error}`);
     });
 
-    const huskyInit =
-      pm === PackageManagerKindEnum.YARN
-        ? `yarn dlx husky-init --yarn2 && yarn`
-        : pm === PackageManagerKindEnum.PNPM
-        ? `pnpm dlx husky-init && pnpm install`
-        : pm === PackageManagerKindEnum.BUN
-        ? 'bunx husky-init && bun install'
-        : 'npx husky-init && npm install';
+    let huskyInit = $execa`npx husky-init && npm install`;
 
-    await $execa`${huskyInit}`.catch((error) => {
-      oops();
-      this.spinner.fail();
-      throw new Error(`${error}`);
-    });
+    // TODO: Manual install husky - the following fails unless npm
+    if (pm === PackageManagerKindEnum.YARN) {
+      huskyInit = $execa`yarn dlx husky-init --yarn2 && yarn`;
+    }
+
+    if (pm === PackageManagerKindEnum.PNPM) {
+      huskyInit = $execa`pnpm dlx husky-init && pnpm install`;
+    }
+
+    if (pm === PackageManagerKindEnum.BUN) {
+      huskyInit = $execa`bunx husky-init && bun install`;
+    }
+
+    await huskyInit;
 
     // rewrite husky pre-commit commands based on choices
-    let huskyPreCommitStr = `#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"`;
+    let huskyPreCommitFile = `#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"`;
 
-    if (use.husky && use.lintStaged) {
-      huskyPreCommitStr += `\n\${pm} run lint-staged`;
+    if (husky && lintStaged) {
+      huskyPreCommitFile += `$\n\n{pm} run lint-staged`;
     } else {
-      if (use.eslint) {
-        huskyPreCommitStr += `\n\${pm} run format:write`;
+      if (eslint) {
+        huskyPreCommitFile += `\n\n${pm} run format:write`;
       }
 
-      if (use.prettier) {
-        huskyPreCommitStr +=
-          `\n\${pm} run lint:check` + `\n\${pm} run lint:fix`;
+      if (prettier) {
+        huskyPreCommitFile +=
+          `\n\${pm} run lint:check` + `\n\n${pm} run lint:fix`;
       }
 
-      if (use.typescript) {
-        huskyPreCommitStr += `\n\${pm} run build --no-emit`;
+      if (typescript) {
+        huskyPreCommitFile += `\n\n${pm} run build --no-emit`;
       }
     }
 
     await fs.promises
       .writeFile(
-        path.join(this.root, '.husky', 'pre-commit'),
-        huskyPreCommitStr,
+        path.join(this.cwd, '.husky', 'pre-commit'),
+        huskyPreCommitFile,
         'utf8'
       )
       .catch((error) => {
@@ -343,68 +338,66 @@ class Configurator {
   };
 
   public installDependencies = async () => {
-    this.spinner.start('Installing Dependencies');
+    const { packageDependencies, packageDevDependencies } = this.config;
 
-    const { packageDependencies, packageDevDependencies } =
-      this.configurationObjects;
+    const dependencies = this.config.packageDependencies
+      .map((dep) => `- ` + cyan(dep))
+      .sort()
+      .join(`\n`);
+
+    console.log(`\n\n` + `Installing Dependencies` + dependencies + `\n\n`);
 
     if (packageDependencies.length > 0) {
-      await this.packageManager.addToDevDependencies(packageDependencies);
+      await this.packageManager.addToDependencies(packageDependencies);
     }
+
+    const devDependencies = this.config.packageDevDependencies
+      .map((dep) => `- ` + cyan(dep))
+      .sort()
+      .join(`\n`);
+
+    console.log(
+      `\n\n` + `Installing devDependencies` + devDependencies + `\n\n`
+    );
 
     if (packageDevDependencies.length > 0) {
       await this.packageManager.addToDevDependencies(packageDevDependencies);
     }
 
-    if (this.promptAnswers.configureGitHusky) {
-      await this.installConfigureGitHusky();
+    if (this.options.husky) {
+      //  await this.installConfigureGitHusky();
     }
 
-    this.spinner.succeed();
+    console.log(`\n\n`);
   };
 
   public configurePackageFile = async () => {
-    const { configureLintStaged, configurePrettier } = this.promptAnswers;
-    const { packageScripts, packageDevDependencies } =
-      this.configurationObjects;
-
-    const hasPrettier =
-      configurePrettier && packageDevDependencies.includes('prettier');
-
-    const hasEslint =
-      this.nextConfig.eslint || packageDevDependencies.includes('eslint');
-
-    const hasTsEslint = packageDevDependencies.includes(
-      '@typescript-eslint/eslint-plugin'
-    );
-
-    const hasJest = packageDevDependencies.includes('jest');
+    const { eslint, jest, lintStaged, prettier, typescript } = this.options;
+    const { packageScripts } = this.config;
 
     // package scripts
     await this.packageManager.addToPackage('scripts', packageScripts);
 
     // lint-staged
-    if (
-      configureLintStaged &&
-      (hasEslint || hasTsEslint || hasPrettier || hasJest)
-    ) {
+    if (lintStaged && (eslint || (eslint && typescript) || prettier || jest)) {
       let lintStaged: Record<string, string[]> = {
         '**/*.{js,jsx}': [
-          ...(hasPrettier ? ['format:write'] : []),
-          ...(hasEslint ? ['lint:check', 'lint:fix'] : []),
-          ...(hasJest ? ['test'] : []),
+          ...(prettier ? ['format:write'] : []),
+          ...(eslint ? ['lint:check', 'lint:fix'] : []),
+          ...(jest ? ['test'] : []),
         ],
-        '**/*.{md, yml, yaml}': ['format:write'],
+        '**/*.{md, yml, yaml, json}': ['format:write'],
         '**/*.css': ['format:write'],
       };
 
-      if (hasTsEslint) {
+      if (eslint && typescript) {
         lintStaged = {
           ...lintStaged,
           '**/*.{ts,tsx}': [
-            ...(hasPrettier ? ['format:write'] : []),
-            ...(hasTsEslint ? ['lint:check', 'lint:fix'] : []),
-            ...(hasJest ? ['test'] : []),
+            ...(prettier ? ['format:write'] : []),
+            'lint:check',
+            'lint:fix',
+            ...(jest ? ['test'] : []),
             'build --noEmit',
           ],
         };
@@ -415,44 +408,31 @@ class Configurator {
   };
 
   public configureEslint = async () => {
-    const { configurePrettier, configureStorybook } = this.promptAnswers;
-    const { packageDevDependencies } = this.configurationObjects;
+    const { storybook, prettier, eslint, typescript, reactTestingLibrary } =
+      this.options;
 
-    const hasPrettier =
-      configurePrettier &&
-      packageDevDependencies.includes('prettier') &&
-      packageDevDependencies.includes('eslint-config-prettier');
+    if (!eslint) return;
 
-    const hasTsEslint = packageDevDependencies.includes(
-      '@typescript-eslint/eslint-plugin'
-    );
-
-    const hasRTL = packageDevDependencies.includes('@testing-library/react');
-
-    const hasStorybook =
-      configureStorybook &&
-      packageDevDependencies.includes('eslint-plugin-storybook');
-
-    if (!this.nextConfig.eslint || !configurePrettier) return;
-
-    const eslint = {
-      root: true,
+    const eslintrc = {
+      cwd: true,
       plugins: [
-        ...(hasTsEslint ? ['@typescript-eslint'] : []),
-        ...(hasRTL ? ['testing-library'] : []),
+        ...(eslint && typescript ? ['@typescript-eslint'] : []),
+        ...(reactTestingLibrary ? ['testing-library'] : []),
       ],
       extends: [
         'next/core-web-vitals',
-        ...(hasTsEslint ? ['plugin:@typescript-eslint/recommended'] : []),
-        ...(hasStorybook ? ['plugin:storybook/recommended'] : []),
-        ...(hasPrettier ? ['prettier'] : []),
+        ...(eslint && typescript
+          ? ['plugin:@typescript-eslint/recommended']
+          : []),
+        ...(storybook ? ['plugin:storybook/recommended'] : []),
+        ...(prettier ? ['prettier'] : []),
       ],
       rules: {
         '@typescript-eslint/no-unused-vars': 'error',
         '@typescript-eslint/no-explicit-any': 'error',
       },
       overrides: [
-        ...(hasRTL
+        ...(reactTestingLibrary
           ? [
               {
                 files: [
@@ -467,17 +447,20 @@ class Configurator {
     };
 
     await fs.promises
-      .writeFile(path.join(this.root, '.eslintrc.json'), JSON.stringify(eslint))
+      .writeFile(
+        path.join(this.cwd, '.eslintrc.json'),
+        JSON.stringify(eslintrc)
+      )
       .catch((error) => {
         oops();
         throw new Error(`${error}`);
       });
   };
 
-  public buildConfigs = async () => {
-    this.spinner.start('Building configs');
-    const { configDirectories, configFiles } = this.configurationObjects;
-    const { configureDotEnvFiles } = this.promptAnswers;
+  public buildDependencyConfigs = async () => {
+    this.spinner.start('Building dependency configs');
+    const { configDirectories, configFiles } = this.config;
+    const { dotEnvFiles } = this.options;
 
     const configs = [];
     // Directories & Files
@@ -498,9 +481,9 @@ class Configurator {
     }
 
     // .env files
-    if (configureDotEnvFiles.length > 0) {
-      const copyEnvFiles = configureDotEnvFiles.map(
-        (file: string) => $`touch ${path.join(this.root, file)}`
+    if (dotEnvFiles.length > 0) {
+      const copyEnvFiles = dotEnvFiles.map(
+        (file: string) => $`touch ${path.join(this.cwd, file)}`
       );
       await Promise.all(copyEnvFiles).catch((error) => {
         oops();
@@ -514,12 +497,12 @@ class Configurator {
   };
 
   public cleanUp = async () => {
-    // clean up ie format files + write Readme - maybe other stuff TBC
+    // clean up ie format files - maybe other stuff TBC
     this.spinner.start('Cleaning up');
 
-    if (this.promptAnswers.configurePrettier) {
+    if (this.options.prettier) {
       await $({
-        cwd: this.root,
+        cwd: this.cwd,
       })`${this.packageManager.getKind()} run format:write`.catch((error) => {
         this.spinner.fail();
         oops();
@@ -538,7 +521,7 @@ class Configurator {
     )} The following configurations were made: TBC... `;
   };
 
-  private getFromFiles = async (filenames: string[]) => {
+  private readFromFiles = async (filenames: string[]) => {
     const filePaths = filenames.map((filename) =>
       path.join(this.markdownDirPath, filename)
     );
@@ -555,9 +538,9 @@ class Configurator {
 
   public generateReadme = async () => {
     this.spinner.start('Generating Readme');
-    const markdown = this.configurationObjects.markdown.join('\n\n');
+    const markdown = this.config.markdown.join('\n\n');
     await fs.promises
-      .writeFile(path.join(this.root, 'README.md'), markdown)
+      .writeFile(path.join(this.cwd, 'README.md'), markdown)
       .then(() => this.spinner.succeed())
       .catch((error) => {
         this.spinner.fail();
@@ -574,7 +557,7 @@ class Configurator {
       const copyFiles = template.map((file) =>
         fs.promises.cp(
           path.join(this.configsPath, file),
-          path.join(this.root, file),
+          path.join(this.cwd, file),
           { recursive }
         )
       );

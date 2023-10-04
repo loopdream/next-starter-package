@@ -17,7 +17,7 @@ export enum PackageManagerAddEnum {
 
 export type PackageManagerPropsType = {
   packageManagerKind: PackageManagerKindEnum;
-  root: string;
+  cwd: string;
 };
 
 export type AddToPackageType = Record<
@@ -30,9 +30,9 @@ class PackageManager {
   private cwd: string;
   private packageFilePath: string;
 
-  constructor({ packageManagerKind, root }: PackageManagerPropsType) {
+  constructor({ packageManagerKind, cwd }: PackageManagerPropsType) {
     this.packageManagerKind = packageManagerKind;
-    this.cwd = root;
+    this.cwd = cwd;
     this.packageFilePath = path.join(this.cwd, 'package.json');
   }
 
@@ -58,7 +58,7 @@ class PackageManager {
 
       await execa(this.getKind(), [add, ...deps], {
         cwd: this.cwd,
-        // stdio: 'inherit',
+        stdio: 'inherit',
       });
     } catch (error) {
       throw new Error(`${error}`);

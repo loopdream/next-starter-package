@@ -43,22 +43,23 @@ program
     await configurator.createNextApp();
 
     const answers = await prompt([
-      questions.configureNextImageOptimisation,
-      questions.configurePrettier,
-      questions.configureJestRTL,
-      questions.configureLintStaged,
-      questions.configureCypress,
-      questions.configureStorybook,
-      questions.configureHusky,
-      questions.configureDocker,
-      questions.configureDotEnvFiles,
-      questions.configureSelectedDependencies,
+      questions.nextImageOptimisation,
+      questions.prettier,
+      questions.jest,
+      questions.reactTestingLibrary,
+      questions.lintStaged,
+      questions.cypress,
+      questions.storybook,
+      questions.husky,
+      questions.docker,
+      questions.dotEnvFiles,
+      questions.optionalDependencies,
     ]);
 
     const hasAnswers =
       Object.values(answers).includes(true) ||
-      answers.configureSelectedDependencies.length > 0 ||
-      answers.configureDotEnvFiles.length > 0;
+      answers.optionalDependencies.length > 0 ||
+      answers.dotEnvFiles.length > 0;
 
     if (!hasAnswers) {
       // nothing to configure!
@@ -68,15 +69,7 @@ program
       );
     }
 
-    configurator.setPromptAnswers(answers);
-
-    console.log(`
-    
-Using ${packageManagerChoice}.
-
-Configuring project with following configurations:  
-
-`);
+    configurator.setOptions(answers);
 
     await configurator.run();
   });
