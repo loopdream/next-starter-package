@@ -3,3 +3,4 @@
 
 npx lint-staged 
 
+npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely
