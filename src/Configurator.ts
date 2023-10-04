@@ -90,10 +90,13 @@ class Configurator {
 
   public run = async () => {
     console.log(
-      `Using ${bold(this.packageManager.getKind())}` +
-        `\n\n` +
-        `The configurator will now setup your next project based on your selections.` +
-        `\n\n`
+      bold(
+        `Using ` +
+          bold(this.packageManager.getKind()) +
+          `\n\n` +
+          `The configurator will now setup your next project based on your selections.` +
+          `\n\n`
+      )
     );
 
     await this.prepare()
@@ -102,6 +105,12 @@ class Configurator {
       .then(() => this.configurePackageFile())
       .then(() => this.generateReadme())
       .then(() => this.cleanUp());
+
+    console.log(
+      `\n` +
+        green('Success! ') +
+        `The following configurations were made: <TODO: ADD MORE INFO>`
+    );
   };
 
   public setOptions = (answers: prompts.Answers<string>) => {
@@ -387,7 +396,6 @@ class Configurator {
         '**/*.{ts,tsx}': [
           ...(prettier ? ['npx prettier --write .'] : []),
           ...(eslint ? ['npx eslint .', 'npx eslint --fix .'] : []),
-
           ...(jest ? ['npx jest --ci'] : []),
           'tsc --noEmit',
         ],
@@ -513,14 +521,6 @@ class Configurator {
     }
 
     this.spinner.succeed();
-
-    return this.configurationCompleteMessage();
-  };
-
-  private configurationCompleteMessage = () => {
-    return `${green(
-      'Success!'
-    )} The following configurations were made: TBC... `;
   };
 
   private readFromFiles = async (filenames: string[]) => {
