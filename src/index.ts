@@ -41,7 +41,7 @@ program
     await configurator.createNextApp();
 
     const opts = await prompts(configurationPrompts);
-    // TODO: something 4
+
     const hasOptions =
       Object.values(opts).includes(true) ||
       opts.optionalDependencies.length > 0 ||
@@ -54,9 +54,7 @@ program
         `Looks like you've passed on all the configuration options. Maybe next time!`
       );
     }
-    // TODO: something
-    // TODO: something 2
-    // TODO: something 3
+
     configurator.setOptions(opts);
 
     await configurator.run();
