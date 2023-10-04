@@ -66,10 +66,11 @@
     "prompts": "^2.4.2"
   },
   "lint-staged": {
-    "**/*.{js,jsx,ts,tsx}": [
+    "**/*.[jt]s?(x)": [
       "prettier --write .",
       "eslint .",
-      "eslint --fix ."
+      "eslint --fix .",
+      "leasot 'src/**/*.ts' --exit-nicely"
     ],
     "**/*.{md, yml, yaml, json}": [
       "prettier --write ."

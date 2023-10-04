@@ -73,7 +73,7 @@ class Configurator {
   } as OptionsType;
   private packageManager = {} as PackageManager;
   private spinner;
-
+  // TODO: test
   constructor({
     projectDirectoryPath,
     packageManagerChoice: packageManagerKind,
