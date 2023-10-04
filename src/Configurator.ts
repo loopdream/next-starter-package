@@ -17,8 +17,8 @@ type ConfiguratorPropsType = {
 };
 
 export interface ConfigType {
-  configDirectories: string[];
-  configFiles: string[];
+  configTemplateDirectories: string[];
+  configTemplateFiles: string[];
   markdown: string[];
   packageDependencies: string[];
   packageDevDependencies: string[];
@@ -48,10 +48,10 @@ export interface OptionsType {
 const { cyan, green, bold } = picocolors;
 
 class Configurator {
-  private configsPath: string;
+  private configTemplatesPath: string;
   private config = {} as ConfigType;
   private cwd: string;
-  private markdownDirPath: string;
+  private markdownTemplatesPath: string;
   private options = {
     appRouter: false,
     cypress: false,
@@ -78,8 +78,8 @@ class Configurator {
     projectDirectoryPath,
     packageManagerChoice: packageManagerKind,
   }: ConfiguratorPropsType) {
-    this.configsPath = path.resolve(path.join('src', 'templates'));
-    this.markdownDirPath = path.resolve(path.join('src', 'markdown'));
+    this.configTemplatesPath = path.resolve(path.join('src', 'templates'));
+    this.markdownTemplatesPath = path.resolve(path.join('src', 'markdown'));
     this.cwd = path.resolve(projectDirectoryPath);
     this.spinner = ora();
     this.packageManager = new PackageManager({
@@ -170,14 +170,14 @@ class Configurator {
       typescript,
     } = this.options;
 
-    this.config.configFiles = [
+    this.config.configTemplateFiles = [
       'next.config.js',
       ...(docker ? ['docker-compose.yml', 'Dockerfile', 'Makefile'] : []),
       ...(prettier ? ['.prettierrc.json', '.prettierignore'] : []),
       ...(jest ? ['jest.config.js'] : []),
     ];
 
-    this.config.configDirectories = [
+    this.config.configTemplateDirectories = [
       ...(cypress ? ['cypress'] : []),
       ...(storybook ? ['.storybook'] : []),
     ];
@@ -394,22 +394,22 @@ class Configurator {
     if (lintStaged && (eslint || (eslint && typescript) || prettier || jest)) {
       const tsLintStagedCmd = {
         '**/*.{ts,tsx}': [
-          ...(prettier ? ['npx prettier --write .'] : []),
-          ...(eslint ? ['npx eslint .', 'npx eslint --fix .'] : []),
-          ...(jest ? ['npx jest --ci'] : []),
+          ...(prettier ? ['prettier --write .'] : []),
+          ...(eslint ? ['eslint .', 'eslint --fix .'] : []),
+          ...(jest ? ['jest --ci'] : []),
           'tsc --noEmit',
         ],
       };
 
       const lintStagedCmds = {
         '**/*.{js,jsx}': [
-          ...(prettier ? ['npx prettier --write .'] : []),
-          ...(eslint ? ['npx eslint .', 'npx eslint --fix .'] : []),
-          ...(jest ? ['npx jest --ci'] : []),
+          ...(prettier ? ['prettier --write .'] : []),
+          ...(eslint ? ['eslint .', ' eslint --fix .'] : []),
+          ...(jest ? [' jest --ci'] : []),
         ],
         ...(typescript ? tsLintStagedCmd : {}),
-        '**/*.{md, yml, yaml, json}': ['npx prettier --write .'],
-        '**/*.{css,scss}': ['npx prettier --write .'], // TODO: add styledlint
+        '**/*.{md, yml, yaml, json}': ['prettier --write .'],
+        '**/*.{css}': [' prettier --write .'], // TODO: add styledlint
       };
 
       await this.packageManager.addToPackage('lint-staged', lintStagedCmds);
@@ -469,17 +469,17 @@ class Configurator {
 
   public buildDependencyConfigs = async () => {
     this.spinner.start('Building dependency configs');
-    const { configDirectories, configFiles } = this.config;
+    const { configTemplateDirectories, configTemplateFiles } = this.config;
     const { dotEnvFiles } = this.options;
 
     const configs = [];
     // Directories & Files
-    if (configDirectories.length > 0) {
-      configs.push(this.copyTemplate(configDirectories, true));
+    if (configTemplateDirectories.length > 0) {
+      configs.push(this.copyTemplate(configTemplateDirectories, true));
     }
 
-    if (configFiles.length > 0) {
-      configs.push(this.copyTemplate(configFiles));
+    if (configTemplateFiles.length > 0) {
+      configs.push(this.copyTemplate(configTemplateFiles));
     }
 
     if (configs.length >= 1) {
@@ -525,7 +525,7 @@ class Configurator {
 
   private readFromFiles = async (filenames: string[]) => {
     const filePaths = filenames.map((filename) =>
-      path.join(this.markdownDirPath, filename)
+      path.join(this.markdownTemplatesPath, filename)
     );
 
     const readFiles = filePaths.map((filePath) =>
@@ -558,7 +558,7 @@ class Configurator {
     if (Array.isArray(template) && template.length > 0) {
       const copyFiles = template.map((file) =>
         fs.promises.cp(
-          path.join(this.configsPath, file),
+          path.join(this.configTemplatesPath, file),
           path.join(this.cwd, file),
           { recursive }
         )
