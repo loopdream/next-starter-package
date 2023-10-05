@@ -392,7 +392,7 @@ class Configurator {
     if (lintStaged) {
       const tsLintStagedConfig = {
         '**/*.{ts,tsx}': [
-          ...(prettier ? ['prettier --write .'] : []),
+          ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
           ...(eslint ? ['eslint .', 'eslint --fix .'] : []),
           ...(jest ? ['jest --ci'] : []),
           'tsc --noEmit',
@@ -401,13 +401,16 @@ class Configurator {
 
       const lintStagedConfig = {
         '**/*.{js,jsx}': [
-          ...(prettier ? ['prettier --write .'] : []),
+          ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
           ...(eslint ? ['eslint .', ' eslint --fix .'] : []),
           ...(jest ? [' jest --ci'] : []),
         ],
         ...(typescript ? tsLintStagedConfig : {}),
-        '**/*.{md, yml, yaml, json}': ['prettier --write .'],
-        '**/*.{css}': [' prettier --write .'], // TODO: add styledlint
+        '**/*.{md, yml, yaml, json}': [
+          'prettier --check .',
+          'prettier --write .',
+        ],
+        '**/*.{css}': ['prettier --check .', 'prettier --write .'], // TODO: add styledlint
       };
 
       await this.packageManager.addToPackage('lint-staged', lintStagedConfig);

@@ -3,4 +3,10 @@
 
 npx lint-staged 
 
+# Following is for monitoring only 
+
+#TODOs / FIXMEs
 npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely
+
+# # Test coverage
+# npx jest --coverage

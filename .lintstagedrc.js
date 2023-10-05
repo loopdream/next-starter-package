@@ -1,12 +1,14 @@
 export default {
   '**/*.[jt]s': (filenames) => [
+    `prettier --check ${filenames.join(' ')}`,
     `prettier --write ${filenames.join(' ')}`,
     `eslint ${filenames.join(' ')}`,
     `eslint --fix ${filenames.join(' ')}`,
     `tsc --noEmit`,
-    `leasot ${filenames.join(' ')} --exit-nicely`,
   ],
 
-  '**/*.(md, yml, yaml, json)': (filenames) =>
+  '**/*.(md, yml, yaml, json)': (filenames) => [
+    `prettier --check ${filenames.join(' ')}`,
     `prettier --write ${filenames.join(' ')}`,
+  ],
 };
