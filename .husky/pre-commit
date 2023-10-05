@@ -1,7 +1,9 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-npx lint-staged || { printf "\nYOU HAVE ERRORS!\n--------------\n" ; exit 1; }
+npx lint-staged || { 
+  printf "\nYOU HAVE ERRORS!\n--------------\n" ; exit 1; 
+}
 
 # Following is for observability purposes
 
@@ -17,6 +19,6 @@ npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely
  
 # npx jest --coverage --ci
 
-printf "\n\n-----------------------\n\n"
+printf "\n------------------------------------------\n"
 printf "Now push your code! 🚀"
-printf "\n\n-----------------------\n\n"
+printf "\n------------------------------------------\n"
