@@ -25,5 +25,5 @@ npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely
 # npx jest --coverage --ci
 
 printf "\n\n------------------------------------------\n\n"
-printf  "\033[1m"Now push your code!"\033[0m 🚀"
+printf '%b' "\033[1m"Now push your code!"\033[0m 🚀"
 printf "\n\n------------------------------------------\n\n"
