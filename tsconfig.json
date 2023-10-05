@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "esModuleInterop": true,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ES2020",
+    "moduleResolution": "Bundler",
     "outDir": "dist",
     "rootDir": "src",
     "sourceMap": true,

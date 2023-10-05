@@ -2,10 +2,19 @@
 
 export default {
   preset: 'ts-jest',
-  testEnvironment: 'node',
+  collectCoverageFrom: ['src/**/*.{ts,js}'],
+  modulePaths: ['<rootDir>/src/'],
   modulePathIgnorePatterns: [
     '<rootDir>/dist/',
     '<rootDir>/coverage/',
     '<rootDir>/.husky/',
   ],
+  transform: {
+    '^.+\\.[jt]s?(x)': [
+      'ts-jest',
+      {
+        useESM: true,
+      },
+    ],
+  },
 };

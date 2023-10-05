@@ -173,7 +173,7 @@ class Configurator {
       'next.config.js',
       ...(docker ? ['docker-compose.yml', 'Dockerfile', 'Makefile'] : []),
       ...(prettier ? ['.prettierrc.json', '.prettierignore'] : []),
-      ...(jest ? ['jest.config.js'] : []),
+      ...(jest ? ['jest.config.js', 'jest.setup.js'] : []),
     ];
 
     this.config.configTemplateDirectories = [
