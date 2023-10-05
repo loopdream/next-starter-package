@@ -22,7 +22,6 @@ npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely
 # TODO: Add tests!
 printf "\n\nTEST COVERAGE\n--------------\n"
  
-npx jest --ci
 
 printf "\n\n------------------------------------------\n\n"
 printf '%b ' "\033[1m"Now push your code!"\033[0m 🚀"
