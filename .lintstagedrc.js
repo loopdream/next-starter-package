@@ -4,6 +4,7 @@ export default {
     `prettier --write ${filenames.join(' ')}`,
     `eslint ${filenames.join(' ')}`,
     `eslint --fix ${filenames.join(' ')}`,
+    // `test:ci --findRelatedTests ${filenames.join(' ')}`,
     `tsc --noEmit`,
   ],
 

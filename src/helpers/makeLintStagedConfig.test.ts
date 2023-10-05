@@ -2,6 +2,7 @@ import makeLintStagedConfig from './makeLintStagedConfig';
 
 describe('makeLintStagedConfig', () => {
   it('should return a valid lint-staged configuration object', () => {
+    //test
     const expectedConfig = {
       '**/*.{js,jsx}': [
         'prettier --check .',
