@@ -470,6 +470,7 @@ class Configurator {
 
   public buildConfigs = async () => {
     this.spinner.start('Building configs');
+
     const { configTemplateDirectories, configTemplateFiles } = this.config;
     const { dotEnvFiles } = this.options;
 
