@@ -2,7 +2,10 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 npx lint-staged || { 
-  printf "\nYOU HAVE ERRORS!\n--------------\n" ; exit 1; 
+  printf "\n------------------------------------------\n"
+  printf "\nYOU HAVE ERRORS!\n--------------\n" 
+  printf "\n------------------------------------------\n";
+  exit 1; 
 }
 
 # Following is for observability purposes
