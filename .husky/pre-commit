@@ -3,11 +3,13 @@
 
 npx lint-staged || { printf "\nYOU HAVE ERRORS!\n--------------\n" ; exit 1; }
 
-# Following is for monitoring only 
- 
-printf "\n\nTODOs / FIXMEs - consider reviewing these"
+# Following is for observability purposes
+
+# TODOs / FIXMEs
+printf "\n\n"
+printf "TODOs / FIXMEs - consider reviewing these"
 printf "\n------------------------------------------\n"
- 
+#
 npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely
 
 # TODO: Add tests!
