@@ -13,14 +13,11 @@ npx lint-staged || {
 # Following is for observability purposes
 
 # TODOs / FIXMEs
-
+printf "\n\n"
+printf "TODOs / FIXMEs - consider reviewing these"
+printf "\n------------------------------------------\n"
 #
-npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely || { 
-  printf "\n\n"
-  printf "TODOs / FIXMEs - consider reviewing these"
-  printf "\n------------------------------------------\n"
-  exit 0; 
-}
+npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely 
 
 # TODO: Add tests!
 # printf "\n\nTEST COVERAGE\n--------------\n"
