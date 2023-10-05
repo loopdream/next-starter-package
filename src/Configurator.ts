@@ -7,6 +7,7 @@ import { $ } from 'execa';
 import prompts from 'prompts';
 
 import { oops } from './utils.js';
+import makeLintStagedConfig from './helpers/makeLintStagedConfig.js';
 
 import PackageManager, { PackageManagerKindEnum } from './PackageManager.js';
 import { ChoiceValuesType } from './prompts.js';
@@ -395,39 +396,12 @@ class Configurator {
 
     // lint-staged
     if (lintStaged) {
-      const lintStagedConfig = this.makeLintStagedConfig();
-      await this.packageManager.addToPackage('lint-staged', lintStagedConfig);
+      await this.packageManager.addToPackage(
+        'lint-staged',
+        makeLintStagedConfig(this.options)
+      );
     }
   };
-
-  private makeLintStagedConfig() {
-    const { eslint, jest, prettier, typescript } = this.options;
-
-    const tsLintStagedConfig = {
-      '**/*.{ts,tsx}': [
-        ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
-        ...(eslint ? ['eslint .', 'eslint --fix .'] : []),
-        ...(jest ? ['jest --ci'] : []),
-        'tsc --noEmit',
-      ],
-    };
-
-    const lintStagedConfig = {
-      '**/*.{js,jsx}': [
-        ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
-        ...(eslint ? ['eslint .', ' eslint --fix .'] : []),
-        ...(jest ? [' jest --ci'] : []),
-      ],
-      ...(typescript ? tsLintStagedConfig : {}),
-      '**/*.{md, yml, yaml, json}': [
-        'prettier --check .',
-        'prettier --write .',
-      ],
-      '**/*.{css}': ['prettier --check .', 'prettier --write .'], // TODO: add styledlint
-    };
-
-    return lintStagedConfig;
-  }
 
   private configureEslint = async () => {
     const { storybook, prettier, eslint, typescript, reactTestingLibrary } =
