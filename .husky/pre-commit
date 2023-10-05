@@ -20,7 +20,7 @@ printf "\n------------------------------------------\n"
 npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely 
 
 # TODO: Add tests!
-printf "\n\nTEST COVERAGE\n--------------\n"
+# printf "\n\nTEST COVERAGE\n--------------\n"
  
 
 printf "\n\n------------------------------------------\n\n"
