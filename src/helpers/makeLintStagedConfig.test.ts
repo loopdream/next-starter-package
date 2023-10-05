@@ -1,17 +1,17 @@
-import makeLintStagedConfig from './makeLintStagedConfig';
+import makeLintStagedConfig from './makeLintStagedConfig.js';
 
 describe('makeLintStagedConfig', () => {
   it('should return a valid lint-staged configuration object', () => {
     //test
     const expectedConfig = {
-      '**/*.{js,jsx}': [
+      '**/*.js?(x)': [
         'prettier --check .',
         'prettier --write .',
         'eslint .',
         'eslint --fix .',
         'jest --ci',
       ],
-      '**/*.{ts,tsx}': [
+      '**/*.ts?(x)': [
         'prettier --check .',
         'prettier --write .',
         'eslint .',
@@ -38,7 +38,7 @@ describe('makeLintStagedConfig', () => {
 
   it('should return a valid lint-staged configuration object without TypeScript', () => {
     const expectedConfig = {
-      '**/*.{js,jsx}': [
+      '**/*.js?(x)': [
         'prettier --check .',
         'prettier --write .',
         'eslint .',
@@ -64,13 +64,13 @@ describe('makeLintStagedConfig', () => {
 
   it('should return a valid lint-staged configuration object without Jest', () => {
     const expectedConfig = {
-      '**/*.{js,jsx}': [
+      '**/*.js?(x)': [
         'prettier --check .',
         'prettier --write .',
         'eslint .',
         'eslint --fix .',
       ],
-      '**/*.{ts,tsx}': [
+      '**/*.ts?(x)': [
         'prettier --check .',
         'prettier --write .',
         'eslint .',
@@ -96,8 +96,8 @@ describe('makeLintStagedConfig', () => {
 
   it('should return a valid lint-staged configuration object without Prettier', () => {
     const expectedConfig = {
-      '**/*.{js,jsx}': ['eslint .', 'eslint --fix .', 'jest --ci'],
-      '**/*.{ts,tsx}': [
+      '**/*.js?(x)': ['eslint .', 'eslint --fix .', 'jest --ci'],
+      '**/*.ts?(x)': [
         'eslint .',
         'eslint --fix .',
         'jest --ci',
@@ -123,12 +123,8 @@ describe('makeLintStagedConfig', () => {
       typescript: true,
     };
     const expectedConfig = {
-      '**/*.{js,jsx}': [
-        'prettier --check .',
-        'prettier --write .',
-        'jest --ci',
-      ],
-      '**/*.{ts,tsx}': [
+      '**/*.js?(x)': ['prettier --check .', 'prettier --write .', 'jest --ci'],
+      '**/*.ts?(x)': [
         'prettier --check .',
         'prettier --write .',
         'jest --ci',

@@ -1,5 +1,6 @@
 import picocolors from 'picocolors';
 import { PromptObject } from 'prompts';
+
 import { PackageManagerKindEnum } from './PackageManager.js';
 
 const { blue } = picocolors;

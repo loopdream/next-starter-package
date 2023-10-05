@@ -1,16 +1,14 @@
-import path from 'path';
+import { $ } from 'execa';
 import fs from 'fs';
 import ora from 'ora';
+import path from 'path';
 import picocolors from 'picocolors';
-import { $ } from 'execa';
-
 import prompts from 'prompts';
 
-import { oops } from './utils.js';
-import makeLintStagedConfig from './helpers/makeLintStagedConfig.js';
-
 import PackageManager, { PackageManagerKindEnum } from './PackageManager.js';
+import makeLintStagedConfig from './helpers/makeLintStagedConfig.js';
 import { ChoiceValuesType } from './prompts.js';
+import { oops } from './utils.js';
 
 type ConfiguratorPropsType = {
   packageManagerChoice: PackageManagerKindEnum;
@@ -286,7 +284,7 @@ class Configurator {
   public installConfigureGitHusky = async () => {
     const $execa = $({ cwd: this.cwd });
     const pm = this.packageManager.getKind();
-    const { husky, eslint, lintStaged, prettier, typescript } = this.options;
+    const { eslint, jest, lintStaged, prettier, typescript } = this.options;
 
     this.spinner.start('Configuring Git and Husky');
 
@@ -319,16 +317,21 @@ class Configurator {
     let huskyPreCommit =
       `#!/usr/bin/env sh` + `\n` + `. "$(dirname -- "$0")/_/husky.sh"`;
 
-    if (husky && lintStaged) {
+    if (lintStaged) {
       huskyPreCommit += `\n\n` + `${pm} run lint-staged`;
     } else {
       if (prettier) {
-        huskyPreCommit += `\n\n` + `${pm} run format:write`;
+        huskyPreCommit +=
+          `\n\n` + `${pm} run format:check` + `\n\n` + `${pm} run format:write`;
       }
 
       if (eslint) {
         huskyPreCommit +=
           `\n\n` + `${pm} run lint:check` + `\n\n` + `${pm} run lint:fix`;
+      }
+
+      if (jest) {
+        huskyPreCommit += `\n\n` + `${pm} run test --passWithNoTests`;
       }
 
       if (typescript) {

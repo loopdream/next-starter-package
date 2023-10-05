@@ -1,7 +1,7 @@
-import path from 'path';
-import os from 'os';
-import fs from 'fs';
 import { execa } from 'execa';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 
 export enum PackageManagerKindEnum {
   NPM = 'npm',

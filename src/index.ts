@@ -1,15 +1,13 @@
 #!/usr/bin/env ts-node
-import path from 'path';
-import fs from 'fs';
-
 import { program } from 'commander';
 import figlet from 'figlet';
+import fs from 'fs';
+import path from 'path';
 import prompts from 'prompts';
-
-import { goodbye } from './utils.js';
 
 import Configurator from './Configurator.js';
 import { packageManagerPrompt, configurationPrompts } from './prompts.js';
+import { goodbye } from './utils.js';
 
 console.log('\n', figlet.textSync('Nextra'), '\n\n');
 

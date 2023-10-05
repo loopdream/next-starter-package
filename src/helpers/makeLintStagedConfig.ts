@@ -12,7 +12,7 @@ function makeLintStagedConfig({
   typescript,
 }: LintStagedConfigType) {
   const tsLintStagedConfig = {
-    '**/*.{ts,tsx}': [
+    '**/*.ts?(x)': [
       ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
       ...(eslint ? ['eslint .', 'eslint --fix .'] : []),
       ...(jest ? ['jest --ci'] : []),
@@ -34,7 +34,7 @@ function makeLintStagedConfig({
   };
 
   const lintStagedConfig = {
-    '**/*.{js,jsx}': [
+    '**/*.js?(x)': [
       ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
       ...(eslint ? ['eslint .', 'eslint --fix .'] : []),
       ...(jest ? ['jest --ci'] : []),
