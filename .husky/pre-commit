@@ -7,7 +7,7 @@ npx lint-staged || { printf "\nYOU HAVE ERRORS!\n--------------\n" ; exit 1; }
  
 printf "\nTODOs / FIXMEs\n--------------\n"
  
-npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely
+npx leasot 'src/**/*' --exit-nicely
 
 # TODO: Add tests!
 # printf "\n\nTEST COVERAGE\n--------------\n"
