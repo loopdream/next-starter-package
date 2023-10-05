@@ -48,10 +48,8 @@ export interface OptionsType {
 const { cyan, green, bold } = picocolors;
 
 class Configurator {
-  private configTemplatesPath: string;
   private config = {} as ConfigType;
   private cwd: string;
-  private markdownTemplatesPath: string;
   private options = {
     appRouter: false,
     cypress: false,
@@ -73,15 +71,15 @@ class Configurator {
   } as OptionsType;
   private packageManager = {} as PackageManager;
   private spinner;
+  private srcPath: string;
 
   constructor({
     projectDirectoryPath,
     packageManagerChoice: packageManagerKind,
   }: ConfiguratorPropsType) {
-    this.configTemplatesPath = path.resolve(path.join('src', 'templates'));
-    this.markdownTemplatesPath = path.resolve(path.join('src', 'markdown'));
     this.cwd = path.resolve(projectDirectoryPath);
     this.spinner = ora();
+    this.srcPath = path.resolve(path.join('src', 'templates'));
     this.packageManager = new PackageManager({
       packageManagerKind,
       cwd: this.cwd,
@@ -101,7 +99,7 @@ class Configurator {
 
     await this.prepare()
       .then(() => this.installDependencies())
-      .then(() => this.buildDependencyConfigs())
+      .then(() => this.buildConfigs())
       .then(() => this.configurePackageFile())
       .then(() => this.generateReadme())
       .then(() => this.cleanUp());
@@ -467,8 +465,8 @@ class Configurator {
       });
   };
 
-  public buildDependencyConfigs = async () => {
-    this.spinner.start('Building dependency configs');
+  public buildConfigs = async () => {
+    this.spinner.start('Building configs');
     const { configTemplateDirectories, configTemplateFiles } = this.config;
     const { dotEnvFiles } = this.options;
 
@@ -525,7 +523,7 @@ class Configurator {
 
   private readFromFiles = async (filenames: string[]) => {
     const filePaths = filenames.map((filename) =>
-      path.join(this.markdownTemplatesPath, filename)
+      path.join(this.srcPath, 'markdown', filename)
     );
 
     const readFiles = filePaths.map((filePath) =>
@@ -558,7 +556,7 @@ class Configurator {
     if (Array.isArray(template) && template.length > 0) {
       const copyFiles = template.map((file) =>
         fs.promises.cp(
-          path.join(this.configTemplatesPath, file),
+          path.join(this.srcPath, 'templates', file),
           path.join(this.cwd, file),
           { recursive }
         )
