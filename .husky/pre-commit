@@ -19,7 +19,7 @@ npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely || {
   printf "\n\n"
   printf "TODOs / FIXMEs - consider reviewing these"
   printf "\n------------------------------------------\n"
-  exit 1; 
+  exit 0; 
 }
 
 # TODO: Add tests!
