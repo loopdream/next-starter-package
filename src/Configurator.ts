@@ -79,7 +79,7 @@ class Configurator {
   }: ConfiguratorPropsType) {
     this.cwd = path.resolve(projectDirectoryPath);
     this.spinner = ora();
-    this.srcPath = path.resolve(path.join('src', 'templates'));
+    this.srcPath = path.resolve(path.join('src'));
     this.packageManager = new PackageManager({
       packageManagerKind,
       cwd: this.cwd,
@@ -231,7 +231,13 @@ class Configurator {
             'storybook',
           ]
         : []),
-      ...(jest ? ['jest', 'jest-environment-jsdom'] : []),
+      ...(jest
+        ? [
+            'jest',
+            'jest-environment-jsdom',
+            ...(typescript ? ['@types/jest', 'ts-jest'] : []),
+          ]
+        : []),
       ...(reactTestingLibrary
         ? [
             '@testing-library/jest-dom',
@@ -289,22 +295,21 @@ class Configurator {
       throw new Error(`${error}`);
     });
 
-    let huskyInit = $execa`npx husky-init && npm install`;
-
     // TODO: Manual install husky - the following fails unless npm
-    if (pm === PackageManagerKindEnum.YARN) {
-      huskyInit = $execa`yarn dlx husky-init --yarn2 && yarn`;
-    }
+    //const huskyInit = $execa`npx husky-init && npm install`;
+    // if (pm === PackageManagerKindEnum.YARN) {
+    //   huskyInit = $execa`yarn dlx husky-init --yarn2 && yarn`;
+    // }
 
-    if (pm === PackageManagerKindEnum.PNPM) {
-      huskyInit = $execa`pnpm dlx husky-init && pnpm install`;
-    }
+    // if (pm === PackageManagerKindEnum.PNPM) {
+    //   huskyInit = $execa`pnpm dlx husky-init && pnpm install`;
+    // }
 
-    if (pm === PackageManagerKindEnum.BUN) {
-      huskyInit = $execa`bunx husky-init && bun install`;
-    }
+    // if (pm === PackageManagerKindEnum.BUN) {
+    //   huskyInit = $execa`bunx husky-init && bun install`;
+    // }
 
-    await huskyInit.catch((error) => {
+    await $execa`npx husky-init && npm install`.catch((error) => {
       oops();
       this.spinner.fail();
       throw new Error(`${error}`);
@@ -375,14 +380,14 @@ class Configurator {
     }
 
     if (this.options.husky) {
-      //  await this.installConfigureGitHusky();
+      await this.installConfigureGitHusky();
     }
 
     console.log(`\n\n`);
   };
 
   public configurePackageFile = async () => {
-    const { eslint, jest, lintStaged, prettier, typescript } = this.options;
+    const { lintStaged } = this.options;
     const { packageScripts } = this.config;
 
     // package scripts
@@ -390,40 +395,47 @@ class Configurator {
 
     // lint-staged
     if (lintStaged) {
-      const tsLintStagedConfig = {
-        '**/*.{ts,tsx}': [
-          ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
-          ...(eslint ? ['eslint .', 'eslint --fix .'] : []),
-          ...(jest ? ['jest --ci'] : []),
-          'tsc --noEmit',
-        ],
-      };
-
-      const lintStagedConfig = {
-        '**/*.{js,jsx}': [
-          ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
-          ...(eslint ? ['eslint .', ' eslint --fix .'] : []),
-          ...(jest ? [' jest --ci'] : []),
-        ],
-        ...(typescript ? tsLintStagedConfig : {}),
-        '**/*.{md, yml, yaml, json}': [
-          'prettier --check .',
-          'prettier --write .',
-        ],
-        '**/*.{css}': ['prettier --check .', 'prettier --write .'], // TODO: add styledlint
-      };
-
+      const lintStagedConfig = this.makeLintStagedConfig();
       await this.packageManager.addToPackage('lint-staged', lintStagedConfig);
     }
   };
 
-  public configureEslint = async () => {
+  private makeLintStagedConfig() {
+    const { eslint, jest, prettier, typescript } = this.options;
+
+    const tsLintStagedConfig = {
+      '**/*.{ts,tsx}': [
+        ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
+        ...(eslint ? ['eslint .', 'eslint --fix .'] : []),
+        ...(jest ? ['jest --ci'] : []),
+        'tsc --noEmit',
+      ],
+    };
+
+    const lintStagedConfig = {
+      '**/*.{js,jsx}': [
+        ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
+        ...(eslint ? ['eslint .', ' eslint --fix .'] : []),
+        ...(jest ? [' jest --ci'] : []),
+      ],
+      ...(typescript ? tsLintStagedConfig : {}),
+      '**/*.{md, yml, yaml, json}': [
+        'prettier --check .',
+        'prettier --write .',
+      ],
+      '**/*.{css}': ['prettier --check .', 'prettier --write .'], // TODO: add styledlint
+    };
+
+    return lintStagedConfig;
+  }
+
+  private configureEslint = async () => {
     const { storybook, prettier, eslint, typescript, reactTestingLibrary } =
       this.options;
 
     if (!eslint) return;
 
-    // TODO: create a configuration for the new eslint config file type
+    // TODO: create a make func for the new eslint config file type
     const eslintrc = {
       cwd: true,
       plugins: [
