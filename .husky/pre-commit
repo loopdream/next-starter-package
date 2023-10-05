@@ -9,6 +9,7 @@ printf "\nTODOs / FIXMEs\n--------------\n"
  
 npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely
 
-printf "\n\nTEST COVERAGE\n--------------\n"
+# TODO: Add tests!
+# printf "\n\nTEST COVERAGE\n--------------\n"
  
-# npx jest --coverage
+# npx jest --coverage --ci
