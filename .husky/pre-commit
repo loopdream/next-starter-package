@@ -5,7 +5,7 @@ npx lint-staged || { printf "\nYOU HAVE ERRORS!\n--------------\n" ; exit 1; }
 
 # Following is for monitoring only 
  
-printf "\nTODOs / FIXMEs - you can still git push!\n--------------\n"
+printf "\nTODOs / FIXMEs\n--------------\n"
  
 npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely
 
@@ -13,3 +13,5 @@ npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely
 # printf "\n\nTEST COVERAGE\n--------------\n"
  
 # npx jest --coverage --ci
+
+printf "You are good to push 🚀"
