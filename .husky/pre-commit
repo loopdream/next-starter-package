@@ -1,12 +1,14 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-npx lint-staged 
+npx lint-staged || { printf "\nYOU HAVE ERRORS!\n--------------\n" ; exit 1; }
 
 # Following is for monitoring only 
-
-#TODOs / FIXMEs
+ 
+printf "\nTODOs / FIXMEs\n--------------\n"
+ 
 npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely
 
-# # Test coverage
+printf "\n\nTEST COVERAGE\n--------------\n"
+ 
 # npx jest --coverage
