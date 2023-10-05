@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+printf "\n\n"
+
 npx lint-staged || { 
   printf "\n------------------------------------------\n"
   printf "\nYOU HAVE ERRORS!\n--------------\n" 
