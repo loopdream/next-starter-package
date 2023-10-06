@@ -6,7 +6,7 @@ import picocolors from 'picocolors';
 import prompts from 'prompts';
 
 import PackageManager, { PackageManagerKindEnum } from './PackageManager.js';
-import makeLintStagedConfig from './helpers/makeLintStagedConfig.js';
+import makeLintStaged from './helpers/makeLintStaged.js';
 import { ChoiceValuesType } from './prompts.js';
 import { oops } from './utils.js';
 
@@ -33,7 +33,9 @@ export interface OptionsType {
   husky: boolean;
   jest: boolean;
   lintStaged: boolean;
+  nextImageOptimisation: boolean;
   optionalDependencies: ChoiceValuesType[];
+  packageManager: PackageManagerKindEnum;
   prettier: boolean;
   reactTestingLibrary: boolean;
   selectedDependencies: boolean;
@@ -41,7 +43,6 @@ export interface OptionsType {
   storybook: boolean;
   tailwind: boolean;
   typescript: boolean;
-  nextImageOptimisation: boolean;
 }
 
 const { cyan, green, bold } = picocolors;
@@ -60,6 +61,7 @@ class Configurator {
     lintStaged: false,
     nextImageOptimisation: false,
     optionalDependencies: [],
+    packageManager: PackageManagerKindEnum.NPM,
     prettier: false,
     reactTestingLibrary: false,
     selectedDependencies: false,
@@ -79,6 +81,7 @@ class Configurator {
     this.cwd = path.resolve(projectDirectoryPath);
     this.spinner = ora();
     this.srcPath = path.resolve(path.join('src'));
+    this.options.packageManager = packageManagerKind;
     this.packageManager = new PackageManager({
       packageManagerKind,
       cwd: this.cwd,
@@ -318,7 +321,29 @@ class Configurator {
       `#!/usr/bin/env sh` + `\n` + `. "$(dirname -- "$0")/_/husky.sh"`;
 
     if (lintStaged) {
-      huskyPreCommit += `\n\n` + `${pm} run lint-staged`;
+      huskyPreCommit +=
+        `\n\n` +
+        `${pm} run lint-staged ` +
+        `||` +
+        `{` +
+        `printf "\n\n------------------------------------------\n\n"\n` +
+        `printf "🚫 YOU HAVE ERRORS!"` +
+        `printf "\n\n------------------------------------------\n\n'";` +
+        `exit 1;` +
+        `}` +
+        `\n\n` +
+        `printf"\n\n"` +
+        `# Following is for observability` +
+        `printf "\n\n"` +
+        `\n\n` +
+        `printf "TODOs / FIXMEs - consider reviewing these"` +
+        `printf "\n------------------------------------------\n\n"` +
+        `\n` +
+        `npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely` +
+        `printf "\n\n------------------------------------------\n\n"` +
+        `printf '%b ' "${String.raw`\033`}[1m"Now push your code!"${String.raw`\033`}[0m 🚀"` +
+        `printf "\n\n------------------------------------------\n\n"` +
+        ``;
     } else {
       if (prettier) {
         huskyPreCommit +=
@@ -337,6 +362,8 @@ class Configurator {
       if (typescript) {
         huskyPreCommit += `\n\n` + `${pm} run build --no-emit`;
       }
+      // TODO: leaslot hard coded. Consider making this configurable
+      huskyPreCommit += `npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely`;
     }
 
     await fs.promises
@@ -401,7 +428,7 @@ class Configurator {
     if (lintStaged) {
       await this.packageManager.addToPackage(
         'lint-staged',
-        makeLintStagedConfig(this.options)
+        makeLintStaged.config(this.options)
       );
     }
   };

@@ -14,11 +14,7 @@ export default {
     '<rootDir>/.husky/',
   ],
   transform: {
-    '^.+\\.[jt]s?(x)': [
-      'ts-jest',
-      {
-        useESM: true,
-      },
-    ],
+    '^.+\\.(ts|tsx)?$': 'ts-jest',
+    '^.+\\.(js|jsx)$': 'babel-jest',
   },
 };

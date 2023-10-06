@@ -1,4 +1,3 @@
-import { execa } from 'execa';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -44,6 +43,7 @@ class PackageManager {
     dependencies: string[],
     addToDevDependencies: boolean = false
   ) {
+    const { execa } = await import('execa');
     if (!Array.isArray(dependencies) || dependencies.length === 0) return;
     try {
       const pm = this.getKind();

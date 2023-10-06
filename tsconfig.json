@@ -11,7 +11,13 @@
     "declaration": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "tmp", "src/templates", "src/**/*.test.*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tmp",
+    "src/templates",
+    "src/**/*.test.*"
+  ],
   "ts-node": {
     "esm": true,
     "compilerOptions": {
