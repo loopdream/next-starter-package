@@ -102,6 +102,7 @@ function makeLintStagedPreCommit({
     'printf "\n\n------------------------------------------\n\n"\n' +
     'printf "Now push your code! 🚀"\n' +
     'printf "\n\n------------------------------------------\n\n"';
+
   return huskyPreCommit;
 }
 

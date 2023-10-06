@@ -135,7 +135,7 @@ describe('makeLintStaged.config', () => {
         'prettier --check .',
         'prettier --write .',
       ],
-      '**/*.{css}': ['prettier --check .', 'prettier --write .'], // TODO: add styledlint
+      '**/*.{css}': ['prettier --check .', 'prettier --write .'],
     };
 
     const config = makeLintStaged.config(options);
