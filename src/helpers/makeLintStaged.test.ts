@@ -1,9 +1,7 @@
 import { PackageManagerKindEnum } from '../PackageManager.js';
 import makeLintStaged from './makeLintStaged.js';
 
-const makeLintStagedConfig = makeLintStaged.config;
-const makeLintStagedPreCommit = makeLintStaged.preCommit;
-describe('makeLintStagedConfig', () => {
+describe('makeLintStaged.config', () => {
   it('should return a valid lint-staged configuration object', () => {
     //test
     const expectedConfig = {
@@ -29,7 +27,7 @@ describe('makeLintStagedConfig', () => {
       '**/*.{css}': ['prettier --check .', 'prettier --write .'],
     };
 
-    const config = makeLintStagedConfig({
+    const config = makeLintStaged.config({
       eslint: true,
       jest: true,
       prettier: true,
@@ -55,7 +53,7 @@ describe('makeLintStagedConfig', () => {
       '**/*.{css}': ['prettier --check .', 'prettier --write .'],
     };
 
-    const config = makeLintStagedConfig({
+    const config = makeLintStaged.config({
       eslint: true,
       jest: true,
       prettier: true,
@@ -87,7 +85,7 @@ describe('makeLintStagedConfig', () => {
       '**/*.{css}': ['prettier --check .', 'prettier --write .'],
     };
 
-    const config = makeLintStagedConfig({
+    const config = makeLintStaged.config({
       eslint: true,
       jest: false,
       prettier: true,
@@ -108,7 +106,7 @@ describe('makeLintStagedConfig', () => {
       ],
     };
 
-    const config = makeLintStagedConfig({
+    const config = makeLintStaged.config({
       eslint: true,
       jest: true,
       prettier: false,
@@ -140,13 +138,13 @@ describe('makeLintStagedConfig', () => {
       '**/*.{css}': ['prettier --check .', 'prettier --write .'], // TODO: add styledlint
     };
 
-    const config = makeLintStagedConfig(options);
+    const config = makeLintStaged.config(options);
 
     expect(config).toEqual(expectedConfig);
   });
 });
 
-describe('makeLintStagedPreCommit', () => {
+describe('makeLintStaged.preCommit', () => {
   describe('when lint-staged is enabled', () => {
     it('should return a valid pre-commit hook script', () => {
       // Arrange
@@ -175,7 +173,7 @@ describe('makeLintStagedPreCommit', () => {
         'printf "Now push your code! 🚀"\n' +
         'printf "\n\n------------------------------------------\n\n"';
       // Act
-      const script = makeLintStagedPreCommit(options);
+      const script = makeLintStaged.preCommit(options);
       // Assert
       expect(script).toEqual(expectedScript);
     });
@@ -193,7 +191,7 @@ describe('makeLintStagedPreCommit', () => {
           typescript: true,
         };
 
-        const script = makeLintStagedPreCommit(options);
+        const script = makeLintStaged.preCommit(options);
 
         expect(script).toContain('yarn run lint:check');
         expect(script).toContain('yarn run lint:fix');
@@ -215,7 +213,7 @@ describe('makeLintStagedPreCommit', () => {
           typescript: true,
         };
 
-        const script = makeLintStagedPreCommit(options);
+        const script = makeLintStaged.preCommit(options);
 
         expect(script).toContain('npm run lint:check');
         expect(script).toContain('npm run lint:fix');
@@ -237,7 +235,7 @@ describe('makeLintStagedPreCommit', () => {
           typescript: true,
         };
 
-        const script = makeLintStagedPreCommit(options);
+        const script = makeLintStaged.preCommit(options);
 
         expect(script).toContain('bun run lint:check');
         expect(script).toContain('bun run lint:fix');
@@ -259,7 +257,7 @@ describe('makeLintStagedPreCommit', () => {
           typescript: true,
         };
 
-        const script = makeLintStagedPreCommit(options);
+        const script = makeLintStaged.preCommit(options);
 
         expect(script).toContain('pnpm run lint:check');
         expect(script).toContain('pnpm run lint:fix');
@@ -299,7 +297,7 @@ describe('makeLintStagedPreCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
         // Act
-        const script = makeLintStagedPreCommit(options);
+        const script = makeLintStaged.preCommit(options);
         // Assert
         expect(script).toEqual(expectedScript);
       });
@@ -333,7 +331,7 @@ describe('makeLintStagedPreCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
         // Act
-        const script = makeLintStagedPreCommit(options);
+        const script = makeLintStaged.preCommit(options);
         // Assert
         expect(script).toEqual(expectedScript);
       });
@@ -367,7 +365,7 @@ describe('makeLintStagedPreCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
         // Act
-        const script = makeLintStagedPreCommit(options);
+        const script = makeLintStaged.preCommit(options);
         // Assert
         expect(script).toEqual(expectedScript);
       });
@@ -400,7 +398,7 @@ describe('makeLintStagedPreCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
         // Act
-        const script = makeLintStagedPreCommit(options);
+        const script = makeLintStaged.preCommit(options);
         // Assert
         expect(script).toEqual(expectedScript);
       });
@@ -431,7 +429,7 @@ describe('makeLintStagedPreCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
         // Act
-        const script = makeLintStagedPreCommit(options);
+        const script = makeLintStaged.preCommit(options);
         // Assert
         expect(script).toEqual(expectedScript);
       });
@@ -461,7 +459,7 @@ describe('makeLintStagedPreCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
         // Act
-        const script = makeLintStagedPreCommit(options);
+        const script = makeLintStaged.preCommit(options);
         // Assert
         expect(script).toEqual(expectedScript);
       });
@@ -491,7 +489,7 @@ describe('makeLintStagedPreCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
         // Act
-        const script = makeLintStagedPreCommit(options);
+        const script = makeLintStaged.preCommit(options);
         // Assert
         expect(script).toEqual(expectedScript);
       });
@@ -523,7 +521,7 @@ describe('makeLintStagedPreCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
         // Act
-        const script = makeLintStagedPreCommit(options);
+        const script = makeLintStaged.preCommit(options);
         // Assert
         expect(script).toEqual(expectedScript);
       });
@@ -553,7 +551,7 @@ describe('makeLintStagedPreCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
         // Act
-        const script = makeLintStagedPreCommit(options);
+        const script = makeLintStaged.preCommit(options);
 
         // Assert
         expect(script).toEqual(expectedScript);
