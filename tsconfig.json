@@ -7,10 +7,11 @@
     "rootDir": "src",
     "sourceMap": true,
     "strict": true,
-    "target": "ES2020"
+    "target": "ESNext",
+    "declaration": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "tmp", "src/templates"],
+  "exclude": ["node_modules", "dist", "tmp", "src/templates", "src/**/*.test.*"],
   "ts-node": {
     "esm": true,
     "compilerOptions": {

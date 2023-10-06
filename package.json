@@ -25,11 +25,7 @@
     "prepare": "husky install",
     "start:build": "node ./dist/bundle.js",
     "start:standalone": "node ./.next/standalone/server.js",
-    "storybook": "storybook dev -p 6006",
-    "test:ci": "jest --ci",
-    "test": "jest --watch",
-    "test:coverage": "jest",
-    "todo": "leasot 'src/**/*.ts' --exit-nicely"
+    "storybook": "storybook dev -p 6006"
   },
   "keywords": [],
   "author": "",
