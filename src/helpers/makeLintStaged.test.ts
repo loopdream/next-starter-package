@@ -199,6 +199,8 @@ describe('makeLintStagedPreCommit', () => {
         expect(script).toContain('yarn run lint:fix');
         expect(script).toContain('yarn run format:check');
         expect(script).toContain('yarn run format:write');
+        expect(script).toContain('yarn run test --passWithNoTests');
+        expect(script).toContain('yarn run build --no-emit');
       });
     });
 
@@ -219,6 +221,8 @@ describe('makeLintStagedPreCommit', () => {
         expect(script).toContain('npm run lint:fix');
         expect(script).toContain('npm run format:check');
         expect(script).toContain('npm run format:write');
+        expect(script).toContain('npm run test --passWithNoTests');
+        expect(script).toContain('npm run build --no-emit');
       });
     });
 
@@ -239,6 +243,8 @@ describe('makeLintStagedPreCommit', () => {
         expect(script).toContain('bun run lint:fix');
         expect(script).toContain('bun run format:check');
         expect(script).toContain('bun run format:write');
+        expect(script).toContain('bun run test --passWithNoTests');
+        expect(script).toContain('bun run build --no-emit');
       });
     });
 
@@ -259,6 +265,8 @@ describe('makeLintStagedPreCommit', () => {
         expect(script).toContain('pnpm run lint:fix');
         expect(script).toContain('pnpm run format:check');
         expect(script).toContain('pnpm run format:write');
+        expect(script).toContain('pnpm run test --passWithNoTests');
+        expect(script).toContain('pnpm run build --no-emit');
       });
     });
 
