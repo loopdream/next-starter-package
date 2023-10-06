@@ -1,6 +1,6 @@
-import commonjs from '@rollup/plugin-commonjs';
-import json from '@rollup/plugin-json';
-import resolve from '@rollup/plugin-node-resolve';
+// import commonjs from '@rollup/plugin-commonjs';
+// import json from '@rollup/plugin-json';
+// import resolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
 import copy from 'rollup-plugin-copy';
@@ -13,13 +13,13 @@ export default [
   {
     input: `src/index.ts`,
     plugins: [
-      json(),
-      commonjs({ extensions: ['.js', '.ts'] }),
-      resolve({
-        preferBuiltins: true,
-      }),
+      // json(),
+      // commonjs({ extensions: ['.js', '.ts'] }),
+      // resolve({
+      //   preferBuiltins: true,
+      // }),
       typescript({
-        tsconfig: './tsconfig.build.json',
+        // tsconfig: './tsconfig.build.json',
       }),
       copy({
         targets: [
