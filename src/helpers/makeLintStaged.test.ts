@@ -40,7 +40,7 @@ describe('makeLintStaged.config', () => {
   });
 
   describe('When typescript is false and all other options are false', () => {
-    it('should return a valid lint-staged configuration object', () => {
+    it('should return a valid lint-staged configuration object without typescript', () => {
       const expectedConfig = {
         '**/*.js?(x)': [
           'prettier --check .',
@@ -67,7 +67,7 @@ describe('makeLintStaged.config', () => {
     });
   });
   describe('When jest is false and all other options are false', () => {
-    it('should return a valid lint-staged configuration object', () => {
+    it('should return a valid lint-staged configuration object without jest', () => {
       const expectedConfig = {
         '**/*.js?(x)': [
           'prettier --check .',
@@ -193,7 +193,7 @@ describe('makeLintStaged.preCommit', () => {
 
   describe('when lint-staged is disabled', () => {
     describe('When the package manager is Yarn', () => {
-      it('should use yarn', () => {
+      it('should use yarn for the commands', () => {
         const options = {
           eslint: true,
           jest: true,
@@ -215,7 +215,7 @@ describe('makeLintStaged.preCommit', () => {
     });
 
     describe('When the package manager is Npm', () => {
-      it('should use Npm', () => {
+      it('should use Npm for the commands', () => {
         const options = {
           eslint: true,
           jest: true,
@@ -237,7 +237,7 @@ describe('makeLintStaged.preCommit', () => {
     });
 
     describe('When the package manager is Bun', () => {
-      it('should use Bun', () => {
+      it('should use Bun for the commands', () => {
         const options = {
           eslint: true,
           jest: true,
@@ -259,7 +259,7 @@ describe('makeLintStaged.preCommit', () => {
     });
 
     describe('When the package manager is Pnpm', () => {
-      it('should use Pnpm', () => {
+      it('should use Pnpm for the commands', () => {
         const options = {
           eslint: true,
           jest: true,
