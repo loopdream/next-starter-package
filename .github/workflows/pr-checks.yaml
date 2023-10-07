@@ -10,9 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
-        run: npm install
-      - name: run npm in ci 
-        run: npm ci --ignore-scripts
+        run: npm ci --ignore-scripts && npm install
       - name: Lint
         run: npm run lint:check
       - name: Test
