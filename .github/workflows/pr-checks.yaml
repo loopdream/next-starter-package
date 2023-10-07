@@ -1,5 +1,5 @@
 name: PR Checks
-
+run-name: PR Checks
 on:
   pull_request:
     branches: [ main ]
