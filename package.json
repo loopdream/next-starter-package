@@ -33,6 +33,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/preset-env": "^7.22.20",
     "@rollup/plugin-commonjs": "^25.0.5",
     "@rollup/plugin-json": "^6.0.1",
     "@rollup/plugin-node-resolve": "^15.2.2",
@@ -45,6 +46,7 @@
     "@types/prompts": "^2.4.4",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
+    "babel-jest": "^29.7.0",
     "esbuild": "^0.19.3",
     "eslint": "^8.48.0",
     "eslint-config-prettier": "^9.0.0",
@@ -67,8 +69,6 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@babel/preset-env": "^7.22.20",
-    "babel-jest": "^29.7.0",
     "commander": "^11.0.0",
     "execa": "^8.0.1",
     "figlet": "^1.6.0",

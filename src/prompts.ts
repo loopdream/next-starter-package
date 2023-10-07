@@ -130,10 +130,10 @@ const lintStaged: PromptObject = {
   inactive: `No`,
 };
 
-const nextImageOptimisation: PromptObject = {
+const imageOptimisation: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'nextImageOptimisation',
+  name: 'imageOptimisation',
   message: `Will you be using ${blue('Next')}'s image optimisation? `,
   initial: 'No',
   active: 'Yes',
@@ -427,7 +427,7 @@ const optionalDependencies: PromptObject = {
 };
 
 export const configurationPrompts = [
-  nextImageOptimisation,
+  imageOptimisation,
   prettier,
   jest,
   reactTestingLibrary,

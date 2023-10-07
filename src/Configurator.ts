@@ -33,7 +33,7 @@ export interface OptionsType {
   husky: boolean;
   jest: boolean;
   lintStaged: boolean;
-  nextImageOptimisation: boolean;
+  imageOptimisation: boolean;
   optionalDependencies: ChoiceValuesType[];
   packageManager: PackageManagerKindEnum;
   prettier: boolean;
@@ -59,7 +59,7 @@ class Configurator {
     husky: false,
     jest: false,
     lintStaged: false,
-    nextImageOptimisation: false,
+    imageOptimisation: false,
     optionalDependencies: [],
     packageManager: PackageManagerKindEnum.NPM,
     prettier: false,
@@ -88,7 +88,9 @@ class Configurator {
     });
   }
 
-  public run = async () => {
+  public run = async (options: prompts.Answers<string>) => {
+    this.setOptions(options);
+
     console.log(
       bold(
         `Using ` +
@@ -126,15 +128,18 @@ class Configurator {
 
     await $({
       stdio: 'inherit',
-    })`npx create-next-app@latest ${this.cwd} --use-${pm}`.catch((error) => {
-      oops();
-      throw new Error(`\n${error}`);
-    });
-
-    this.options = {
-      ...this.options,
-      ...this.getNextConfig(),
-    };
+    })`npx create-next-app@latest ${this.cwd} --use-${pm}`
+      .catch((error) => {
+        oops();
+        throw new Error(`\n${error}`);
+      })
+      .finally(
+        () =>
+          (this.options = {
+            ...this.options,
+            ...this.getNextConfig(),
+          })
+      );
 
     return this.options;
   };
@@ -162,7 +167,7 @@ class Configurator {
       husky,
       jest,
       lintStaged,
-      nextImageOptimisation,
+      imageOptimisation,
       optionalDependencies,
       prettier,
       reactTestingLibrary,
@@ -210,9 +215,7 @@ class Configurator {
         : {}),
     };
 
-    this.config.packageDependencies = [
-      ...(nextImageOptimisation ? ['sharp'] : []),
-    ];
+    this.config.packageDependencies = [...(imageOptimisation ? ['sharp'] : [])];
 
     this.config.packageDevDependencies = [
       ...(cypress ? ['cypress'] : []),
@@ -439,9 +442,22 @@ class Configurator {
 
     if (!eslint) return;
 
+    const overides = [
+      ...(reactTestingLibrary
+        ? [
+            {
+              files: [
+                '**/__tests__/**/*.[jt]s?(x)',
+                '**/?(*.)+(spec|test).[jt]s?(x)',
+              ],
+              extends: ['plugin:testing-library/react'],
+            },
+          ]
+        : []),
+    ];
     // TODO: create a make func for the new eslint config file type
     const eslintrc = {
-      cwd: true,
+      root: true,
       plugins: [
         ...(eslint && typescript ? ['@typescript-eslint'] : []),
         ...(reactTestingLibrary ? ['testing-library'] : []),
@@ -458,19 +474,7 @@ class Configurator {
         '@typescript-eslint/no-unused-vars': 'error',
         '@typescript-eslint/no-explicit-any': 'error',
       },
-      overrides: [
-        ...(reactTestingLibrary
-          ? [
-              {
-                files: [
-                  '**/__tests__/**/*.[jt]s?(x)',
-                  '**/?(*.)+(spec|test).[jt]s?(x)',
-                ],
-                extends: ['plugin:testing-library/react'],
-              },
-            ]
-          : []),
-      ],
+      ...(overides.length > 0 ? overides : []),
     };
 
     await fs.promises
