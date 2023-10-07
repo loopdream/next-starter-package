@@ -15,3 +15,5 @@ jobs:
         run: npm run lint:check
       - name: Test
         run: npm test --ci
+      - name: Typescript
+        run: npm run build
