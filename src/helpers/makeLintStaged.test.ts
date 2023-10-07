@@ -38,7 +38,7 @@ describe('makeLintStaged.linstagedrc', () => {
     });
   });
 
-  describe('When typescript is false and all other options are false', () => {
+  describe('When typescript is false and all other options are true', () => {
     it('should return a valid lint-staged configuration object without typescript', () => {
       const expectedConfig = {
         '**/*.js?(x)': [
@@ -65,7 +65,7 @@ describe('makeLintStaged.linstagedrc', () => {
       expect(config).toEqual(expectedConfig);
     });
   });
-  describe('When jest is false and all other options are false', () => {
+  describe('When jest is false and all other options are true', () => {
     it('should return a valid lint-staged configuration object without jest', () => {
       const expectedConfig = {
         '**/*.js?(x)': [
@@ -98,7 +98,7 @@ describe('makeLintStaged.linstagedrc', () => {
       expect(config).toEqual(expectedConfig);
     });
   });
-  describe('When prettier is false and all other options are false', () => {
+  describe('When prettier is false and all other options are true', () => {
     it('should return a valid lint-staged configuration object without Prettier', () => {
       const expectedConfig = {
         '**/*.js?(x)': ['eslint .', 'eslint --fix .', 'jest --ci'],
@@ -121,7 +121,7 @@ describe('makeLintStaged.linstagedrc', () => {
     });
   });
 
-  describe('When eslint is false and all other options are false', () => {
+  describe('When eslint is false and all other options are true', () => {
     it('should return a valid lint-staged configuration object without ESLint', () => {
       const options = {
         eslint: false,
