@@ -1,11 +1,11 @@
 name: PR Checks
-run-name: PR Checks
+ 
 on:
   pull_request:
     branches: [ main ]
 
 jobs:
-  build:
+  pr_checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
