@@ -1,7 +1,7 @@
 import { PackageManagerKindEnum } from '../PackageManager.js';
 import makeLintStaged from './makeLintStaged.js';
 
-describe('makeLintStaged.config', () => {
+describe('makeLintStaged.linstagedrc', () => {
   describe('When eslint, jest, prettier and typescript options are true', () => {
     it('should return a valid lint-staged configuration object', () => {
       const expectedConfig = {
@@ -27,7 +27,7 @@ describe('makeLintStaged.config', () => {
         '**/*.{css}': ['prettier --check .', 'prettier --write .'],
       };
 
-      const config = makeLintStaged.config({
+      const config = makeLintStaged.linstagedrc({
         eslint: true,
         jest: true,
         prettier: true,
@@ -55,7 +55,7 @@ describe('makeLintStaged.config', () => {
         '**/*.{css}': ['prettier --check .', 'prettier --write .'],
       };
 
-      const config = makeLintStaged.config({
+      const config = makeLintStaged.linstagedrc({
         eslint: true,
         jest: true,
         prettier: true,
@@ -88,7 +88,7 @@ describe('makeLintStaged.config', () => {
         '**/*.{css}': ['prettier --check .', 'prettier --write .'],
       };
 
-      const config = makeLintStaged.config({
+      const config = makeLintStaged.linstagedrc({
         eslint: true,
         jest: false,
         prettier: true,
@@ -110,7 +110,7 @@ describe('makeLintStaged.config', () => {
         ],
       };
 
-      const config = makeLintStaged.config({
+      const config = makeLintStaged.linstagedrc({
         eslint: true,
         jest: true,
         prettier: false,
@@ -148,7 +148,7 @@ describe('makeLintStaged.config', () => {
         '**/*.{css}': ['prettier --check .', 'prettier --write .'],
       };
 
-      const config = makeLintStaged.config(options);
+      const config = makeLintStaged.linstagedrc(options);
 
       expect(config).toEqual(expectedConfig);
     });

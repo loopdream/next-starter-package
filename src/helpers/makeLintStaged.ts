@@ -107,6 +107,6 @@ function makeLintStagedPreCommit({
 }
 
 export default {
-  config: makeLintStagedConfig,
+  linstagedrc: makeLintStagedConfig,
   preCommit: makeLintStagedPreCommit,
 };

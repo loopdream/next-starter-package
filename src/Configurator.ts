@@ -221,7 +221,13 @@ class Configurator {
       ...(cypress ? ['cypress'] : []),
       ...(eslint && typescript ? ['@typescript-eslint/eslint-plugin'] : []),
       ...(lintStaged ? ['lint-staged'] : []),
-      ...(prettier ? ['prettier', 'eslint-config-prettier'] : []),
+      ...(prettier
+        ? [
+            'prettier',
+            'eslint-config-prettier',
+            '@trivago/prettier-plugin-sort-imports',
+          ]
+        : []),
       ...(storybook
         ? [
             '@storybook/addon-essentials',
@@ -289,8 +295,6 @@ class Configurator {
 
   public installConfigureGitHusky = async () => {
     const $execa = $({ cwd: this.cwd });
-    const pm = this.packageManager.getKind();
-    const { eslint, jest, lintStaged, prettier, typescript } = this.options;
 
     this.spinner.start('Configuring Git and Husky');
 
@@ -320,54 +324,7 @@ class Configurator {
       throw new Error(`${error}`);
     });
 
-    let huskyPreCommit =
-      `#!/usr/bin/env sh` + `\n` + `. "$(dirname -- "$0")/_/husky.sh"`;
-
-    if (lintStaged) {
-      huskyPreCommit +=
-        `\n\n` +
-        `${pm} run lint-staged ` +
-        `||` +
-        `{` +
-        `printf "\n\n------------------------------------------\n\n"\n` +
-        `printf "🚫 YOU HAVE ERRORS!"` +
-        `printf "\n\n------------------------------------------\n\n'";` +
-        `exit 1;` +
-        `}` +
-        `\n\n` +
-        `printf"\n\n"` +
-        `# Following is for observability` +
-        `printf "\n\n"` +
-        `\n\n` +
-        `printf "TODOs / FIXMEs - consider reviewing these"` +
-        `printf "\n------------------------------------------\n\n"` +
-        `\n` +
-        `npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely` +
-        `printf "\n\n------------------------------------------\n\n"` +
-        `printf '%b ' "${String.raw`\033`}[1m"Now push your code!"${String.raw`\033`}[0m 🚀"` +
-        `printf "\n\n------------------------------------------\n\n"` +
-        ``;
-    } else {
-      if (prettier) {
-        huskyPreCommit +=
-          `\n\n` + `${pm} run format:check` + `\n\n` + `${pm} run format:write`;
-      }
-
-      if (eslint) {
-        huskyPreCommit +=
-          `\n\n` + `${pm} run lint:check` + `\n\n` + `${pm} run lint:fix`;
-      }
-
-      if (jest) {
-        huskyPreCommit += `\n\n` + `${pm} run test --passWithNoTests`;
-      }
-
-      if (typescript) {
-        huskyPreCommit += `\n\n` + `${pm} run build --no-emit`;
-      }
-      // TODO: leaslot hard coded. Consider making this configurable
-      huskyPreCommit += `npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely`;
-    }
+    const huskyPreCommit = makeLintStaged.preCommit(this.options);
 
     await fs.promises
       .writeFile(
@@ -431,7 +388,7 @@ class Configurator {
     if (lintStaged) {
       await this.packageManager.addToPackage(
         'lint-staged',
-        makeLintStaged.config(this.options)
+        makeLintStaged.linstagedrc(this.options)
       );
     }
   };
