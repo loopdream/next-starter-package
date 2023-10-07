@@ -4,7 +4,6 @@ import makeLintStaged from './makeLintStaged.js';
 describe('makeLintStaged.config', () => {
   describe('When eslint, jest, prettier and typescript options are true', () => {
     it('should return a valid lint-staged configuration object', () => {
-      //test
       const expectedConfig = {
         '**/*.js?(x)': [
           'prettier --check .',
@@ -159,7 +158,6 @@ describe('makeLintStaged.config', () => {
 describe('makeLintStaged.preCommit', () => {
   describe('when lint-staged is enabled', () => {
     it('should return a valid pre-commit hook script', () => {
-      // Arrange
       const options = {
         eslint: true,
         jest: true,
@@ -168,6 +166,7 @@ describe('makeLintStaged.preCommit', () => {
         prettier: true,
         typescript: true,
       };
+
       const expectedScript =
         '#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"\n\n' +
         'npx lint-staged || { \n' +
@@ -184,9 +183,9 @@ describe('makeLintStaged.preCommit', () => {
         'printf "\n\n------------------------------------------\n\n"\n' +
         'printf "Now push your code! 🚀"\n' +
         'printf "\n\n------------------------------------------\n\n"';
-      // Act
+
       const script = makeLintStaged.preCommit(options);
-      // Assert
+
       expect(script).toEqual(expectedScript);
     });
   });
@@ -282,7 +281,6 @@ describe('makeLintStaged.preCommit', () => {
 
     describe('when prettier, eslint, jest, and typescript are enabled', () => {
       it('should return a valid pre-commit hook script', () => {
-        // Arrange
         const options = {
           eslint: true,
           jest: true,
@@ -291,6 +289,7 @@ describe('makeLintStaged.preCommit', () => {
           prettier: true,
           typescript: true,
         };
+
         const expectedScript =
           '#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"\n\n' +
           'npm run format:check\n\n' +
@@ -308,16 +307,15 @@ describe('makeLintStaged.preCommit', () => {
           'printf "\n\n------------------------------------------\n\n"\n' +
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
-        // Act
+
         const script = makeLintStaged.preCommit(options);
-        // Assert
+
         expect(script).toEqual(expectedScript);
       });
     });
 
     describe('when prettier, eslint, jest, are enabled', () => {
       it('should return a valid pre-commit hook script', () => {
-        // Arrange
         const options = {
           eslint: true,
           jest: true,
@@ -326,6 +324,7 @@ describe('makeLintStaged.preCommit', () => {
           prettier: true,
           typescript: false,
         };
+
         const expectedScript =
           '#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"\n\n' +
           'npm run format:check\n\n' +
@@ -342,16 +341,15 @@ describe('makeLintStaged.preCommit', () => {
           'printf "\n\n------------------------------------------\n\n"\n' +
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
-        // Act
+
         const script = makeLintStaged.preCommit(options);
-        // Assert
+
         expect(script).toEqual(expectedScript);
       });
     });
 
     describe('when prettier, eslint, typescript, are enabled', () => {
       it('should return a valid pre-commit hook script', () => {
-        // Arrange
         const options = {
           eslint: true,
           jest: false,
@@ -360,6 +358,7 @@ describe('makeLintStaged.preCommit', () => {
           prettier: true,
           typescript: true,
         };
+
         const expectedScript =
           '#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"\n\n' +
           'npm run format:check\n\n' +
@@ -376,16 +375,15 @@ describe('makeLintStaged.preCommit', () => {
           'printf "\n\n------------------------------------------\n\n"\n' +
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
-        // Act
+
         const script = makeLintStaged.preCommit(options);
-        // Assert
+
         expect(script).toEqual(expectedScript);
       });
     });
 
     describe('when prettier, eslint, are enabled', () => {
       it('should return a valid pre-commit hook script', () => {
-        // Arrange
         const options = {
           eslint: true,
           jest: false,
@@ -394,6 +392,7 @@ describe('makeLintStaged.preCommit', () => {
           prettier: true,
           typescript: false,
         };
+
         const expectedScript =
           '#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"\n\n' +
           'npm run format:check\n\n' +
@@ -409,16 +408,15 @@ describe('makeLintStaged.preCommit', () => {
           'printf "\n\n------------------------------------------\n\n"\n' +
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
-        // Act
+
         const script = makeLintStaged.preCommit(options);
-        // Assert
+
         expect(script).toEqual(expectedScript);
       });
     });
 
     describe('when only prettier is enabled', () => {
       it('should return a valid pre-commit hook script', () => {
-        // Arrange
         const options = {
           eslint: false,
           jest: false,
@@ -427,6 +425,7 @@ describe('makeLintStaged.preCommit', () => {
           prettier: true,
           typescript: false,
         };
+
         const expectedScript =
           '#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"\n\n' +
           'npm run format:check\n\n' +
@@ -440,15 +439,14 @@ describe('makeLintStaged.preCommit', () => {
           'printf "\n\n------------------------------------------\n\n"\n' +
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
-        // Act
+
         const script = makeLintStaged.preCommit(options);
-        // Assert
+
         expect(script).toEqual(expectedScript);
       });
     });
     describe('when only eslint is enabled', () => {
       it('should return a valid pre-commit hook script', () => {
-        // Arrange
         const options = {
           eslint: true,
           jest: false,
@@ -457,6 +455,7 @@ describe('makeLintStaged.preCommit', () => {
           prettier: false,
           typescript: false,
         };
+
         const expectedScript =
           '#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"\n\n' +
           'npm run lint:check\n\n' +
@@ -470,16 +469,15 @@ describe('makeLintStaged.preCommit', () => {
           'printf "\n\n------------------------------------------\n\n"\n' +
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
-        // Act
+
         const script = makeLintStaged.preCommit(options);
-        // Assert
+
         expect(script).toEqual(expectedScript);
       });
     });
 
     describe('when only typescript is enabled', () => {
       it('should return a valid pre-commit hook script', () => {
-        // Arrange
         const options = {
           eslint: false,
           jest: false,
@@ -488,6 +486,7 @@ describe('makeLintStaged.preCommit', () => {
           prettier: false,
           typescript: true,
         };
+
         const expectedScript =
           '#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"\n\n' +
           'npm run build --no-emit\n\n' +
@@ -500,16 +499,15 @@ describe('makeLintStaged.preCommit', () => {
           'printf "\n\n------------------------------------------\n\n"\n' +
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
-        // Act
+
         const script = makeLintStaged.preCommit(options);
-        // Assert
+
         expect(script).toEqual(expectedScript);
       });
     });
 
     describe('when only some checks are enabled', () => {
       it('should return a valid pre-commit hook script', () => {
-        // Arrange
         const options = {
           eslint: true,
           jest: false,
@@ -518,6 +516,7 @@ describe('makeLintStaged.preCommit', () => {
           prettier: false,
           typescript: true,
         };
+
         const expectedScript =
           '#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"\n\n' +
           'npm run lint:check\n\n' +
@@ -532,16 +531,15 @@ describe('makeLintStaged.preCommit', () => {
           'printf "\n\n------------------------------------------\n\n"\n' +
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
-        // Act
+
         const script = makeLintStaged.preCommit(options);
-        // Assert
+
         expect(script).toEqual(expectedScript);
       });
     });
 
     describe('when all checks are disabled', () => {
       it('should return a valid pre-commit hook script', () => {
-        // Arrange
         const options = {
           eslint: false,
           jest: false,
@@ -550,6 +548,7 @@ describe('makeLintStaged.preCommit', () => {
           prettier: false,
           typescript: false,
         };
+
         const expectedScript =
           '#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"' +
           `\n\n` +
@@ -562,10 +561,9 @@ describe('makeLintStaged.preCommit', () => {
           'printf "\n\n------------------------------------------\n\n"\n' +
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
-        // Act
+
         const script = makeLintStaged.preCommit(options);
 
-        // Assert
         expect(script).toEqual(expectedScript);
       });
     });
