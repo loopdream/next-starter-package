@@ -16,4 +16,4 @@ jobs:
       - name: Test
         run: npm test --ci
       - name: Typescript
-        run: npm run build
+        run: npm run build --noEmit
