@@ -87,12 +87,12 @@ program
 
     const opts = await prompts(filteredConfigurationPrompts);
 
-    const hasOptions =
+    const hasConfigurationOptions =
       Object.values(opts).includes(true) ||
       opts.optionalDependencies.length > 0 ||
       opts.dotEnvFiles.length > 0;
 
-    if (!hasOptions) {
+    if (!hasConfigurationOptions) {
       // nothing to configure!
       goodbye();
       return console.log(

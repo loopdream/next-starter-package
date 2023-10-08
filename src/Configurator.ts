@@ -144,6 +144,8 @@ class Configurator {
     return this.options;
   };
 
+  public getConfig = () => this.config;
+
   public getNextConfig = () => {
     const exists = (fileName: string) =>
       fs.existsSync(path.join(this.cwd, fileName)) || false;
