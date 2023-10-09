@@ -4,7 +4,7 @@ const jestConfig: JestConfigWithTsJest = {
   extensionsToTreatAsEsm: ['.ts'],
   modulePaths: ['<rootDir>/src/'],
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.(js|ts)$': '$1',
+    '^(\\.{1,2}/.*)\\.(js|jsx|ts|tsx)$': '$1',
   },
   modulePathIgnorePatterns: [
     '<rootDir>/dist/',
@@ -12,7 +12,7 @@ const jestConfig: JestConfigWithTsJest = {
     '<rootDir>/husky/',
   ],
   transform: {
-    '^.+\\.(js|ts|tsx)?$': [
+    '^.+\\.(js|jsx|ts|tsx)?$': [
       'ts-jest',
       {
         useESM: true,
