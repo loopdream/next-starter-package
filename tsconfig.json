@@ -1,29 +1,14 @@
 {
   "compilerOptions": {
-    "esModuleInterop": true,
+    "target": "ESNext",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "dist",
-    "rootDir": "src",
-    "sourceMap": true,
+    "esModuleInterop": true,
     "strict": true,
-    "target": "ESNext",
-    "declaration": true
+    "skipLibCheck": true
   },
-  "include": ["src/**/*.ts"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "tmp",
-    "src/templates",
-    "src/**/*.test.*"
-  ],
-  "ts-node": {
-    "esm": true,
-    "compilerOptions": {
-      "allowImportingTsExtensions": true,
-      "esModuleInterop": true,
-      "module": "NodeNext"
-    }
-  }
+  "exclude": ["node_modules", "./*.ts", "__test__", "dis/", "tmp/", "src/templates"]
 }
+
+  

@@ -101,18 +101,23 @@ class Configurator {
       )
     );
 
-    await this.prepare()
+    this.prepare()
       .then(() => this.installDependencies())
       .then(() => this.buildConfigs())
       .then(() => this.configurePackageFile())
       .then(() => this.generateReadme())
-      .then(() => this.cleanUp());
-
-    console.log(
-      `\n` +
-        green('Success! ') +
-        `The following configurations were made: <TODO: ADD MORE INFO>`
-    );
+      .then(() => this.cleanUp())
+      .then(() =>
+        console.log(
+          `\n` +
+            green('Success! ') +
+            `The following configurations were made: <TODO: ADD MORE INFO>`
+        )
+      )
+      .catch((error) => {
+        oops();
+        throw new Error(`${error}`);
+      });
   };
 
   public setOptions = (answers: prompts.Answers<string>) => {
@@ -275,7 +280,7 @@ class Configurator {
       );
     }
 
-    const markdownFiles = [
+    this.config.markdown = [
       'next.md',
       ...(cypress ? ['cypress.md'] : []),
       ...(docker ? ['docker.md'] : []),
@@ -287,10 +292,6 @@ class Configurator {
       ...(husky ? ['git.md', 'husky.md'] : []),
       ...(lintStaged ? ['selected-dependencies.md'] : []),
     ];
-
-    const markdowns = await this.readFromFiles(markdownFiles);
-
-    this.config.markdown = markdowns;
 
     return this.config;
   };
@@ -521,9 +522,12 @@ class Configurator {
 
   public generateReadme = async () => {
     this.spinner.start('Generating Readme');
-    const markdown = this.config.markdown.join('\n\n');
-    await fs.promises
-      .writeFile(path.join(this.cwd, 'README.md'), markdown)
+
+    await this.readFromFiles(this.config.markdown)
+      .then((markdownStrArr) => markdownStrArr.join('\n\n'))
+      .then((markdown) =>
+        fs.promises.writeFile(path.join(this.cwd, 'README.md'), markdown)
+      )
       .then(() => this.spinner.succeed())
       .catch((error) => {
         this.spinner.fail();
