@@ -290,7 +290,7 @@ class Configurator {
       ...(reactTestingLibrary ? ['reactTestingLibrary.md'] : []),
       ...(lintStaged ? ['lint-staged.md'] : []),
       ...(husky ? ['git.md', 'husky.md'] : []),
-      ...(optionalDependencies ? ['selected-dependencies.md'] : []),
+      ...(optionalDependencies.length > 0 ? ['selected-dependencies.md'] : []),
     ];
 
     return this.config;

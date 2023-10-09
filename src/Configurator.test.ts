@@ -129,6 +129,6 @@ describe('Configurator', () => {
 
     expect(config.packageDevDependencies).toEqual([]);
 
-    expect(config.markdown).toEqual(['next.md', 'selected-dependencies.md']);
+    expect(config.markdown).toEqual(['next.md']);
   });
 });
