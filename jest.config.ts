@@ -6,11 +6,7 @@ const jestConfig: JestConfigWithTsJest = {
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.(js|jsx|ts|tsx)$': '$1',
   },
-  modulePathIgnorePatterns: [
-    '<rootDir>/dist/',
-    '<rootDir>/tmp/',
-    '<rootDir>/husky/',
-  ],
+  modulePathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/tmp/'],
   transform: {
     '^.+\\.(js|jsx|ts|tsx)?$': [
       'ts-jest',
