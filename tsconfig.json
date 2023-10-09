@@ -8,7 +8,12 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "exclude": ["node_modules", "./*.ts", "__test__", "dis/", "tmp/", "src/templates"]
+  "exclude": [
+    "node_modules",
+    "./*.ts",
+    "__test__",
+    "dis/",
+    "tmp/",
+    "src/templates"
+  ]
 }
-
-  
