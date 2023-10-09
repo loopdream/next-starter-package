@@ -1,13 +1,28 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+printf "\n\n"
 
-npm run lint:check
+npx lint-staged || { 
+  printf "\n\n------------------------------------------\n\n"
+  printf "🚫 YOU HAVE ERRORS!" 
+  printf "\n\n------------------------------------------\n\n";
+  exit 1; 
+}
 
-npm run lint:fix
+# Following is for observability purposes
 
-npm run format:write
+# TODOs / FIXMEs
+printf "\n\n"
+printf "TODOs / FIXMEs - consider reviewing these"
+printf "\n------------------------------------------\n"
+#
+npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely 
 
-npm run build --noEmit 
+# TODO: Add tests!
+# printf "\n\nTEST COVERAGE\n--------------\n"
+ 
 
-npm run todo
+printf "\n\n------------------------------------------\n\n"
+printf '%b ' "\033[1m"Now push your code!"\033[0m 🚀"
+printf "\n\n------------------------------------------\n\n"

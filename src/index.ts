@@ -1,15 +1,23 @@
 #!/usr/bin/env ts-node
-import path from 'path';
-import fs from 'fs';
-
 import { program } from 'commander';
 import figlet from 'figlet';
-import prompt from 'prompts';
+import fs from 'fs';
+import path from 'path';
+import prompts from 'prompts';
 
+import Configurator, { OptionsType } from './Configurator.js';
+import { PackageManagerKindEnum } from './PackageManager.js';
+import { packageManagerPrompt, configurationPrompts } from './prompts.js';
 import { goodbye } from './utils.js';
 
-import Nextra from './Nextra.js';
-import questions from './questions.js';
+export interface ProgramOptionsType extends OptionsType {
+  dev?: boolean;
+  clean?: boolean;
+  useNpm?: PackageManagerKindEnum.NPM;
+  useYarn?: PackageManagerKindEnum.YARN;
+  usePnpm?: PackageManagerKindEnum.PNPM;
+  useBun?: PackageManagerKindEnum.BUN;
+}
 
 console.log('\n', figlet.textSync('Nextra'), '\n\n');
 
@@ -19,112 +27,80 @@ program
   .version(`1.0.0`)
   .usage('<projectName> -- [options]')
   .argument('<projectName>')
-  .option('-d, --dev', 'my test option')
-  .action(async (projectName, options) => {
-    let projectDirectoryPath = projectName;
+  .option('--cypress', 'use cypress')
+  .option('--docker', 'use docker')
+  .option('--dotEnvFiles', 'create dot env files')
+  .option('--eslint', 'use eslint')
+  .option('--husky', 'use husky')
+  .option('--image-optimisation', 'use next Image Optimisation (install sharp)')
+  .option('--jest', 'use jest')
+  .option('--lint-staged', 'use lint-staged')
+  .option('--prettier', 'use prettier')
+  .option('--react-testing-library', 'use React testing-library')
+  .option('--storybook', 'use storybook')
+  .option('--use-bun', 'use bun as the package manager')
+  .option('--use-npm', 'use npm as the package manager')
+  .option('--use-pnpm', 'use pnpm as the package manager')
+  .option('--use-yarn', 'use yarn as the package manager')
+  .option('-d, --dev', 'run in dev mode')
+  .option('--clean', 'clean the tmp dev directory')
+  .option('-ts, --typescript', 'use typescript')
+  .option('--debug', 'Debug')
+  .action(async (projectName, options: ProgramOptionsType) => {
+    let projectDirectoryPath = path.resolve(projectName);
 
     if (options?.dev) {
       // if the dev flag is passed create a temp directory for the project installation
       // this is for testing as otherwise we would pollute the root dir
-      if (!fs.existsSync('./tmp')) await fs.promises.mkdir('./tmp');
-      projectDirectoryPath = path.join('tmp', projectName);
+      const tempDir = path.resolve('./tmp');
+      // clean the tmp directory first
+      if (options.clean) {
+        await fs.promises.rmdir(tempDir, { recursive: true });
+      }
+      if (!fs.existsSync(tempDir)) {
+        await fs.promises.mkdir(tempDir);
+      }
+      projectDirectoryPath = path.join(tempDir, projectName);
     }
 
-    const { packageManagerChoice } = await prompt(
-      questions.packageManagerPrompt
-    );
+    const { packageManagerChoice } = options?.useNpm
+      ? { packageManagerChoice: PackageManagerKindEnum.NPM }
+      : options?.useYarn
+      ? { packageManagerChoice: PackageManagerKindEnum.YARN }
+      : options?.usePnpm
+      ? { packageManagerChoice: PackageManagerKindEnum.PNPM }
+      : options?.useBun
+      ? { packageManagerChoice: PackageManagerKindEnum.BUN }
+      : await prompts(packageManagerPrompt);
 
-    const nextra = new Nextra({
+    const configurator = new Configurator({
       projectDirectoryPath,
       packageManagerChoice,
     });
 
-    const nextConfig = await nextra.createNextApp();
+    await configurator.createNextApp();
 
-    const answers = await prompt([
-      questions.configureNextImageOptimisation,
-      questions.configurePrettier,
-      questions.configureJestRTL,
-      questions.configureLintStaged,
-      questions.configureCypress,
-      questions.configureStorybook,
-      questions.configureHusky,
-      questions.configureDocker,
-      questions.configureDotEnvFiles,
-      questions.configureSelectedDependencies,
-    ]);
+    // strip out the options that have been passed in as cli options
+    const filteredConfigurationPrompts = configurationPrompts.filter(
+      ({ name }) => !Object.keys(options).includes(name as string)
+    );
 
-    const hasAnswers =
-      Object.values(answers).includes(true) ||
-      answers.configureSelectedDependencies.length > 0 ||
-      answers.configureDotEnvFiles.length > 0;
+    const opts = await prompts(filteredConfigurationPrompts);
 
-    if (hasAnswers) {
-      nextra.setPromptAnswers(answers);
-    } else {
+    const hasConfigurationOptions =
+      Object.values(opts).includes(true) ||
+      opts.optionalDependencies.length > 0 ||
+      opts.dotEnvFiles.length > 0;
+
+    if (!hasConfigurationOptions) {
       // nothing to configure!
       goodbye();
-      return console.log(`
-    Looks like you've passed on all the Netxra configuration options. Maybe next time!
-    Thanks for using Nextra!
-    `);
-    }
-
-    console.log(`
-    
-Using ${packageManagerChoice}.
-
-Configuring project with following configurations:  
-
-`);
-
-    await nextra.configureNext();
-
-    if (answers.configurePrettier) {
-      await nextra.configurePrettier();
-    }
-
-    if (answers.configureJestRTL) {
-      await nextra.configureJestRTL();
-    }
-
-    if (answers.configureCypress) {
-      await nextra.configureCypress();
-    }
-
-    if (
-      (nextConfig.eslint || answers.configurePrettier) &&
-      answers.configureLintStaged
-    ) {
-      await nextra.configureLintStaged();
-    }
-
-    if (answers.configureHusky) {
-      await nextra.configureGitHusky();
-    }
-
-    if (answers.configureStorybook) {
-      await nextra.configureStorybook();
-    }
-
-    if (answers.configureDocker) {
-      await nextra.configureDocker();
-    }
-
-    if (answers.configureDotEnvFiles.length > 0) {
-      await nextra.configureEnvVars(answers.configureDotEnvFiles);
-    }
-
-    if (answers.configureSelectedDependencies.length > 0) {
-      await nextra.configureSelectedDependencies(
-        answers.configureSelectedDependencies
+      return console.log(
+        `Looks like you've passed on all the configuration options. Maybe next time!`
       );
     }
 
-    const configurationCompleteMessage = await nextra.cleanUp();
-    console.log(`\n` + configurationCompleteMessage);
+    await configurator.run(opts);
   });
 
-program.parse();
-
-export default program;
+program.parse(process.argv);

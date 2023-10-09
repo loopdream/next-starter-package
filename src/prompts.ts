@@ -1,11 +1,12 @@
 import picocolors from 'picocolors';
 import { PromptObject } from 'prompts';
+
 import { PackageManagerKindEnum } from './PackageManager.js';
 
 const { blue } = picocolors;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const onPromptState = (state: any) => {
+export const onPromptState = (state: any) => {
   if (state.aborted) {
     // If we don't re-enable the terminal cursor before exiting
     // the program, the cursor will remain hidden
@@ -32,10 +33,10 @@ export const packageManagerPrompt: PromptObject = {
   initial: 0,
 };
 
-export const configureDotEnvFiles: PromptObject = {
+const dotEnvFiles: PromptObject = {
   onState: onPromptState,
   type: 'multiselect',
-  name: 'configureDotEnvFiles',
+  name: 'dotEnvFiles',
   message: 'Select .env* files to install',
   choices: [
     { title: '.env.example', value: '.env.example' },
@@ -47,106 +48,92 @@ export const configureDotEnvFiles: PromptObject = {
   initial: 0,
 };
 
-// export const configureNextStandalone: PromptObject = {
-//   onState: onPromptState,
-//   type: 'toggle',
-//   name: 'configureNextStandalone',
-//   message: `Would you like to configure ${blue(
-//     'Next'
-//   )} for standalone production builds?`,
-//   initial: 'Yes',
-//   active: 'Yes',
-//   inactive: `No`,
-// };
-
-export const configurePrettier: PromptObject = {
+const prettier: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'configurePrettier',
-  message: `Would you like to install and configure ${blue(
-    'Prettier'
-  )}? (recommended)`,
+  name: 'prettier',
+  message: `Would you like to install and configure ${blue('Prettier')}?`,
   initial: 'Yes',
   active: 'Yes',
   inactive: `No`,
 };
 
-export const configureStorybook: PromptObject = {
+const storybook: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'configureStorybook',
-  message: `Would you like to install and configure ${blue(
-    'Storybook'
-  )}? (recommended)`,
+  name: 'storybook',
+  message: `Would you like to install and configure ${blue('Storybook')}?`,
   initial: 'Yes',
   active: 'Yes',
   inactive: `No`,
 };
 
-export const configureDocker: PromptObject = {
+const docker: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'configureDocker',
-  message: `Would you like to add ${blue(
-    'Docker'
-  )} configuration? (recommended)`,
+  name: 'docker',
+  message: `Would you like to add ${blue('Docker')} configuration?`,
   initial: 'Yes',
   active: 'Yes',
   inactive: `No`,
 };
 
-export const configureJestRTL: PromptObject = {
+const jest: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'configureJestRTL',
-  message: `Would you like to install and configure ${blue(
-    'Jest'
-  )} and ${`React Testing Library`}? (recommended)`,
+  name: 'jest',
+  message: `Would you like to install and configure ${blue('Jest')}?`,
   initial: 'Yes',
   active: 'Yes',
   inactive: `No`,
 };
 
-export const configureCypress: PromptObject = {
+const reactTestingLibrary: PromptObject = {
   onState: onPromptState,
-  type: 'toggle',
-  name: 'configureCypress',
-  message: `Would you like to install and configure ${blue(
-    'Cypress'
-  )}? (recommended)`,
+  type: (prev) => (prev === true ? 'toggle' : null),
+  name: 'reactTestingLibrary',
+  message: `Would you like to install and configure ${`React Testing Library`}?`,
   initial: 'Yes',
   active: 'Yes',
   inactive: `No`,
 };
 
-export const configureHusky: PromptObject = {
+const cypress: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'configureHusky',
+  name: 'cypress',
+  message: `Would you like to install and configure ${blue('Cypress')}?`,
+  initial: 'Yes',
+  active: 'Yes',
+  inactive: `No`,
+};
+
+const husky: PromptObject = {
+  onState: onPromptState,
+  type: 'toggle',
+  name: 'husky',
   message: `Would you like to install and configure ${blue('Git')} and ${blue(
     'Husky'
-  )}? (recommended)`,
+  )}?`,
   initial: 'Yes',
   active: 'Yes',
   inactive: `No`,
 };
 
-export const configureLintStaged: PromptObject = {
+const lintStaged: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'configureLintStaged',
-  message: `Would you like to install and configure ${blue(
-    'Lint Staged'
-  )}? (recommended)`,
+  name: 'lintStaged',
+  message: `Would you like to install and configure ${blue('Lint Staged')}?`,
   initial: 'Yes',
   active: 'Yes',
   inactive: `No`,
 };
 
-export const configureNextImageOptimisation: PromptObject = {
+const imageOptimisation: PromptObject = {
   onState: onPromptState,
   type: 'toggle',
-  name: 'configureNextImageOptimisation',
+  name: 'imageOptimisation',
   message: `Will you be using ${blue('Next')}'s image optimisation? `,
   initial: 'No',
   active: 'Yes',
@@ -165,7 +152,7 @@ export interface ChoiceType {
   value: ChoiceValuesType;
 }
 
-export const choices: ChoiceType[] = [
+const choices: ChoiceType[] = [
   {
     title: 'classnames',
     value: {
@@ -430,25 +417,25 @@ export const choices: ChoiceType[] = [
   },
 ];
 
-export const configureSelectedDependencies: PromptObject = {
+const optionalDependencies: PromptObject = {
   onState: onPromptState,
   type: 'multiselect',
-  name: 'configureSelectedDependencies',
+  name: 'optionalDependencies',
   message: 'Install some popular packages?',
   choices: choices,
   hint: '- Space to select. Return to submit',
 };
 
-export default {
-  packageManagerPrompt,
-  configureCypress,
-  configureDocker,
-  configureHusky,
-  configureNextImageOptimisation,
-  configureJestRTL,
-  configureLintStaged,
-  configurePrettier,
-  configureSelectedDependencies,
-  configureStorybook,
-  configureDotEnvFiles,
-};
+export const configurationPrompts = [
+  imageOptimisation,
+  prettier,
+  jest,
+  reactTestingLibrary,
+  cypress,
+  storybook,
+  husky,
+  lintStaged,
+  docker,
+  dotEnvFiles,
+  optionalDependencies,
+];

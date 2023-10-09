@@ -1,7 +1,6 @@
-import path from 'path';
-import os from 'os';
 import fs from 'fs';
-import { execa } from 'execa';
+import os from 'os';
+import path from 'path';
 
 export enum PackageManagerKindEnum {
   NPM = 'npm',
@@ -15,26 +14,24 @@ export enum PackageManagerAddEnum {
   INSTALL = 'install',
 }
 
-export enum PackageManagerSaveDevEnum {
-  DEV = '--dev',
-  SAVE_DEV = '--save-dev',
-}
-
 export type PackageManagerPropsType = {
   packageManagerKind: PackageManagerKindEnum;
-  root: string;
+  cwd: string;
 };
 
-export type AddToPackageType = Record<string, string | Record<string, string>>;
+export type AddToPackageType = Record<
+  string,
+  string | string[] | Record<string, string>
+>;
 
 class PackageManager {
   private packageManagerKind: PackageManagerKindEnum;
   private cwd: string;
   private packageFilePath: string;
 
-  constructor({ packageManagerKind, root }: PackageManagerPropsType) {
+  constructor({ packageManagerKind, cwd }: PackageManagerPropsType) {
     this.packageManagerKind = packageManagerKind;
-    this.cwd = root;
+    this.cwd = cwd;
     this.packageFilePath = path.join(this.cwd, 'package.json');
   }
 
@@ -42,39 +39,27 @@ class PackageManager {
     return this.packageManagerKind;
   }
 
-  public getCmds(): {
-    add: PackageManagerAddEnum;
-    saveDev: PackageManagerSaveDevEnum;
-  } {
-    const pm = this.getKind();
-    return {
-      add:
-        pm === PackageManagerKindEnum.NPM
-          ? PackageManagerAddEnum.INSTALL
-          : PackageManagerAddEnum.ADD,
-      saveDev:
-        pm === PackageManagerKindEnum.YARN || PackageManagerKindEnum.BUN
-          ? PackageManagerSaveDevEnum.DEV // --dev
-          : PackageManagerSaveDevEnum.SAVE_DEV, // --save-dev
-    };
-  }
-
   public async addToDependencies(
     dependencies: string[],
-    addToDependencies: boolean = false
+    addToDevDependencies: boolean = false
   ) {
+    const { execa } = await import('execa');
     if (!Array.isArray(dependencies) || dependencies.length === 0) return;
     try {
-      const { add, saveDev } = this.getCmds();
+      const pm = this.getKind();
+      const add =
+        pm === PackageManagerKindEnum.NPM
+          ? PackageManagerAddEnum.INSTALL
+          : PackageManagerAddEnum.ADD;
+
       const deps = [...dependencies];
 
-      if (addToDependencies) deps.push(saveDev);
+      if (addToDevDependencies) deps.push('-D');
 
-      const { stdout } = await execa(this.getKind(), [add, ...deps], {
+      await execa(this.getKind(), [add, ...deps], {
         cwd: this.cwd,
+        stdio: 'inherit',
       });
-
-      return stdout;
     } catch (error) {
       throw new Error(`${error}`);
     }
