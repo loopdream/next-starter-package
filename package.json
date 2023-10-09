@@ -26,8 +26,8 @@
     "start:standalone": "node ./.next/standalone/server.js",
     "storybook": "storybook dev -p 6006",
     "test": "node --experimental-vm-modules --no-warnings node_modules/.bin/jest",
-    "test:watch": "node --experimental-vm-modules --no-warnings node_modules/.bin/jest --watch",
-    "test:coverage": "node --experimental-vm-modules --no-warnings node_modules/.bin/jest --coverage"
+    "test:watch": "npm run test --watch",
+    "test:coverage": "npm run test --coverage"
   },
   "keywords": [],
   "author": "",

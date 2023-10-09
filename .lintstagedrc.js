@@ -4,7 +4,9 @@ export default {
     `prettier --write ${filenames.join(' ')}`,
     `eslint ${filenames.join(' ')}`,
     `eslint --fix ${filenames.join(' ')}`,
-    `npm run test --passWithNoTests --findRelatedTests ${filenames.join(' ')}`,
+    `node --experimental-vm-modules --no-warnings node_modules/.bin/jest --passWithNoTests --findRelatedTests ${filenames.join(
+      ' '
+    )}`,
     `tsc --noEmit`,
   ],
 
