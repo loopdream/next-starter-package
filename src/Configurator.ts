@@ -1,5 +1,6 @@
 import { $ } from 'execa';
 import fs from 'fs';
+import { markdownTable } from 'markdown-table';
 import ora from 'ora';
 import path from 'path';
 import picocolors from 'picocolors';
@@ -135,7 +136,6 @@ class Configurator {
       stdio: 'inherit',
     })`npx create-next-app@latest ${this.cwd} --use-${pm}`
       .catch((error) => {
-        oops();
         throw new Error(`\n${error}`);
       })
       .finally(
@@ -290,7 +290,7 @@ class Configurator {
       ...(reactTestingLibrary ? ['reactTestingLibrary.md'] : []),
       ...(lintStaged ? ['lint-staged.md'] : []),
       ...(husky ? ['git.md', 'husky.md'] : []),
-      ...(lintStaged ? ['selected-dependencies.md'] : []),
+      ...(optionalDependencies ? ['selected-dependencies.md'] : []),
     ];
 
     return this.config;
@@ -302,7 +302,6 @@ class Configurator {
     this.spinner.start('Configuring Git and Husky');
 
     await $execa`git init`.catch((error) => {
-      oops();
       this.spinner.fail();
       throw new Error(`${error}`);
     });
@@ -322,7 +321,6 @@ class Configurator {
     // }
 
     await $execa`npx husky-init && npm install`.catch((error) => {
-      oops();
       this.spinner.fail();
       throw new Error(`${error}`);
     });
@@ -336,7 +334,6 @@ class Configurator {
         'utf8'
       )
       .catch((error) => {
-        oops();
         this.spinner.fail();
         throw new Error(`${error}`);
       });
@@ -443,7 +440,6 @@ class Configurator {
         JSON.stringify(eslintrc)
       )
       .catch((error) => {
-        oops();
         throw new Error(`${error}`);
       });
   };
@@ -466,7 +462,6 @@ class Configurator {
 
     if (configs.length >= 1) {
       await Promise.all(configs).catch((error) => {
-        oops();
         this.spinner.fail();
         throw new Error(`${error}`);
       });
@@ -478,7 +473,6 @@ class Configurator {
         (file: string) => $`touch ${path.join(this.cwd, file)}`
       );
       await Promise.all(copyEnvFiles).catch((error) => {
-        oops();
         this.spinner.fail();
         throw new Error(`${error}`);
       });
@@ -497,7 +491,7 @@ class Configurator {
         cwd: this.cwd,
       })`${this.packageManager.getKind()} run format:write`.catch((error) => {
         this.spinner.fail();
-        oops();
+
         console.log(`${error}`);
       });
     }
@@ -514,24 +508,42 @@ class Configurator {
       fs.readFileSync(filePath, 'utf8')
     );
 
-    return await Promise.all(readFiles).catch((error) => {
-      oops();
+    const markdownArr = await Promise.all(readFiles).catch((error) => {
       throw new Error(`${error}`);
     });
+
+    return markdownArr;
   };
+
+  private makeDependenciesMarkdownTable() {
+    const tableHeader = ['Package name', 'Package description', 'Type'];
+    const tableData = this.options.optionalDependencies.map(
+      ({ module, github, description, saveDev }) => [
+        `[${module}](${github})`,
+        description,
+        saveDev ? '`devDependency`' : '`dependency`',
+      ]
+    );
+
+    return markdownTable([tableHeader, ...tableData]);
+  }
 
   public generateReadme = async () => {
     this.spinner.start('Generating Readme');
 
     await this.readFromFiles(this.config.markdown)
-      .then((markdownStrArr) => markdownStrArr.join('\n\n'))
+      .then((markdownStrArr) => {
+        if (this.options.optionalDependencies.length > 0) {
+          this.config.markdown.push(this.makeDependenciesMarkdownTable());
+        }
+        return markdownStrArr.join('\n\n');
+      })
       .then((markdown) =>
         fs.promises.writeFile(path.join(this.cwd, 'README.md'), markdown)
       )
       .then(() => this.spinner.succeed())
       .catch((error) => {
         this.spinner.fail();
-        oops();
         throw new Error(`${error}`);
       });
   };
@@ -550,7 +562,6 @@ class Configurator {
       );
 
       return await Promise.all(copyFiles).catch((error) => {
-        oops();
         throw new Error(`${error}`);
       });
     }
