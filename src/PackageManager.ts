@@ -2,6 +2,8 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
+const { execa } = await import('execa');
+
 export enum PackageManagerKindEnum {
   NPM = 'npm',
   YARN = 'yarn',
@@ -43,7 +45,6 @@ class PackageManager {
     dependencies: string[],
     addToDevDependencies: boolean = false
   ) {
-    const { execa } = await import('execa');
     if (!Array.isArray(dependencies) || dependencies.length === 0) return;
     try {
       const pm = this.getKind();

@@ -1,5 +1,5 @@
-import Configurator from './Configurator.js';
-import { PackageManagerKindEnum } from './PackageManager.js';
+import Configurator from '../Configurator.js';
+import { PackageManagerKindEnum } from '../PackageManager.js';
 
 describe('Configurator', () => {
   it('should prepare the configuration with all options', async () => {

@@ -1,4 +1,5 @@
 import { $ } from 'execa';
+import figlet from 'figlet';
 import fs from 'fs';
 import { markdownTable } from 'markdown-table';
 import ora from 'ora';
@@ -7,9 +8,9 @@ import picocolors from 'picocolors';
 import prompts from 'prompts';
 
 import PackageManager, { PackageManagerKindEnum } from './PackageManager.js';
-import makeLintStaged from './helpers/makeLintStaged.js';
+import makeHuskyPreCommit from './helpers/makeHuskyPreCommit.js';
+import makeLintStagedrc from './helpers/makeLintStagedrc.js';
 import { ChoiceValuesType } from './prompts.js';
-import { oops } from './utils.js';
 
 type ConfiguratorPropsType = {
   packageManagerChoice: PackageManagerKindEnum;
@@ -110,13 +111,13 @@ class Configurator {
       .then(() => this.cleanUp())
       .then(() =>
         console.log(
-          `\n` +
-            green('Success! ') +
-            `The following configurations were made: <TODO: ADD MORE INFO>`
+          `\n`,
+          green('Success! '),
+          `The following configurations were made: <TODO: ADD MORE INFO>`
         )
       )
       .catch((error) => {
-        oops();
+        console.log(`\n`, figlet.textSync('Ooops...'), `\n\n`);
         throw new Error(`${error}`);
       });
   };
@@ -325,7 +326,7 @@ class Configurator {
       throw new Error(`${error}`);
     });
 
-    const huskyPreCommit = makeLintStaged.preCommit(this.options);
+    const huskyPreCommit = makeHuskyPreCommit(this.options);
 
     await fs.promises
       .writeFile(
@@ -350,7 +351,11 @@ class Configurator {
       .join(`\n`);
 
     console.log(
-      `\n\n` + `Installing Dependencies` + `\n\n` + dependencies + `\n\n`
+      `\n\n`,
+      `Installing Dependencies`,
+      `\n\n`,
+      dependencies,
+      `\n\n`
     );
 
     if (packageDependencies.length > 0) {
@@ -363,7 +368,11 @@ class Configurator {
       .join(`\n`);
 
     console.log(
-      `\n\n` + `Installing devDependencies` + `\n\n` + devDependencies + `\n\n`
+      `\n\n`,
+      `Installing devDependencies`,
+      `\n\n`,
+      devDependencies,
+      `\n\n`
     );
 
     if (packageDevDependencies.length > 0) {
@@ -388,7 +397,7 @@ class Configurator {
     if (lintStaged) {
       await this.packageManager.addToPackage(
         'lint-staged',
-        makeLintStaged.linstagedrc(this.options)
+        makeLintStagedrc(this.options)
       );
     }
   };
@@ -450,8 +459,8 @@ class Configurator {
     const { configTemplateDirectories, configTemplateFiles } = this.config;
     const { dotEnvFiles } = this.options;
 
-    const configs = [];
-    // Directories & Files
+    const configs: Promise<void[] | undefined>[] = [];
+
     if (configTemplateDirectories.length > 0) {
       configs.push(this.copyTemplate(configTemplateDirectories, true));
     }

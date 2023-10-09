@@ -1,161 +1,7 @@
-import { PackageManagerKindEnum } from '../PackageManager.js';
-import makeLintStaged from './makeLintStaged.js';
+import { PackageManagerKindEnum } from '../../PackageManager.js';
+import makeHuskyPreCommit from '../makeHuskyPreCommit.js';
 
-describe('makeLintStaged.linstagedrc', () => {
-  describe('When eslint, jest, prettier and typescript options are true', () => {
-    it('should return a valid lint-staged configuration object', () => {
-      const expectedConfig = {
-        '**/*.js?(x)': [
-          'prettier --check .',
-          'prettier --write .',
-          'eslint .',
-          'eslint --fix .',
-          'jest --ci',
-        ],
-        '**/*.ts?(x)': [
-          'prettier --check .',
-          'prettier --write .',
-          'eslint .',
-          'eslint --fix .',
-          'jest --ci',
-          'tsc --noEmit',
-        ],
-        '**/*.{md, yml, yaml, json}': [
-          'prettier --check .',
-          'prettier --write .',
-        ],
-        '**/*.{css}': ['prettier --check .', 'prettier --write .'],
-      };
-
-      const config = makeLintStaged.linstagedrc({
-        eslint: true,
-        jest: true,
-        prettier: true,
-        typescript: true,
-      });
-
-      expect(config).toEqual(expectedConfig);
-    });
-  });
-
-  describe('When typescript is false and all other options are true', () => {
-    it('should return a valid lint-staged configuration object without typescript', () => {
-      const expectedConfig = {
-        '**/*.js?(x)': [
-          'prettier --check .',
-          'prettier --write .',
-          'eslint .',
-          'eslint --fix .',
-          'jest --ci',
-        ],
-        '**/*.{md, yml, yaml, json}': [
-          'prettier --check .',
-          'prettier --write .',
-        ],
-        '**/*.{css}': ['prettier --check .', 'prettier --write .'],
-      };
-
-      const config = makeLintStaged.linstagedrc({
-        eslint: true,
-        jest: true,
-        prettier: true,
-        typescript: false,
-      });
-
-      expect(config).toEqual(expectedConfig);
-    });
-  });
-  describe('When jest is false and all other options are true', () => {
-    it('should return a valid lint-staged configuration object without jest', () => {
-      const expectedConfig = {
-        '**/*.js?(x)': [
-          'prettier --check .',
-          'prettier --write .',
-          'eslint .',
-          'eslint --fix .',
-        ],
-        '**/*.ts?(x)': [
-          'prettier --check .',
-          'prettier --write .',
-          'eslint .',
-          'eslint --fix .',
-          'tsc --noEmit',
-        ],
-        '**/*.{md, yml, yaml, json}': [
-          'prettier --check .',
-          'prettier --write .',
-        ],
-        '**/*.{css}': ['prettier --check .', 'prettier --write .'],
-      };
-
-      const config = makeLintStaged.linstagedrc({
-        eslint: true,
-        jest: false,
-        prettier: true,
-        typescript: true,
-      });
-
-      expect(config).toEqual(expectedConfig);
-    });
-  });
-  describe('When prettier is false and all other options are true', () => {
-    it('should return a valid lint-staged configuration object without Prettier', () => {
-      const expectedConfig = {
-        '**/*.js?(x)': ['eslint .', 'eslint --fix .', 'jest --ci'],
-        '**/*.ts?(x)': [
-          'eslint .',
-          'eslint --fix .',
-          'jest --ci',
-          'tsc --noEmit',
-        ],
-      };
-
-      const config = makeLintStaged.linstagedrc({
-        eslint: true,
-        jest: true,
-        prettier: false,
-        typescript: true,
-      });
-
-      expect(config).toEqual(expectedConfig);
-    });
-  });
-
-  describe('When eslint is false and all other options are true', () => {
-    it('should return a valid lint-staged configuration object without ESLint', () => {
-      const options = {
-        eslint: false,
-        jest: true,
-        prettier: true,
-        typescript: true,
-      };
-      const expectedConfig = {
-        '**/*.js?(x)': [
-          'prettier --check .',
-          'prettier --write .',
-          'jest --ci',
-        ],
-        '**/*.ts?(x)': [
-          'prettier --check .',
-          'prettier --write .',
-          'jest --ci',
-          'tsc --noEmit',
-        ],
-        '**/*.{md, yml, yaml, json}': [
-          'prettier --check .',
-          'prettier --write .',
-        ],
-        '**/*.{css}': ['prettier --check .', 'prettier --write .'],
-      };
-
-      const config = makeLintStaged.linstagedrc(options);
-
-      expect(config).toEqual(expectedConfig);
-    });
-  });
-});
-
-describe('makeLintStaged.preCommit', () => {
+describe('makeHuskyPreCommit', () => {
   describe('when lint-staged is enabled', () => {
     it('should return a valid pre-commit hook script', () => {
       const options = {
@@ -184,7 +30,7 @@ describe('makeLintStaged.preCommit', () => {
         'printf "Now push your code! 🚀"\n' +
         'printf "\n\n------------------------------------------\n\n"';
 
-      const script = makeLintStaged.preCommit(options);
+      const script = makeHuskyPreCommit(options);
 
       expect(script).toEqual(expectedScript);
     });
@@ -202,7 +48,7 @@ describe('makeLintStaged.preCommit', () => {
           typescript: true,
         };
 
-        const script = makeLintStaged.preCommit(options);
+        const script = makeHuskyPreCommit(options);
 
         expect(script).toContain('yarn run lint:check');
         expect(script).toContain('yarn run lint:fix');
@@ -224,7 +70,7 @@ describe('makeLintStaged.preCommit', () => {
           typescript: true,
         };
 
-        const script = makeLintStaged.preCommit(options);
+        const script = makeHuskyPreCommit(options);
 
         expect(script).toContain('npm run lint:check');
         expect(script).toContain('npm run lint:fix');
@@ -246,7 +92,7 @@ describe('makeLintStaged.preCommit', () => {
           typescript: true,
         };
 
-        const script = makeLintStaged.preCommit(options);
+        const script = makeHuskyPreCommit(options);
 
         expect(script).toContain('bun run lint:check');
         expect(script).toContain('bun run lint:fix');
@@ -268,7 +114,7 @@ describe('makeLintStaged.preCommit', () => {
           typescript: true,
         };
 
-        const script = makeLintStaged.preCommit(options);
+        const script = makeHuskyPreCommit(options);
 
         expect(script).toContain('pnpm run lint:check');
         expect(script).toContain('pnpm run lint:fix');
@@ -308,7 +154,7 @@ describe('makeLintStaged.preCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
 
-        const script = makeLintStaged.preCommit(options);
+        const script = makeHuskyPreCommit(options);
 
         expect(script).toEqual(expectedScript);
       });
@@ -342,7 +188,7 @@ describe('makeLintStaged.preCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
 
-        const script = makeLintStaged.preCommit(options);
+        const script = makeHuskyPreCommit(options);
 
         expect(script).toEqual(expectedScript);
       });
@@ -376,7 +222,7 @@ describe('makeLintStaged.preCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
 
-        const script = makeLintStaged.preCommit(options);
+        const script = makeHuskyPreCommit(options);
 
         expect(script).toEqual(expectedScript);
       });
@@ -409,7 +255,7 @@ describe('makeLintStaged.preCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
 
-        const script = makeLintStaged.preCommit(options);
+        const script = makeHuskyPreCommit(options);
 
         expect(script).toEqual(expectedScript);
       });
@@ -440,7 +286,7 @@ describe('makeLintStaged.preCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
 
-        const script = makeLintStaged.preCommit(options);
+        const script = makeHuskyPreCommit(options);
 
         expect(script).toEqual(expectedScript);
       });
@@ -470,7 +316,7 @@ describe('makeLintStaged.preCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
 
-        const script = makeLintStaged.preCommit(options);
+        const script = makeHuskyPreCommit(options);
 
         expect(script).toEqual(expectedScript);
       });
@@ -500,7 +346,7 @@ describe('makeLintStaged.preCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
 
-        const script = makeLintStaged.preCommit(options);
+        const script = makeHuskyPreCommit(options);
 
         expect(script).toEqual(expectedScript);
       });
@@ -532,7 +378,7 @@ describe('makeLintStaged.preCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
 
-        const script = makeLintStaged.preCommit(options);
+        const script = makeHuskyPreCommit(options);
 
         expect(script).toEqual(expectedScript);
       });
@@ -562,7 +408,7 @@ describe('makeLintStaged.preCommit', () => {
           'printf "Now push your code! 🚀"\n' +
           'printf "\n\n------------------------------------------\n\n"';
 
-        const script = makeLintStaged.preCommit(options);
+        const script = makeHuskyPreCommit(options);
 
         expect(script).toEqual(expectedScript);
       });

@@ -16,6 +16,6 @@ jobs:
       - name: Format
         run: npm run format:check
       - name: Test
-        run: npm test --ci
+        run: npm test --ci 
       - name: Typescript
         run: npm run build --noEmit

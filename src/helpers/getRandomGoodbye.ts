@@ -1,6 +1,4 @@
-import figlet from 'figlet';
-
-export function goodbye() {
+const getRandomGoodbye = () => {
   const goodbyes = [
     'Adios',
     'Aloha',
@@ -14,7 +12,8 @@ export function goodbye() {
     'Zài jiàn',
   ];
   const randomGoodbye = goodbyes[Math.floor(Math.random() * goodbyes.length)];
-  return console.log(`\n`, figlet.textSync(randomGoodbye), '\n\n');
-}
 
-export const oops = () => console.log(`\n${figlet.textSync('Ooops...')}\n\n`);
+  return randomGoodbye;
+};
+
+export default getRandomGoodbye;

@@ -7,8 +7,10 @@ import prompts from 'prompts';
 
 import Configurator, { OptionsType } from './Configurator.js';
 import { PackageManagerKindEnum } from './PackageManager.js';
+import getRandomGoodbye from './helpers/getRandomGoodbye.js';
 import { packageManagerPrompt, configurationPrompts } from './prompts.js';
-import { goodbye } from './utils.js';
+
+// import { goodbye } from './utils.js';
 
 export interface ProgramOptionsType extends OptionsType {
   dev?: boolean;
@@ -94,8 +96,10 @@ program
 
     if (!hasConfigurationOptions) {
       // nothing to configure!
-      goodbye();
       return console.log(
+        `\n`,
+        figlet.textSync(getRandomGoodbye()),
+        '\n\n',
         `Looks like you've passed on all the configuration options. Maybe next time!`
       );
     }
