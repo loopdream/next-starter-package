@@ -8,6 +8,7 @@ import picocolors from 'picocolors';
 import prompts from 'prompts';
 
 import PackageManager, { PackageManagerKindEnum } from './PackageManager.js';
+import makeEslintrc from './helpers/makeEslintrc.js';
 import makeHuskyPreCommit from './helpers/makeHuskyPreCommit.js';
 import makeLintStagedrc from './helpers/makeLintStagedrc.js';
 import { ChoiceValuesType } from './prompts.js';
@@ -93,17 +94,16 @@ class Configurator {
   public run = async (options: prompts.Answers<string>) => {
     this.setOptions(options);
 
-    console.log(
-      bold(
-        `Using ` +
-          bold(this.packageManager.getKind()) +
-          `\n\n` +
-          `The configurator will now setup your next project based on your selections.` +
-          `\n\n`
-      )
-    );
-
     this.prepare()
+      .then(() => {
+        console.log(
+          `\n\n`,
+          bold(`Using ` + this.packageManager.getKind()),
+          `\n\n`,
+          `The configurator will now setup your next project based on your selections.`,
+          `\n\n`
+        );
+      })
       .then(() => this.installDependencies())
       .then(() => this.buildConfigs())
       .then(() => this.configurePackageFile())
@@ -379,69 +379,30 @@ class Configurator {
       await this.packageManager.addToDevDependencies(packageDevDependencies);
     }
 
+    console.log(`\n\n`);
+
     if (this.options.husky) {
       await this.installConfigureGitHusky();
     }
-
-    console.log(`\n\n`);
   };
 
   public configurePackageFile = async () => {
-    const { lintStaged } = this.options;
-    const { packageScripts } = this.config;
-
     // package scripts
-    await this.packageManager.addToPackage('scripts', packageScripts);
+    await this.packageManager.addToPackage(
+      'scripts',
+      this.config.packageScripts
+    );
 
-    // lint-staged
-    if (lintStaged) {
-      await this.packageManager.addToPackage(
-        'lint-staged',
-        makeLintStagedrc(this.options)
-      );
+    if (this.options.lintStaged) {
+      const lintstagedrc = makeLintStagedrc(this.options);
+      await this.packageManager.addToPackage('lint-staged', lintstagedrc);
     }
   };
 
   private configureEslint = async () => {
-    const { storybook, prettier, eslint, typescript, reactTestingLibrary } =
-      this.options;
+    if (!this.options.eslint) return;
 
-    if (!eslint) return;
-
-    const overides = [
-      ...(reactTestingLibrary
-        ? [
-            {
-              files: [
-                '**/__tests__/**/*.[jt]s?(x)',
-                '**/?(*.)+(spec|test).[jt]s?(x)',
-              ],
-              extends: ['plugin:testing-library/react'],
-            },
-          ]
-        : []),
-    ];
-    // TODO: create a make func for the new eslint config file type
-    const eslintrc = {
-      root: true,
-      plugins: [
-        ...(eslint && typescript ? ['@typescript-eslint'] : []),
-        ...(reactTestingLibrary ? ['testing-library'] : []),
-      ],
-      extends: [
-        'next/core-web-vitals',
-        ...(eslint && typescript
-          ? ['plugin:@typescript-eslint/recommended']
-          : []),
-        ...(storybook ? ['plugin:storybook/recommended'] : []),
-        ...(prettier ? ['prettier'] : []),
-      ],
-      rules: {
-        '@typescript-eslint/no-unused-vars': 'error',
-        '@typescript-eslint/no-explicit-any': 'error',
-      },
-      ...(overides.length > 0 ? overides : []),
-    };
+    const eslintrc = makeEslintrc(this.options);
 
     await fs.promises
       .writeFile(
@@ -543,7 +504,7 @@ class Configurator {
     await this.readFromFiles(this.config.markdown)
       .then((markdownStrArr) => {
         if (this.options.optionalDependencies.length > 0) {
-          this.config.markdown.push(this.makeDependenciesMarkdownTable());
+          markdownStrArr.push(this.makeDependenciesMarkdownTable());
         }
         return markdownStrArr.join('\n\n');
       })

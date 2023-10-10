@@ -46,24 +46,23 @@ class PackageManager {
     addToDevDependencies: boolean = false
   ) {
     if (!Array.isArray(dependencies) || dependencies.length === 0) return;
-    try {
-      const pm = this.getKind();
-      const add =
-        pm === PackageManagerKindEnum.NPM
-          ? PackageManagerAddEnum.INSTALL
-          : PackageManagerAddEnum.ADD;
 
-      const deps = [...dependencies];
+    const pm = this.getKind();
+    const add =
+      pm === PackageManagerKindEnum.NPM
+        ? PackageManagerAddEnum.INSTALL
+        : PackageManagerAddEnum.ADD;
 
-      if (addToDevDependencies) deps.push('-D');
+    const deps = [...dependencies];
 
-      await execa(this.getKind(), [add, ...deps], {
-        cwd: this.cwd,
-        stdio: 'inherit',
-      });
-    } catch (error) {
+    if (addToDevDependencies) deps.push('-D');
+
+    await execa(pm, [add, ...deps], {
+      cwd: this.cwd,
+      stdio: 'inherit',
+    }).catch((error) => {
       throw new Error(`${error}`);
-    }
+    });
   }
 
   public async addToDevDependencies(dependencies: string[]) {
@@ -74,24 +73,26 @@ class PackageManager {
     property: string,
     values: AddToPackageType
   ): Promise<void> {
-    try {
-      const packageFile = await fs.promises
-        .readFile(this.packageFilePath, 'utf8')
-        .then((file) => JSON.parse(file));
+    const packageFile = await fs.promises
+      .readFile(this.packageFilePath, 'utf8')
+      .then((file) => JSON.parse(file))
+      .catch((error) => {
+        throw new Error(`${error}`);
+      });
 
-      if (property in packageFile) {
-        packageFile[property] = { ...packageFile[property], ...values };
-      } else {
-        packageFile[property] = { ...values };
-      }
+    packageFile[property] =
+      property in packageFile
+        ? { ...packageFile[property], ...values }
+        : { ...values };
 
-      await fs.promises.writeFile(
+    await fs.promises
+      .writeFile(
         this.packageFilePath,
         JSON.stringify(packageFile, null, 2) + os.EOL
-      );
-    } catch (error) {
-      throw new Error(`${error}`);
-    }
+      )
+      .catch((error) => {
+        throw new Error(`${error}`);
+      });
   }
 }
 

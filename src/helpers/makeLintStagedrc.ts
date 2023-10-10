@@ -1,6 +1,6 @@
 import { OptionsType } from '../Configurator.js';
 
-type LintStagedrcConfigType = Pick<
+type MakeLintStagedrc = Pick<
   OptionsType,
   'eslint' | 'jest' | 'prettier' | 'typescript'
 >;
@@ -10,7 +10,7 @@ function makeLintStagedrc({
   jest,
   prettier,
   typescript,
-}: LintStagedrcConfigType) {
+}: MakeLintStagedrc) {
   const tsLintStagedConfig = {
     '**/*.ts?(x)': [
       ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
