@@ -1,8 +1,7 @@
+import { execa } from 'execa';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-
-const { execa } = await import('execa');
 
 export enum PackageManagerKindEnum {
   NPM = 'npm',
@@ -56,7 +55,7 @@ class PackageManager {
     const deps = [...dependencies];
 
     if (addToDevDependencies) deps.push('-D');
-
+    console.log(pm, [add, ...deps]);
     await execa(pm, [add, ...deps], {
       cwd: this.cwd,
       stdio: 'inherit',
