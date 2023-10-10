@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+printf "\n\n"
+printf '%b ' "\033[1m"Running pre-push hook"\033[0m 🚀"
+
+# TODO: Add tests!
+printf "\n\nTEST COVERAGE\n--------------\n"
+npm run test:coverage
+
+ 

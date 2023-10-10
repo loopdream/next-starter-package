@@ -19,10 +19,6 @@ printf "\n------------------------------------------\n"
 #
 npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely 
 
-# TODO: Add tests!
-printf "\n\nTEST COVERAGE\n--------------\n"
-npm run test:coverage
-
 printf "\n\n------------------------------------------\n\n"
 printf '%b ' "\033[1m"Now push your code!"\033[0m 🚀"
 printf "\n\n------------------------------------------\n\n"
