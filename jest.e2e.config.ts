@@ -7,11 +7,6 @@ const jestConfig: JestConfigWithTsJest = {
     '^(\\.{1,2}/.*)\\.(js|jsx|ts|tsx)$': '$1',
   },
   setupFiles: ['<rootDir>/jest.setup.ts'],
-  modulePathIgnorePatterns: [
-    '<rootDir>/dist/',
-    '<rootDir>/tmp/',
-    '__e2e_tests__',
-  ],
   transform: {
     '^.+\\.(js|jsx|ts|tsx)?$': [
       'ts-jest',
@@ -20,6 +15,7 @@ const jestConfig: JestConfigWithTsJest = {
       },
     ],
   },
+  modulePathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/tmp/', '__tests__'],
 };
 
 export default jestConfig;

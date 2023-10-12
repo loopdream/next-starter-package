@@ -2,7 +2,8 @@ import { $ } from 'execa';
 import figlet from 'figlet';
 import fs from 'fs';
 import { markdownTable } from 'markdown-table';
-import ora from 'ora';
+import ora, { Options as OraOptions } from 'ora';
+//, { Options as OraOptions }
 import path from 'path';
 import picocolors from 'picocolors';
 import prompts from 'prompts';
@@ -11,6 +12,7 @@ import PackageManager, { PackageManagerKindEnum } from './PackageManager.js';
 import makeEslintrc from './helpers/makeEslintrc.js';
 import makeHuskyPreCommit from './helpers/makeHuskyPreCommit.js';
 import makeLintStagedrc from './helpers/makeLintStagedrc.js';
+import makePrettier from './helpers/makePrettier.js';
 import { ChoiceValuesType } from './prompts.js';
 
 type ConfiguratorPropsType = {
@@ -48,7 +50,7 @@ export interface OptionsType {
   typescript: boolean;
 }
 
-const { cyan, green, bold } = picocolors;
+const { red, cyan, green, bold } = picocolors;
 
 class Configurator {
   private config = {} as ConfigType;
@@ -74,7 +76,6 @@ class Configurator {
     typescript: false,
   } as OptionsType;
   private packageManager = {} as PackageManager;
-  private spinner;
   private srcPath: string;
 
   constructor({
@@ -82,7 +83,6 @@ class Configurator {
     packageManagerChoice: packageManagerKind,
   }: ConfiguratorPropsType) {
     this.cwd = path.resolve(projectDirectoryPath);
-    this.spinner = ora();
     this.srcPath = path.resolve(path.join('src'));
     this.options.packageManager = packageManagerKind;
     this.packageManager = new PackageManager({
@@ -91,10 +91,21 @@ class Configurator {
     });
   }
 
-  public run = async (options: prompts.Answers<string>) => {
-    this.setOptions(options);
+  private withSpinner = async (
+    fn: () => Promise<void>,
+    text: string,
+    opts?: OraOptions
+  ) => {
+    const spinner = ora(opts).start(text);
+    await fn()
+      .then(() => spinner.succeed())
+      .catch(() => spinner.fail());
+  };
 
-    this.prepare()
+  public run = async (options: prompts.Answers<string>) => {
+    const { withSpinner } = this;
+    this.setOptions(options)
+      .then(() => this.prepare())
       .then(() => {
         console.log(
           `\n\n`,
@@ -105,10 +116,10 @@ class Configurator {
         );
       })
       .then(() => this.installDependencies())
-      .then(() => this.buildConfigs())
-      .then(() => this.configurePackageFile())
-      .then(() => this.generateReadme())
-      .then(() => this.cleanUp())
+      .then(() => withSpinner(this.buildConfigs, 'Building configs'))
+      .then(() => withSpinner(this.configurePackageFile, 'Configuring package'))
+      .then(() => withSpinner(this.generateReadme, 'Generating Readme'))
+      .then(() => withSpinner(this.cleanUp, 'Cleaning up'))
       .then(() =>
         console.log(
           `\n`,
@@ -122,30 +133,44 @@ class Configurator {
       });
   };
 
-  public setOptions = (answers: prompts.Answers<string>) => {
-    this.options = {
-      ...this.options,
-      ...answers,
-    };
-    return this.options;
-  };
+  public setOptions = (answers: OptionsType | prompts.Answers<string>) =>
+    new Promise((resolve) => {
+      this.options = {
+        ...this.options,
+        ...answers,
+      };
+      resolve(this.options);
+    });
 
   public createNextApp = async () => {
-    const pm = this.packageManager.getKind();
+    const { cwd, packageManager } = this;
+    const pm = packageManager.getKind();
 
     await $({
       stdio: 'inherit',
-    })`npx create-next-app@latest ${this.cwd} --use-${pm}`
-      .catch((error) => {
-        throw new Error(`\n${error}`);
-      })
-      .finally(
-        () =>
-          (this.options = {
-            ...this.options,
-            ...this.getNextConfig(),
-          })
+    })`npx create-next-app@latest ${cwd} --use-${pm}`.catch((error) => {
+      console.log(
+        `\n\n`,
+        red(bold('Error!')),
+        `Please check that your chosen package manager ${cyan(
+          bold(pm)
+        )} is installed:`,
+        cyan(
+          pm === PackageManagerKindEnum.PNPM
+            ? 'https://pnpm.io/installation'
+            : pm === PackageManagerKindEnum.YARN
+            ? 'https://yarnpkg.com/getting-started/install'
+            : 'https://bun.sh/docs/installation'
+        ),
+        `\n\n`
       );
+      throw new Error(`\n${error}`);
+    });
+
+    this.options = {
+      ...this.options,
+      ...this.getNextConfig(),
+    };
 
     return this.options;
   };
@@ -154,9 +179,10 @@ class Configurator {
 
   public getNextConfig = () => {
     const exists = (fileName: string) =>
-      fs.existsSync(path.join(this.cwd, fileName)) || false;
+      fs.existsSync(path.join(this.cwd, fileName));
 
     const typescript = exists('tsconfig.json');
+
     return {
       appRouter: !exists('src/pages'),
       eslint: exists('.eslintrc.json'),
@@ -186,7 +212,6 @@ class Configurator {
     this.config.configTemplateFiles = [
       'next.config.js',
       ...(docker ? ['docker-compose.yml', 'Dockerfile', 'Makefile'] : []),
-      ...(prettier ? ['.prettierrc.json', '.prettierignore'] : []),
       ...(jest ? ['jest.config.js', 'jest.setup.js'] : []),
     ];
 
@@ -300,10 +325,7 @@ class Configurator {
   public installConfigureGitHusky = async () => {
     const $execa = $({ cwd: this.cwd });
 
-    this.spinner.start('Configuring Git and Husky');
-
     await $execa`git init`.catch((error) => {
-      this.spinner.fail();
       throw new Error(`${error}`);
     });
 
@@ -322,7 +344,6 @@ class Configurator {
     // }
 
     await $execa`npx husky-init && npm install`.catch((error) => {
-      this.spinner.fail();
       throw new Error(`${error}`);
     });
 
@@ -335,11 +356,8 @@ class Configurator {
         'utf8'
       )
       .catch((error) => {
-        this.spinner.fail();
         throw new Error(`${error}`);
       });
-
-    this.spinner.succeed();
   };
 
   public installDependencies = async () => {
@@ -359,6 +377,7 @@ class Configurator {
     );
 
     if (packageDependencies.length > 0) {
+      console.log(this.options);
       await this.packageManager.addToDependencies(packageDependencies);
     }
 
@@ -387,7 +406,6 @@ class Configurator {
   };
 
   public configurePackageFile = async () => {
-    // package scripts
     await this.packageManager.addToPackage(
       'scripts',
       this.config.packageScripts
@@ -397,6 +415,30 @@ class Configurator {
       const lintstagedrc = makeLintStagedrc(this.options);
       await this.packageManager.addToPackage('lint-staged', lintstagedrc);
     }
+  };
+
+  private configurePrettier = async () => {
+    if (!this.options.prettier) return;
+
+    const prettierrc = makePrettier.makePrettierrc();
+    const prettierignore = makePrettier.makePrettierignore();
+
+    const prettierFiles = [
+      fs.promises.writeFile(
+        path.join(this.cwd, '.prettierrc.json'),
+        JSON.stringify(prettierrc, null, 2),
+        { encoding: 'utf8' }
+      ),
+      fs.promises.writeFile(
+        path.join(this.cwd, '.prettierignore'),
+        prettierignore,
+        { encoding: 'utf8' }
+      ),
+    ];
+
+    await Promise.all(prettierFiles).catch((error) => {
+      throw new Error(`${error}`);
+    });
   };
 
   private configureEslint = async () => {
@@ -415,8 +457,6 @@ class Configurator {
   };
 
   public buildConfigs = async () => {
-    this.spinner.start('Building configs');
-
     const { configTemplateDirectories, configTemplateFiles } = this.config;
     const { dotEnvFiles } = this.options;
 
@@ -432,7 +472,6 @@ class Configurator {
 
     if (configs.length >= 1) {
       await Promise.all(configs).catch((error) => {
-        this.spinner.fail();
         throw new Error(`${error}`);
       });
     }
@@ -443,30 +482,24 @@ class Configurator {
         (file: string) => $`touch ${path.join(this.cwd, file)}`
       );
       await Promise.all(copyEnvFiles).catch((error) => {
-        this.spinner.fail();
         throw new Error(`${error}`);
       });
     }
 
+    await this.configurePrettier();
     await this.configureEslint();
-    this.spinner.succeed();
   };
 
   public cleanUp = async () => {
     // clean up ie format files - maybe other stuff TBC
-    this.spinner.start('Cleaning up');
 
     if (this.options.prettier) {
       await $({
         cwd: this.cwd,
       })`${this.packageManager.getKind()} run format:write`.catch((error) => {
-        this.spinner.fail();
-
         console.log(`${error}`);
       });
     }
-
-    this.spinner.succeed();
   };
 
   private readFromFiles = async (filenames: string[]) => {
@@ -499,8 +532,6 @@ class Configurator {
   }
 
   public generateReadme = async () => {
-    this.spinner.start('Generating Readme');
-
     await this.readFromFiles(this.config.markdown)
       .then((markdownStrArr) => {
         if (this.options.optionalDependencies.length > 0) {
@@ -511,9 +542,7 @@ class Configurator {
       .then((markdown) =>
         fs.promises.writeFile(path.join(this.cwd, 'README.md'), markdown)
       )
-      .then(() => this.spinner.succeed())
       .catch((error) => {
-        this.spinner.fail();
         throw new Error(`${error}`);
       });
   };

@@ -50,7 +50,7 @@ function makeHuskyPreCommit({
     '# TODOs / FIXMEs\n' +
     'printf "\n\n"\n' +
     'printf "TODOs / FIXMEs - consider reviewing these"\n' +
-    'printf "\n------------------------------------------\n"\n#\n' +
+    'printf "\n------------------------------------------\n"\n\n' +
     "npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely\n\n" +
     'printf "\n\n------------------------------------------\n\n"\n' +
     'printf "Now push your code! 🚀"\n' +

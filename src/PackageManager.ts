@@ -47,6 +47,7 @@ class PackageManager {
     if (!Array.isArray(dependencies) || dependencies.length === 0) return;
 
     const pm = this.getKind();
+
     const add =
       pm === PackageManagerKindEnum.NPM
         ? PackageManagerAddEnum.INSTALL
@@ -60,6 +61,7 @@ class PackageManager {
       cwd: this.cwd,
       stdio: 'inherit',
     }).catch((error) => {
+      console.log('ERROR!');
       throw new Error(`${error}`);
     });
   }
