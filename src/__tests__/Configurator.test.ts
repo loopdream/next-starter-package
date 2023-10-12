@@ -31,6 +31,7 @@ describe('Configurator', () => {
       .then((config) => {
         expect(config.configTemplateFiles).toEqual([
           'next.config.js',
+          '.editorconfig',
           'docker-compose.yml',
           'Dockerfile',
           'Makefile',
@@ -116,7 +117,10 @@ describe('Configurator', () => {
 
     const config = await configurator.prepare();
 
-    expect(config.configTemplateFiles).toEqual(['next.config.js']);
+    expect(config.configTemplateFiles).toEqual([
+      'next.config.js',
+      '.editorconfig',
+    ]);
 
     expect(config.configTemplateDirectories).toEqual([]);
 

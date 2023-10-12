@@ -56,12 +56,11 @@ class PackageManager {
     const deps = [...dependencies];
 
     if (addToDevDependencies) deps.push('-D');
-    console.log(pm, [add, ...deps]);
+
     await execa(pm, [add, ...deps], {
       cwd: this.cwd,
       stdio: 'inherit',
     }).catch((error) => {
-      console.log('ERROR!');
       throw new Error(`${error}`);
     });
   }

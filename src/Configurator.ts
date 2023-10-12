@@ -103,23 +103,33 @@ class Configurator {
   };
 
   public run = async (options: prompts.Answers<string>) => {
-    const { withSpinner } = this;
-    this.setOptions(options)
-      .then(() => this.prepare())
+    const {
+      buildConfigs,
+      cleanUp,
+      configurePackageFile,
+      generateReadme,
+      installDependencies,
+      packageManager,
+      prepare,
+      setOptions,
+      withSpinner,
+    } = this;
+
+    setOptions(options)
+      .then(() => prepare())
       .then(() => {
         console.log(
-          `\n\n`,
-          bold(`Using ` + this.packageManager.getKind()),
-          `\n\n`,
-          `The configurator will now setup your next project based on your selections.`,
-          `\n\n`
+          [
+            bold(`Using ` + packageManager.getKind()),
+            `The configurator will now setup your next project based on your selections.`,
+          ].join(`\n\n`)
         );
       })
-      .then(() => this.installDependencies())
-      .then(() => withSpinner(this.buildConfigs, 'Building configs'))
-      .then(() => withSpinner(this.configurePackageFile, 'Configuring package'))
-      .then(() => withSpinner(this.generateReadme, 'Generating Readme'))
-      .then(() => withSpinner(this.cleanUp, 'Cleaning up'))
+      .then(() => installDependencies())
+      .then(() => withSpinner(buildConfigs, 'Building configs'))
+      .then(() => withSpinner(configurePackageFile, 'Configuring package'))
+      .then(() => withSpinner(generateReadme, 'Generating Readme'))
+      .then(() => withSpinner(cleanUp, 'Cleaning up'))
       .then(() =>
         console.log(
           `\n`,
@@ -175,7 +185,9 @@ class Configurator {
     return this.options;
   };
 
-  public getConfig = () => this.config;
+  public getConfig = () => {
+    return this.config;
+  };
 
   public getNextConfig = () => {
     const exists = (fileName: string) =>
@@ -211,6 +223,7 @@ class Configurator {
 
     this.config.configTemplateFiles = [
       'next.config.js',
+      '.editorconfig',
       ...(docker ? ['docker-compose.yml', 'Dockerfile', 'Makefile'] : []),
       ...(jest ? ['jest.config.js', 'jest.setup.js'] : []),
     ];
@@ -350,11 +363,7 @@ class Configurator {
     const huskyPreCommit = makeHuskyPreCommit(this.options);
 
     await fs.promises
-      .writeFile(
-        path.join(this.cwd, '.husky', 'pre-commit'),
-        huskyPreCommit,
-        'utf8'
-      )
+      .writeFile(path.join(this.cwd, '.husky', 'pre-commit'), huskyPreCommit)
       .catch((error) => {
         throw new Error(`${error}`);
       });
@@ -426,13 +435,11 @@ class Configurator {
     const prettierFiles = [
       fs.promises.writeFile(
         path.join(this.cwd, '.prettierrc.json'),
-        JSON.stringify(prettierrc, null, 2),
-        { encoding: 'utf8' }
+        JSON.stringify(prettierrc)
       ),
       fs.promises.writeFile(
         path.join(this.cwd, '.prettierignore'),
-        prettierignore,
-        { encoding: 'utf8' }
+        prettierignore
       ),
     ];
 
