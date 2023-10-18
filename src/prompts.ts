@@ -173,6 +173,35 @@ const choices: ChoiceType[] = [
     },
   },
   {
+    title: 'formik',
+    value: {
+      module: 'formik',
+      saveDev: false,
+      github: 'https://github.com/jaredpalmer/formik',
+      description: 'Build forms in React, without the tears.',
+    },
+  },
+  {
+    title: 'react-hook-form',
+    value: {
+      module: 'react-hook-form',
+      saveDev: false,
+      github: 'https://github.com/react-hook-form/react-hook-form',
+      description:
+        'Performant, flexible and extensible forms with easy-to-use validation',
+    },
+  },
+  {
+    title: 'yup',
+    value: {
+      module: 'yup',
+      saveDev: false,
+      github: 'https://github.com/jquense/yup',
+      description:
+        'Yup is a schema builder for runtime value parsing and validation.',
+    },
+  },
+  {
     title: 'jotai',
     value: {
       module: 'jotai',
@@ -192,12 +221,21 @@ const choices: ChoiceType[] = [
     },
   },
   {
-    title: 'formik',
+    title: 'react-redux',
     value: {
-      module: 'formik',
+      module: '@tanstack/react-query',
       saveDev: false,
-      github: 'https://github.com/jaredpalmer/formik',
-      description: 'Build forms in React, without the tears.',
+      github: '',
+      description: 'Official React bindings for Redux.',
+    },
+  },
+  {
+    title: 'mobx',
+    value: {
+      module: 'mobx',
+      saveDev: false,
+      github: 'https://github.com/mobxjs/mobx',
+      description: 'Simple, scalable state management.',
     },
   },
   {
@@ -250,31 +288,13 @@ const choices: ChoiceType[] = [
     },
   },
   {
-    title: 'react-redux',
+    title: '@tanstack/react-query-devtools',
     value: {
-      module: '@tanstack/react-query',
-      saveDev: false,
-      github: '',
-      description: 'Official React bindings for Redux.',
-    },
-  },
-  {
-    title: 'yup',
-    value: {
-      module: 'yup',
-      saveDev: false,
-      github: 'https://github.com/jquense/yup',
+      module: '@tanstack/react-query-devtools',
+      saveDev: true,
+      github: 'https://github.com/TanStack/query',
       description:
-        'Yup is a schema builder for runtime value parsing and validation.',
-    },
-  },
-  {
-    title: 'mobx',
-    value: {
-      module: 'mobx',
-      saveDev: false,
-      github: 'https://github.com/mobxjs/mobx',
-      description: 'Simple, scalable state management.',
+        'Developer tools to interact with and visualize the TanStack/react-query cache',
     },
   },
   {
@@ -296,61 +316,12 @@ const choices: ChoiceType[] = [
     },
   },
   {
-    title: 'react-hook-form',
-    value: {
-      module: 'react-hook-form',
-      saveDev: false,
-      github: 'https://github.com/react-hook-form/react-hook-form',
-      description:
-        'Performant, flexible and extensible forms with easy-to-use validation',
-    },
-  },
-  {
-    title: 'react-i18next',
-    value: {
-      module: 'react-i18next',
-      saveDev: false,
-      github: 'https://github.com/i18next/react-i18next',
-      description:
-        'Internationalization for react done right. Using the i18next i18n ecosystem.',
-    },
-  },
-  {
     title: '@emotion/css',
     value: {
       module: '@emotion/css',
       saveDev: false,
       github: 'https://github.com/emotion-js/emotion',
       description: 'The Next Generation of CSS-in-JS.',
-    },
-  },
-  {
-    title: '@stripe/react-stripe-js',
-    value: {
-      module: '@stripe/react-stripe-js',
-      saveDev: false,
-      github: 'https://github.com/stripe/react-stripe-js',
-      description: 'React components for Stripe.js and Stripe Elements',
-    },
-  },
-  {
-    title: '@stripe/stripe-js',
-    value: {
-      module: '@stripe/stripe-js',
-      saveDev: false,
-      github: 'https://github.com/stripe/stripe-js',
-      description: 'Use Stripe.js as an ES module.',
-    },
-  },
-
-  {
-    title: 'react-virtualized',
-    value: {
-      module: 'react-virtualized',
-      saveDev: false,
-      github: 'https://github.com/bvaughn/react-virtualized',
-      description:
-        'React components for efficiently rendering large lists and tabular data.',
     },
   },
   {
@@ -373,6 +344,45 @@ const choices: ChoiceType[] = [
     },
   },
   {
+    title: 'react-i18next',
+    value: {
+      module: 'react-i18next',
+      saveDev: false,
+      github: 'https://github.com/i18next/react-i18next',
+      description:
+        'Internationalization for react done right. Using the i18next i18n ecosystem.',
+    },
+  },
+  {
+    title: '@stripe/react-stripe-js',
+    value: {
+      module: '@stripe/react-stripe-js',
+      saveDev: false,
+      github: 'https://github.com/stripe/react-stripe-js',
+      description: 'React components for Stripe.js and Stripe Elements',
+    },
+  },
+  {
+    title: '@stripe/stripe-js',
+    value: {
+      module: '@stripe/stripe-js',
+      saveDev: false,
+      github: 'https://github.com/stripe/stripe-js',
+      description: 'Use Stripe.js as an ES module.',
+    },
+  },
+  {
+    title: 'react-virtualized',
+    value: {
+      module: 'react-virtualized',
+      saveDev: false,
+      github: 'https://github.com/bvaughn/react-virtualized',
+      description:
+        'React components for efficiently rendering large lists and tabular data.',
+    },
+  },
+
+  {
     title: 'next-auth',
     value: { module: 'next-auth', saveDev: false, github: '', description: '' },
   },
@@ -393,16 +403,6 @@ const choices: ChoiceType[] = [
       saveDev: false,
       github: 'https://github.com/gregberge/svgr',
       description: 'Transform SVG into React Components.',
-    },
-  },
-  {
-    title: '@tanstack/react-query-devtools',
-    value: {
-      module: '@tanstack/react-query-devtools',
-      saveDev: true,
-      github: 'https://github.com/TanStack/query',
-      description:
-        'Developer tools to interact with and visualize the TanStack/react-query cache',
     },
   },
   {

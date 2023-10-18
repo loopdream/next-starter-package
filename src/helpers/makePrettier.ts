@@ -1,4 +1,4 @@
-function makePrettierrc() {
+export function makePrettierrc() {
   const prettierrc = {
     plugins: ['@trivago/prettier-plugin-sort-imports'],
     importOrderSeparation: true,
@@ -12,7 +12,7 @@ function makePrettierrc() {
   return prettierrc;
 }
 
-function makePrettierignore() {
+export function makePrettierignore() {
   const prettierrc = [
     '.next',
     '.cache',

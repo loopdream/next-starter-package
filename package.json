@@ -12,7 +12,6 @@
     "build:standalone": "BUILD_STANDALONE=true next build",
     "build": "npx tsc",
     "dev:build-start": "npm run build && node ./dist/index.js",
-    "dev:clean": "rm -r tmp",
     "dev:start": "node --no-warnings --loader ts-node/esm ./src/index.ts",
     "e2e": "cypress run",
     "format:check": "prettier --check .",

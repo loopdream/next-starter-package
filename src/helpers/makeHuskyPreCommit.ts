@@ -10,6 +10,43 @@ type LintStagedPreCommitType = Pick<
   | 'packageManager'
 >;
 
+export const huskyFragments = {
+  head: ['#!/usr/bin/env sh', '. "$(dirname -- "$0")/_/husky.sh"'].join('\n'),
+  lintStaged: [
+    'printf "\n\n"',
+    'npx lint-staged || {',
+    ' printf "\n\n------------------------------------------\n\n"',
+    ' printf "🚫 YOU HAVE ERRORS!"',
+    ' printf "\n\n------------------------------------------\n\n"',
+    ' exit 1;',
+    '}',
+  ].join('\n'),
+  prettier: [
+    `<PACKAGE_MANAGER> run format:check`,
+    `<PACKAGE_MANAGER> run format:write`,
+  ].join('\n'),
+  eslint: [
+    `<PACKAGE_MANAGER> run lint:check`,
+    `<PACKAGE_MANAGER> run lint:fix`,
+  ].join('\n'),
+  jest: ['', `<PACKAGE_MANAGER> run test --passWithNoTests`].join('\n'),
+  typescript: [`<PACKAGE_MANAGER> run build --no-emit`].join('\n'),
+  leasot: [
+    '# Following is for observability purposes',
+    '',
+    'printf "\n\n"',
+    'printf "TODOs / FIXMEs - consider reviewing these"',
+    'printf "\n------------------------------------------\n"',
+    '',
+    "npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely",
+  ].join('\n'),
+  footer: [
+    'printf "\n\n------------------------------------------\n\n"',
+    'printf "Now push your code! 🚀"',
+    'printf "\n\n------------------------------------------\n\n"',
+  ].join('\n'),
+};
+
 function makeHuskyPreCommit({
   eslint,
   jest,
@@ -18,43 +55,18 @@ function makeHuskyPreCommit({
   prettier,
   typescript,
 }: LintStagedPreCommitType) {
-  let huskyPreCommit =
-    '#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"\n\n';
-  if (lintStaged) {
-    huskyPreCommit +=
-      'npx lint-staged || { \n' +
-      'printf "\n\n------------------------------------------\n\n"\n' +
-      'printf "🚫 YOU HAVE ERRORS!" \n' +
-      'printf "\n\n------------------------------------------\n\n";\n' +
-      'exit 1;\n}\n\n';
-  } else {
-    if (prettier) {
-      huskyPreCommit +=
-        `${packageManager} run format:check\n\n` +
-        `${packageManager} run format:write\n\n`;
-    }
-    if (eslint) {
-      huskyPreCommit +=
-        `${packageManager} run lint:check\n\n` +
-        `${packageManager} run lint:fix\n\n`;
-    }
-    if (jest) {
-      huskyPreCommit += `${packageManager} run test --passWithNoTests\n\n`;
-    }
-    if (typescript) {
-      huskyPreCommit += `${packageManager} run build --no-emit\n\n`;
-    }
-  }
-  huskyPreCommit +=
-    '# Following is for observability purposes\n\n' +
-    '# TODOs / FIXMEs\n' +
-    'printf "\n\n"\n' +
-    'printf "TODOs / FIXMEs - consider reviewing these"\n' +
-    'printf "\n------------------------------------------\n"\n\n' +
-    "npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely\n\n" +
-    'printf "\n\n------------------------------------------\n\n"\n' +
-    'printf "Now push your code! 🚀"\n' +
-    'printf "\n\n------------------------------------------\n\n"';
+  const huskyPreCommit = [
+    huskyFragments.head,
+    ...(lintStaged ? [huskyFragments.lintStaged] : []),
+    ...(prettier && !lintStaged ? [huskyFragments.prettier] : []),
+    ...(eslint && !lintStaged ? [huskyFragments.eslint] : []),
+    ...(jest && !lintStaged ? [huskyFragments.jest] : []),
+    ...(typescript && !lintStaged ? [huskyFragments.typescript] : []),
+    huskyFragments.leasot,
+    huskyFragments.footer,
+  ]
+    .join('\n')
+    .replace(/<PACKAGE_MANAGER>/g, packageManager);
 
   return huskyPreCommit;
 }

@@ -12,7 +12,8 @@ import PackageManager, { PackageManagerKindEnum } from './PackageManager.js';
 import makeEslintrc from './helpers/makeEslintrc.js';
 import makeHuskyPreCommit from './helpers/makeHuskyPreCommit.js';
 import makeLintStagedrc from './helpers/makeLintStagedrc.js';
-import makePrettier from './helpers/makePrettier.js';
+import { makePrettierignore, makePrettierrc } from './helpers/makePrettier.js';
+import prepareConfig from './helpers/prepareConfig.js';
 import { ChoiceValuesType } from './prompts.js';
 
 type ConfiguratorPropsType = {
@@ -48,6 +49,7 @@ export interface OptionsType {
   storybook: boolean;
   tailwind: boolean;
   typescript: boolean;
+  markdown: string[];
 }
 
 const { red, cyan, green, bold } = picocolors;
@@ -74,6 +76,7 @@ class Configurator {
     storybook: false,
     tailwind: false,
     typescript: false,
+    markdown: [],
   } as OptionsType;
   private packageManager = {} as PackageManager;
   private srcPath: string;
@@ -91,13 +94,19 @@ class Configurator {
     });
   }
 
+  awaitTimeout = (delay: number) =>
+    new Promise((resolve) => setTimeout(resolve, delay));
+
   private withSpinner = async (
     fn: () => Promise<void>,
     text: string,
-    opts?: OraOptions
+    opts?: OraOptions,
+    delay: number = 1000
   ) => {
     const spinner = ora(opts).start(text);
+
     await fn()
+      .then(() => this.awaitTimeout(delay))
       .then(() => spinner.succeed())
       .catch(() => spinner.fail());
   };
@@ -126,8 +135,8 @@ class Configurator {
         );
       })
       .then(() => installDependencies())
-      .then(() => withSpinner(buildConfigs, 'Building configs'))
-      .then(() => withSpinner(configurePackageFile, 'Configuring package'))
+      .then(() => withSpinner(buildConfigs, 'Building configuration files'))
+      .then(() => withSpinner(configurePackageFile, 'Configuring package file'))
       .then(() => withSpinner(generateReadme, 'Generating Readme'))
       .then(() => withSpinner(cleanUp, 'Cleaning up'))
       .then(() =>
@@ -143,14 +152,32 @@ class Configurator {
       });
   };
 
-  public setOptions = (answers: OptionsType | prompts.Answers<string>) =>
-    new Promise((resolve) => {
+  public prepare = () => {
+    return new Promise((resolve) => {
+      this.config = {
+        ...this.config,
+        ...prepareConfig(this.options),
+      };
+      resolve(this.config);
+    });
+  };
+
+  public buildConfigs = async () => {
+    await this.configureDotEnvFiles();
+    await this.configurePrettier();
+    await this.configureEslint();
+    await this.copyTemplateConfigs();
+  };
+
+  public setOptions = (answers: OptionsType | prompts.Answers<string>) => {
+    return new Promise((resolve) => {
       this.options = {
         ...this.options,
         ...answers,
       };
       resolve(this.options);
     });
+  };
 
   public createNextApp = async () => {
     const { cwd, packageManager } = this;
@@ -204,166 +231,17 @@ class Configurator {
     };
   };
 
-  public prepare = async () => {
-    const pm = this.packageManager.getKind();
-    const {
-      cypress,
-      docker,
-      eslint,
-      husky,
-      jest,
-      lintStaged,
-      imageOptimisation,
-      optionalDependencies,
-      prettier,
-      reactTestingLibrary,
-      storybook,
-      typescript,
-    } = this.options;
-
-    this.config.configTemplateFiles = [
-      'next.config.js',
-      '.editorconfig',
-      ...(docker ? ['docker-compose.yml', 'Dockerfile', 'Makefile'] : []),
-      ...(jest ? ['jest.config.js', 'jest.setup.js'] : []),
-    ];
-
-    this.config.configTemplateDirectories = [
-      ...(cypress ? ['cypress'] : []),
-      ...(storybook ? ['.storybook'] : []),
-    ];
-
-    this.config.packageScripts = {
-      'build:standalone': 'BUILD_STANDALONE=true next build',
-      'start:standalone': 'node ./.next/standalone/server.js',
-      'build-start': `next build && next start`,
-      'build-start:standalone': `${pm} run build:standalone && ${pm} run start:standalone`,
-      ...(prettier
-        ? {
-            'format:check': 'prettier --check .',
-            'format:write': 'prettier --write .',
-          }
-        : {}),
-      ...(jest
-        ? {
-            test: 'jest',
-            'test:watch': 'jest --watch',
-            'test:coverage': 'jest --coverage',
-            'test:ci': 'jest --ci --coverage',
-          }
-        : {}),
-      ...(cypress ? { e2e: 'cypress run' } : {}),
-      ...(storybook
-        ? {
-            storybook: 'storybook dev -p 6006',
-            'build-storybook': 'storybook build',
-          }
-        : {}),
-    };
-
-    this.config.packageDependencies = [...(imageOptimisation ? ['sharp'] : [])];
-
-    this.config.packageDevDependencies = [
-      ...(cypress ? ['cypress'] : []),
-      ...(eslint && typescript ? ['@typescript-eslint/eslint-plugin'] : []),
-      ...(lintStaged ? ['lint-staged'] : []),
-      ...(prettier
-        ? [
-            'prettier',
-            'eslint-config-prettier',
-            '@trivago/prettier-plugin-sort-imports',
-          ]
-        : []),
-      ...(storybook
-        ? [
-            '@storybook/addon-essentials',
-            '@storybook/addon-interactions',
-            '@storybook/addon-links',
-            '@storybook/addon-onboarding',
-            '@storybook/blocks',
-            '@storybook/nextjs',
-            '@storybook/react',
-            '@storybook/testing-library',
-            'eslint-plugin-storybook',
-            'storybook',
-          ]
-        : []),
-      ...(jest
-        ? [
-            'jest',
-            'jest-environment-jsdom',
-            ...(typescript ? ['@types/jest', 'ts-jest'] : []),
-          ]
-        : []),
-      ...(reactTestingLibrary
-        ? [
-            '@testing-library/jest-dom',
-            '@testing-library/user-event',
-            '@testing-library/react',
-            'eslint-plugin-testing-library',
-          ]
-        : []),
-    ];
-
-    if (optionalDependencies?.length > 0) {
-      this.config.packageDependencies.push(
-        ...optionalDependencies
-          .filter(({ saveDev }) => !saveDev)
-          .map(({ module }) => module)
-      );
-
-      this.config.packageDevDependencies.push(
-        ...optionalDependencies
-          .filter(({ saveDev }) => saveDev)
-          .map(({ module }) => module)
-      );
-    }
-
-    this.config.markdown = [
-      'next.md',
-      ...(cypress ? ['cypress.md'] : []),
-      ...(docker ? ['docker.md'] : []),
-      ...(prettier ? ['prettier.md'] : []),
-      ...(storybook ? ['storybook.md'] : []),
-      ...(jest ? ['jest.md'] : []),
-      ...(reactTestingLibrary ? ['reactTestingLibrary.md'] : []),
-      ...(lintStaged ? ['lint-staged.md'] : []),
-      ...(husky ? ['git.md', 'husky.md'] : []),
-      ...(optionalDependencies.length > 0 ? ['selected-dependencies.md'] : []),
-    ];
-
-    return this.config;
-  };
-
   public installConfigureGitHusky = async () => {
     const $execa = $({ cwd: this.cwd });
+    const { packageManager, options, cwd } = this;
+    const pm = packageManager.getKind();
 
-    await $execa`git init`.catch((error) => {
-      throw new Error(`${error}`);
-    });
+    const huskyPreCommit = makeHuskyPreCommit(options);
+    const preCommitPath = path.join(cwd, '.husky', 'pre-commit');
 
-    // TODO: Manual install husky - the following fails unless npm
-    //const huskyInit = $execa`npx husky-init && npm install`;
-    // if (pm === PackageManagerKindEnum.YARN) {
-    //   huskyInit = $execa`yarn dlx husky-init --yarn2 && yarn`;
-    // }
-
-    // if (pm === PackageManagerKindEnum.PNPM) {
-    //   huskyInit = $execa`pnpm dlx husky-init && pnpm install`;
-    // }
-
-    // if (pm === PackageManagerKindEnum.BUN) {
-    //   huskyInit = $execa`bunx husky-init && bun install`;
-    // }
-
-    await $execa`npx husky-init && npm install`.catch((error) => {
-      throw new Error(`${error}`);
-    });
-
-    const huskyPreCommit = makeHuskyPreCommit(this.options);
-
-    await fs.promises
-      .writeFile(path.join(this.cwd, '.husky', 'pre-commit'), huskyPreCommit)
+    return $execa`git init`
+      .then(() => $execa`${pm} husky install`)
+      .then(() => fs.promises.writeFile(preCommitPath, huskyPreCommit))
       .catch((error) => {
         throw new Error(`${error}`);
       });
@@ -372,42 +250,25 @@ class Configurator {
   public installDependencies = async () => {
     const { packageDependencies, packageDevDependencies } = this.config;
 
-    const dependencies = this.config.packageDependencies
-      .map((dep) => `- ` + cyan(dep))
-      .sort()
-      .join(`\n`);
-
-    console.log(
-      `\n\n`,
-      `Installing Dependencies`,
-      `\n\n`,
-      dependencies,
-      `\n\n`
-    );
-
     if (packageDependencies.length > 0) {
-      console.log(this.options);
+      const dependencies = packageDependencies
+        .map((dep) => `- ` + cyan(dep))
+        .sort()
+        .join(`\n`);
+
+      console.log(`\nInstalling dependencies:\n${dependencies}\n`);
       await this.packageManager.addToDependencies(packageDependencies);
     }
 
-    const devDependencies = this.config.packageDevDependencies
-      .map((dep) => `- ` + cyan(dep))
-      .sort()
-      .join(`\n`);
-
-    console.log(
-      `\n\n`,
-      `Installing devDependencies`,
-      `\n\n`,
-      devDependencies,
-      `\n\n`
-    );
-
     if (packageDevDependencies.length > 0) {
+      const devDependencies = this.config.packageDevDependencies
+        .map((dep) => `- ` + cyan(dep))
+        .sort()
+        .join(`\n`);
+
+      console.log(`\nInstalling devDependencies:\n${devDependencies}\n`);
       await this.packageManager.addToDevDependencies(packageDevDependencies);
     }
-
-    console.log(`\n\n`);
 
     if (this.options.husky) {
       await this.installConfigureGitHusky();
@@ -429,8 +290,8 @@ class Configurator {
   private configurePrettier = async () => {
     if (!this.options.prettier) return;
 
-    const prettierrc = makePrettier.makePrettierrc();
-    const prettierignore = makePrettier.makePrettierignore();
+    const prettierrc = makePrettierrc();
+    const prettierignore = makePrettierignore();
 
     const prettierFiles = [
       fs.promises.writeFile(
@@ -443,7 +304,7 @@ class Configurator {
       ),
     ];
 
-    await Promise.all(prettierFiles).catch((error) => {
+    return Promise.all(prettierFiles).catch((error) => {
       throw new Error(`${error}`);
     });
   };
@@ -453,7 +314,7 @@ class Configurator {
 
     const eslintrc = makeEslintrc(this.options);
 
-    await fs.promises
+    return fs.promises
       .writeFile(
         path.join(this.cwd, '.eslintrc.json'),
         JSON.stringify(eslintrc)
@@ -463,9 +324,19 @@ class Configurator {
       });
   };
 
-  public buildConfigs = async () => {
+  private configureDotEnvFiles = async () => {
+    if (this.options.dotEnvFiles.length === 0) return;
+
+    const copyEnvFiles = this.options.dotEnvFiles.map(
+      (file: string) => $`touch ${path.join(this.cwd, file)}`
+    );
+    return Promise.all(copyEnvFiles).catch((error) => {
+      throw new Error(`${error}`);
+    });
+  };
+
+  private copyTemplateConfigs = async () => {
     const { configTemplateDirectories, configTemplateFiles } = this.config;
-    const { dotEnvFiles } = this.options;
 
     const configs: Promise<void[] | undefined>[] = [];
 
@@ -477,35 +348,22 @@ class Configurator {
       configs.push(this.copyTemplate(configTemplateFiles));
     }
 
-    if (configs.length >= 1) {
-      await Promise.all(configs).catch((error) => {
-        throw new Error(`${error}`);
-      });
-    }
+    if (configs.length === 0) return;
 
-    // .env files
-    if (dotEnvFiles.length > 0) {
-      const copyEnvFiles = dotEnvFiles.map(
-        (file: string) => $`touch ${path.join(this.cwd, file)}`
-      );
-      await Promise.all(copyEnvFiles).catch((error) => {
-        throw new Error(`${error}`);
-      });
-    }
-
-    await this.configurePrettier();
-    await this.configureEslint();
+    return Promise.all(configs).catch((error) => {
+      throw new Error(`${error}`);
+    });
   };
 
   public cleanUp = async () => {
     // clean up ie format files - maybe other stuff TBC
-
-    if (this.options.prettier) {
-      await $({
-        cwd: this.cwd,
-      })`${this.packageManager.getKind()} run format:write`.catch((error) => {
-        console.log(`${error}`);
-      });
+    const { packageManager, options, cwd } = this;
+    if (options.prettier) {
+      await $({ cwd })`${packageManager.getKind()} run format:write`.catch(
+        (error) => {
+          console.log(`${error}`);
+        }
+      );
     }
   };
 
@@ -539,7 +397,7 @@ class Configurator {
   }
 
   public generateReadme = async () => {
-    await this.readFromFiles(this.config.markdown)
+    return this.readFromFiles(this.config.markdown)
       .then((markdownStrArr) => {
         if (this.options.optionalDependencies.length > 0) {
           markdownStrArr.push(this.makeDependenciesMarkdownTable());
@@ -558,19 +416,19 @@ class Configurator {
     template: string[],
     recursive: boolean = false
   ) => {
-    if (Array.isArray(template) && template.length > 0) {
-      const copyFiles = template.map((file) =>
-        fs.promises.cp(
-          path.join(this.srcPath, 'templates', file),
-          path.join(this.cwd, file),
-          { recursive }
-        )
-      );
+    if (!Array.isArray(template) || template.length === 0) return;
 
-      return await Promise.all(copyFiles).catch((error) => {
-        throw new Error(`${error}`);
-      });
-    }
+    const copyFiles = template.map((file) =>
+      fs.promises.cp(
+        path.join(this.srcPath, 'templates', file),
+        path.join(this.cwd, file),
+        { recursive }
+      )
+    );
+
+    return await Promise.all(copyFiles).catch((error) => {
+      throw new Error(`${error}`);
+    });
   };
 }
 

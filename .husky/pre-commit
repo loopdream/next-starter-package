@@ -3,11 +3,11 @@
 
 printf "\n\n"
 
-npx lint-staged || { 
+npx lint-staged || {
   printf "\n\n------------------------------------------\n\n"
-  printf "🚫 YOU HAVE ERRORS!" 
+  printf "🚫 YOU HAVE ERRORS!"
   printf "\n\n------------------------------------------\n\n";
-  exit 1; 
+  exit 1;
 }
 
 # Following is for observability purposes
@@ -17,7 +17,7 @@ printf "\n\n"
 printf "TODOs / FIXMEs - consider reviewing these"
 printf "\n------------------------------------------\n"
 #
-npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely 
+npx leasot 'src/**/*.[jt]s?(x)' --exit-nicely
 
 printf "\n\n------------------------------------------\n\n"
 printf '%b ' "\033[1m"Now push your code!"\033[0m 🚀"

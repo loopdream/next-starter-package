@@ -28,7 +28,7 @@ program
   .description(`Generate a baseline Next.js app with best practace feature set`)
   .version(`1.0.0`)
   .usage('<projectName> -- [options]')
-  .argument('<projectName>')
+  .argument('<projectName>', 'Name of the directory to install your project')
   .option('--cypress', 'use cypress')
   .option('--docker', 'use docker')
   .option('--dotEnvFiles', 'create dot env files')
@@ -44,7 +44,7 @@ program
   .option('--use-npm', 'use npm as the package manager')
   .option('--use-pnpm', 'use pnpm as the package manager')
   .option('--use-yarn', 'use yarn as the package manager')
-  .option('-d, --dev', 'run in dev mode')
+  .option('-d, --dev', 'run in developer mode (use a temp directory)')
   .option('--clean', 'clean the tmp dev directory')
   .option('-ts, --typescript', 'use typescript')
   .option('--debug', 'Debug')
@@ -56,7 +56,7 @@ program
       // this is for testing as otherwise we would pollute the root dir
       const tempDir = path.resolve('./tmp');
       // clean the tmp directory first
-      if (options.clean) {
+      if (fs.existsSync(tempDir) && options.clean) {
         await fs.promises.rmdir(tempDir, { recursive: true });
       }
       if (!fs.existsSync(tempDir)) {
@@ -87,12 +87,12 @@ program
       ({ name }) => !Object.keys(options).includes(name as string)
     );
 
-    const opts = await prompts(filteredConfigurationPrompts);
+    const promptOptions = await prompts(filteredConfigurationPrompts);
 
     const hasConfigurationOptions =
-      Object.values(opts).includes(true) ||
-      opts.optionalDependencies.length > 0 ||
-      opts.dotEnvFiles.length > 0;
+      Object.values(promptOptions).includes(true) ||
+      promptOptions.optionalDependencies.length > 0 ||
+      promptOptions.dotEnvFiles.length > 0;
 
     if (!hasConfigurationOptions) {
       // nothing to configure!
@@ -100,11 +100,11 @@ program
         `\n`,
         figlet.textSync(getRandomGoodbye()),
         '\n\n',
-        `Looks like you've passed on all the configuration options. Maybe next time!`
+        `Looks like you've passed on all the configuration options!`
       );
     }
 
-    await configurator.run(opts);
+    await configurator.run(promptOptions);
   });
 
 program.parse(process.argv);

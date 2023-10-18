@@ -57,7 +57,7 @@ class PackageManager {
 
     if (addToDevDependencies) deps.push('-D');
 
-    await execa(pm, [add, ...deps], {
+    return await execa(pm, [add, ...deps], {
       cwd: this.cwd,
       stdio: 'inherit',
     }).catch((error) => {

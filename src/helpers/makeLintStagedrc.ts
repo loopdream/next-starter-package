@@ -11,7 +11,7 @@ function makeLintStagedrc({
   prettier,
   typescript,
 }: MakeLintStagedrc) {
-  const tsLintStagedConfig = {
+  const tsLintConfig = {
     '**/*.ts?(x)': [
       ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
       ...(eslint ? ['eslint .', 'eslint --fix .'] : []),
@@ -20,13 +20,13 @@ function makeLintStagedrc({
     ],
   };
 
-  const mdYmlJsonLintStagedConfig = {
+  const mdYmlJsonConfig = {
     '**/*.{md, yml, yaml, json}': [
       ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
     ],
   };
 
-  const stylesLintStagedConfig = {
+  const stylesConfig = {
     '**/*.{css}': [
       ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
       // TODO: add styledlint
@@ -39,9 +39,9 @@ function makeLintStagedrc({
       ...(eslint ? ['eslint .', 'eslint --fix .'] : []),
       ...(jest ? ['jest --ci'] : []),
     ],
-    ...(typescript ? tsLintStagedConfig : {}),
-    ...(prettier ? mdYmlJsonLintStagedConfig : {}),
-    ...(prettier ? stylesLintStagedConfig : {}),
+    ...(typescript ? tsLintConfig : {}),
+    ...(prettier ? mdYmlJsonConfig : {}),
+    ...(prettier ? stylesConfig : {}),
   };
 
   return lintStagedrc;
