@@ -92,7 +92,9 @@ const reactTestingLibrary: PromptObject = {
   onState: onPromptState,
   type: (prev) => (prev === true ? 'toggle' : null),
   name: 'reactTestingLibrary',
-  message: `Would you like to install and configure ${`React Testing Library`}?`,
+  message: `Would you like to install and configure ${blue(
+    `React Testing Library`
+  )}?`,
   initial: 'Yes',
   active: 'Yes',
   inactive: `No`,

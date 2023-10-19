@@ -94,13 +94,14 @@ class Configurator {
     });
   }
 
-  awaitTimeout = (delay: number) =>
-    new Promise((resolve) => setTimeout(resolve, delay));
+  awaitTimeout = (delay: number) => {
+    return new Promise((resolve) => setTimeout(resolve, delay));
+  };
 
   private withSpinner = async (
-    fn: () => Promise<void>,
+    fn: () => Promise<void | unknown | ConfigType>,
     text: string,
-    opts?: OraOptions,
+    opts: OraOptions = {},
     delay: number = 1000
   ) => {
     const spinner = ora(opts).start(text);
@@ -124,35 +125,32 @@ class Configurator {
       withSpinner,
     } = this;
 
-    setOptions(options)
-      .then(() => prepare())
-      .then(() => {
-        console.log(
-          [
-            bold(`Using ` + packageManager.getKind()),
-            `The configurator will now setup your next project based on your selections.`,
-          ].join(`\n\n`)
-        );
-      })
+    console.log(
+      [
+        bold(`Using ` + packageManager.getKind()),
+        `The configurator will now setup your next project based on your selections.`,
+      ].join(`\n\n`)
+    );
+
+    await setOptions(options)
+      .then(() => withSpinner(prepare, 'Preparing installation'))
       .then(() => installDependencies())
       .then(() => withSpinner(buildConfigs, 'Building configuration files'))
       .then(() => withSpinner(configurePackageFile, 'Configuring package file'))
       .then(() => withSpinner(generateReadme, 'Generating Readme'))
       .then(() => withSpinner(cleanUp, 'Cleaning up'))
-      .then(() =>
-        console.log(
-          `\n`,
-          green('Success! '),
-          `The following configurations were made: <TODO: ADD MORE INFO>`
-        )
-      )
       .catch((error) => {
-        console.log(`\n`, figlet.textSync('Ooops...'), `\n\n`);
+        console.log(`\n` + figlet.textSync('Ooops...') + `\n\n`);
         throw new Error(`${error}`);
       });
+
+    console.log(
+      `\n` + green('Success! '),
+      `The following configurations were made: <TODO: ADD MORE INFO>`
+    );
   };
 
-  public prepare = () => {
+  public prepare = async (): Promise<ConfigType> => {
     return new Promise((resolve) => {
       this.config = {
         ...this.config,
@@ -163,10 +161,29 @@ class Configurator {
   };
 
   public buildConfigs = async () => {
-    await this.configureDotEnvFiles();
-    await this.configurePrettier();
-    await this.configureEslint();
+    if (this.options.dotEnvFiles.length === 0) {
+      await this.configureDotEnvFiles();
+    }
+
+    if (this.options.prettier) {
+      await this.configurePrettier();
+    }
+
+    if (this.options.eslint) {
+      await this.configureEslint();
+    }
+
+    if (this.options.eslint) {
+      await this.configureEslint();
+    }
+
     await this.copyTemplateConfigs();
+
+    if (this.options.husky) {
+      await this.configureGitHusky();
+    }
+
+    return;
   };
 
   public setOptions = (answers: OptionsType | prompts.Answers<string>) => {
@@ -187,8 +204,7 @@ class Configurator {
       stdio: 'inherit',
     })`npx create-next-app@latest ${cwd} --use-${pm}`.catch((error) => {
       console.log(
-        `\n\n`,
-        red(bold('Error!')),
+        `\n\n` + red(bold('Error!')),
         `Please check that your chosen package manager ${cyan(
           bold(pm)
         )} is installed:`,
@@ -198,8 +214,7 @@ class Configurator {
             : pm === PackageManagerKindEnum.YARN
             ? 'https://yarnpkg.com/getting-started/install'
             : 'https://bun.sh/docs/installation'
-        ),
-        `\n\n`
+        ) + `\n\n`
       );
       throw new Error(`\n${error}`);
     });
@@ -231,7 +246,7 @@ class Configurator {
     };
   };
 
-  public installConfigureGitHusky = async () => {
+  private configureGitHusky = async () => {
     const $execa = $({ cwd: this.cwd });
     const { packageManager, options, cwd } = this;
     const pm = packageManager.getKind();
@@ -247,35 +262,31 @@ class Configurator {
       });
   };
 
-  public installDependencies = async () => {
+  private installDependencies = async () => {
     const { packageDependencies, packageDevDependencies } = this.config;
 
     if (packageDependencies.length > 0) {
-      const dependencies = packageDependencies
+      const dependenciesList = packageDependencies
         .map((dep) => `- ` + cyan(dep))
         .sort()
         .join(`\n`);
 
-      console.log(`\nInstalling dependencies:\n${dependencies}\n`);
+      console.log(`\nInstalling dependencies:\n${dependenciesList}\n`);
       await this.packageManager.addToDependencies(packageDependencies);
     }
 
     if (packageDevDependencies.length > 0) {
-      const devDependencies = this.config.packageDevDependencies
+      const devDependenciesList = this.config.packageDevDependencies
         .map((dep) => `- ` + cyan(dep))
         .sort()
         .join(`\n`);
 
-      console.log(`\nInstalling devDependencies:\n${devDependencies}\n`);
+      console.log(`\nInstalling devDependencies:\n${devDependenciesList}\n`);
       await this.packageManager.addToDevDependencies(packageDevDependencies);
-    }
-
-    if (this.options.husky) {
-      await this.installConfigureGitHusky();
     }
   };
 
-  public configurePackageFile = async () => {
+  private configurePackageFile = async () => {
     await this.packageManager.addToPackage(
       'scripts',
       this.config.packageScripts
@@ -330,6 +341,7 @@ class Configurator {
     const copyEnvFiles = this.options.dotEnvFiles.map(
       (file: string) => $`touch ${path.join(this.cwd, file)}`
     );
+
     return Promise.all(copyEnvFiles).catch((error) => {
       throw new Error(`${error}`);
     });
@@ -355,7 +367,7 @@ class Configurator {
     });
   };
 
-  public cleanUp = async () => {
+  private cleanUp = async () => {
     // clean up ie format files - maybe other stuff TBC
     const { packageManager, options, cwd } = this;
     if (options.prettier) {
@@ -396,7 +408,7 @@ class Configurator {
     return markdownTable([tableHeader, ...tableData]);
   }
 
-  public generateReadme = async () => {
+  private generateReadme = async () => {
     return this.readFromFiles(this.config.markdown)
       .then((markdownStrArr) => {
         if (this.options.optionalDependencies.length > 0) {

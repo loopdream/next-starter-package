@@ -107,7 +107,8 @@ function prepareConfig({
 
   const packageScripts = {
     'build:standalone': 'BUILD_STANDALONE=true next build',
-    'start:standalone': 'node ./.next/standalone/server.js',
+    'start:standalone':
+      'cp -R ./public ./.next/standalone && cp -R ./.next/static ./public ./.next/standalone/.next && node ./.next/standalone/server.js',
     'build-start': `next build && next start`,
     'build-start:standalone': `${pm} run build:standalone && ${pm} run start:standalone`,
     ...(prettier

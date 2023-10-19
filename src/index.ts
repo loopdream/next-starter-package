@@ -65,6 +65,13 @@ program
       projectDirectoryPath = path.join(tempDir, projectName);
     }
 
+    const onPromptsCancel = {
+      onCancel: () => {
+        console.error('Exiting.');
+        process.exit(1);
+      },
+    };
+
     const { packageManagerChoice } = options?.useNpm
       ? { packageManagerChoice: PackageManagerKindEnum.NPM }
       : options?.useYarn
@@ -73,7 +80,7 @@ program
       ? { packageManagerChoice: PackageManagerKindEnum.PNPM }
       : options?.useBun
       ? { packageManagerChoice: PackageManagerKindEnum.BUN }
-      : await prompts(packageManagerPrompt);
+      : await prompts(packageManagerPrompt, onPromptsCancel);
 
     const configurator = new Configurator({
       projectDirectoryPath,
@@ -87,7 +94,10 @@ program
       ({ name }) => !Object.keys(options).includes(name as string)
     );
 
-    const promptOptions = await prompts(filteredConfigurationPrompts);
+    const promptOptions = await prompts(
+      filteredConfigurationPrompts,
+      onPromptsCancel
+    );
 
     const hasConfigurationOptions =
       Object.values(promptOptions).includes(true) ||
@@ -97,14 +107,12 @@ program
     if (!hasConfigurationOptions) {
       // nothing to configure!
       return console.log(
-        `\n`,
-        figlet.textSync(getRandomGoodbye()),
-        '\n\n',
+        `\n` + figlet.textSync(getRandomGoodbye()) + '\n\n',
         `Looks like you've passed on all the configuration options!`
       );
     }
 
     await configurator.run(promptOptions);
-  });
-
-program.parse(process.argv);
+  })
+  .allowUnknownOption()
+  .parse(process.argv);

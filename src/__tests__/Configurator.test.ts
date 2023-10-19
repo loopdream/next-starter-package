@@ -44,7 +44,8 @@ describe('Configurator', () => {
 
     expect(config.packageScripts).toEqual({
       'build:standalone': 'BUILD_STANDALONE=true next build',
-      'start:standalone': 'node ./.next/standalone/server.js',
+      'start:standalone':
+        'cp -R ./public ./.next/standalone && cp -R ./.next/static ./public ./.next/standalone/.next && node ./.next/standalone/server.js',
       'build-start': 'next build && next start',
       'build-start:standalone':
         'npm run build:standalone && npm run start:standalone',
@@ -112,7 +113,7 @@ describe('Configurator', () => {
       packageManagerChoice: PackageManagerKindEnum.NPM,
     });
 
-    await configurator
+    const config = await configurator
       .setOptions({
         ...options,
         cypress: false,
@@ -125,44 +126,44 @@ describe('Configurator', () => {
         typescript: false,
       })
       .then(() => configurator.prepare())
-      .then(() => configurator.getConfig())
-      .then((config) => {
-        expect(config.configTemplateFiles).toEqual([
-          'next.config.js',
-          '.editorconfig',
-          'docker-compose.yml',
-          'Dockerfile',
-          'Makefile',
-        ]);
+      .then(() => configurator.getConfig());
 
-        expect(config.configTemplateDirectories).toEqual([]);
+    expect(config.configTemplateFiles).toEqual([
+      'next.config.js',
+      '.editorconfig',
+      'docker-compose.yml',
+      'Dockerfile',
+      'Makefile',
+    ]);
 
-        expect(config.packageScripts).toEqual({
-          'build:standalone': 'BUILD_STANDALONE=true next build',
-          'start:standalone': 'node ./.next/standalone/server.js',
-          'build-start': 'next build && next start',
-          'build-start:standalone':
-            'npm run build:standalone && npm run start:standalone',
-          'format:check': 'prettier --check .',
-          'format:write': 'prettier --write .',
-        });
+    expect(config.configTemplateDirectories).toEqual([]);
 
-        expect(config.packageDependencies).toEqual([]);
+    expect(config.packageScripts).toEqual({
+      'build:standalone': 'BUILD_STANDALONE=true next build',
+      'start:standalone':
+        'cp -R ./public ./.next/standalone && cp -R ./.next/static ./public ./.next/standalone/.next && node ./.next/standalone/server.js',
+      'build-start': 'next build && next start',
+      'build-start:standalone':
+        'npm run build:standalone && npm run start:standalone',
+      'format:check': 'prettier --check .',
+      'format:write': 'prettier --write .',
+    });
 
-        expect(config.packageDevDependencies).toEqual([
-          'lint-staged',
-          'prettier',
-          'eslint-config-prettier',
-          '@trivago/prettier-plugin-sort-imports',
-        ]);
+    expect(config.packageDependencies).toEqual([]);
 
-        expect(config.markdown).toEqual([
-          'next.md',
-          'docker.md',
-          'prettier.md',
-          'lint-staged.md',
-        ]);
-      });
+    expect(config.packageDevDependencies).toEqual([
+      'lint-staged',
+      'prettier',
+      'eslint-config-prettier',
+      '@trivago/prettier-plugin-sort-imports',
+    ]);
+
+    expect(config.markdown).toEqual([
+      'next.md',
+      'docker.md',
+      'prettier.md',
+      'lint-staged.md',
+    ]);
   });
 
   // await configurator.prepare();
@@ -173,30 +174,30 @@ describe('Configurator', () => {
       packageManagerChoice: PackageManagerKindEnum.NPM,
     });
 
-    await configurator
+    const config = await configurator
       .prepare()
-      .then(() => configurator.getConfig())
-      .then((config) => {
-        expect(config.configTemplateFiles).toEqual([
-          'next.config.js',
-          '.editorconfig',
-        ]);
+      .then(() => configurator.getConfig());
 
-        expect(config.configTemplateDirectories).toEqual([]);
+    expect(config.configTemplateFiles).toEqual([
+      'next.config.js',
+      '.editorconfig',
+    ]);
 
-        expect(config.packageScripts).toEqual({
-          'build:standalone': 'BUILD_STANDALONE=true next build',
-          'start:standalone': 'node ./.next/standalone/server.js',
-          'build-start': 'next build && next start',
-          'build-start:standalone':
-            'npm run build:standalone && npm run start:standalone',
-        });
+    expect(config.configTemplateDirectories).toEqual([]);
 
-        expect(config.packageDependencies).toEqual([]);
+    expect(config.packageScripts).toEqual({
+      'build:standalone': 'BUILD_STANDALONE=true next build',
+      'start:standalone':
+        'cp -R ./public ./.next/standalone && cp -R ./.next/static ./public ./.next/standalone/.next && node ./.next/standalone/server.js',
+      'build-start': 'next build && next start',
+      'build-start:standalone':
+        'npm run build:standalone && npm run start:standalone',
+    });
 
-        expect(config.packageDevDependencies).toEqual([]);
+    expect(config.packageDependencies).toEqual([]);
 
-        expect(config.markdown).toEqual(['next.md']);
-      });
+    expect(config.packageDevDependencies).toEqual([]);
+
+    expect(config.markdown).toEqual(['next.md']);
   });
 });
