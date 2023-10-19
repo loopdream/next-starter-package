@@ -161,29 +161,19 @@ class Configurator {
   };
 
   public buildConfigs = async () => {
-    if (this.options.dotEnvFiles.length === 0) {
-      await this.configureDotEnvFiles();
-    }
+    const configurations = [
+      ...(this.options.dotEnvFiles.length > 0
+        ? [this.configureDotEnvFiles()]
+        : []),
+      ...(this.options.prettier ? [this.configurePrettier()] : []),
+      ...(this.options.eslint ? [this.configureEslint()] : []),
+      ...(this.options.husky ? [this.configureGitHusky()] : []),
+      this.copyTemplateConfigs(),
+    ];
 
-    if (this.options.prettier) {
-      await this.configurePrettier();
-    }
-
-    if (this.options.eslint) {
-      await this.configureEslint();
-    }
-
-    if (this.options.eslint) {
-      await this.configureEslint();
-    }
-
-    await this.copyTemplateConfigs();
-
-    if (this.options.husky) {
-      await this.configureGitHusky();
-    }
-
-    return;
+    return Promise.all(configurations).catch((error) => {
+      throw new Error(`${error}`);
+    });
   };
 
   public setOptions = (answers: OptionsType | prompts.Answers<string>) => {
