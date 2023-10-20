@@ -79,14 +79,14 @@ class Configurator {
     markdown: [],
   } as OptionsType;
   private packageManager = {} as PackageManager;
-  private srcPath: string;
+  private templatesPath: string;
 
   constructor({
     projectDirectoryPath,
     packageManagerChoice: packageManagerKind,
   }: ConfiguratorPropsType) {
     this.cwd = path.resolve(projectDirectoryPath);
-    this.srcPath = path.resolve(path.join('src'));
+    this.templatesPath = path.resolve(path.join('src', 'templates'));
     this.options.packageManager = packageManagerKind;
     this.packageManager = new PackageManager({
       packageManagerKind,
@@ -150,11 +150,12 @@ class Configurator {
     );
   };
 
-  public prepare = async (): Promise<ConfigType> => {
+  public prepare = () => {
+    const { options } = this;
     return new Promise((resolve) => {
       this.config = {
         ...this.config,
-        ...prepareConfig(this.options),
+        ...prepareConfig(options),
       };
       resolve(this.config);
     });
@@ -340,19 +341,24 @@ class Configurator {
   private copyTemplateConfigs = async () => {
     const { configTemplateDirectories, configTemplateFiles } = this.config;
 
-    const configs: Promise<void[] | undefined>[] = [];
+    const copy = (paths: string[], recursive: boolean = false) => {
+      return paths.map((file) =>
+        fs.promises.cp(
+          path.join(this.templatesPath, file),
+          path.join(this.cwd, file),
+          { recursive }
+        )
+      );
+    };
 
-    if (configTemplateDirectories.length > 0) {
-      configs.push(this.copyTemplate(configTemplateDirectories, true));
-    }
+    const copyPromises = [
+      ...(configTemplateDirectories.length > 0
+        ? copy(configTemplateDirectories, true)
+        : []),
+      ...(configTemplateFiles.length > 0 ? copy(configTemplateFiles) : []),
+    ];
 
-    if (configTemplateFiles.length > 0) {
-      configs.push(this.copyTemplate(configTemplateFiles));
-    }
-
-    if (configs.length === 0) return;
-
-    return Promise.all(configs).catch((error) => {
+    return Promise.all(copyPromises).catch((error) => {
       throw new Error(`${error}`);
     });
   };
@@ -369,22 +375,6 @@ class Configurator {
     }
   };
 
-  private readFromFiles = async (filenames: string[]) => {
-    const filePaths = filenames.map((filename) =>
-      path.join(this.srcPath, 'markdown', filename)
-    );
-
-    const readFiles = filePaths.map((filePath) =>
-      fs.readFileSync(filePath, 'utf8')
-    );
-
-    const markdownArr = await Promise.all(readFiles).catch((error) => {
-      throw new Error(`${error}`);
-    });
-
-    return markdownArr;
-  };
-
   private makeDependenciesMarkdownTable() {
     const tableHeader = ['Package name', 'Package description', 'Type'];
     const tableData = this.options.optionalDependencies.map(
@@ -399,7 +389,11 @@ class Configurator {
   }
 
   private generateReadme = async () => {
-    return this.readFromFiles(this.config.markdown)
+    const readFiles = this.config.markdown.map((file) =>
+      fs.readFileSync(path.join(this.templatesPath, 'markdown', file), 'utf8')
+    );
+
+    return Promise.all(readFiles)
       .then((markdownStrArr) => {
         if (this.options.optionalDependencies.length > 0) {
           markdownStrArr.push(this.makeDependenciesMarkdownTable());
@@ -412,25 +406,6 @@ class Configurator {
       .catch((error) => {
         throw new Error(`${error}`);
       });
-  };
-
-  private copyTemplate = async (
-    template: string[],
-    recursive: boolean = false
-  ) => {
-    if (!Array.isArray(template) || template.length === 0) return;
-
-    const copyFiles = template.map((file) =>
-      fs.promises.cp(
-        path.join(this.srcPath, 'templates', file),
-        path.join(this.cwd, file),
-        { recursive }
-      )
-    );
-
-    return await Promise.all(copyFiles).catch((error) => {
-      throw new Error(`${error}`);
-    });
   };
 }
 

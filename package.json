@@ -28,8 +28,8 @@
     "test:watch": "node --experimental-vm-modules --no-warnings node_modules/.bin/jest --watch",
     "test:ci": "node --experimental-vm-modules --no-warnings node_modules/.bin/jest --ci",
     "test:coverage": "node --experimental-vm-modules --no-warnings node_modules/.bin/jest --coverage",
-    "test:e2e":"node --experimental-vm-modules --no-warnings node_modules/.bin/jest -c ./jest.e2e.config.ts",
-    "test:e2e:ci":"node --experimental-vm-modules --no-warnings node_modules/.bin/jest -c ./jest.e2e.config.ts --ci"
+    "test:e2e": "node --experimental-vm-modules --no-warnings node_modules/.bin/jest -c ./jest.e2e.config.ts",
+    "test:e2e:ci": "node --experimental-vm-modules --no-warnings node_modules/.bin/jest -c ./jest.e2e.config.ts --ci"
   },
   "keywords": [],
   "author": "",
