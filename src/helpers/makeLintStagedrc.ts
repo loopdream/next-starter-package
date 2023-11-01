@@ -13,30 +13,28 @@ function makeLintStagedrc({
 }: MakeLintStagedrc) {
   const tsLintConfig = {
     '**/*.ts?(x)': [
-      ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
-      ...(eslint ? ['eslint .', 'eslint --fix .'] : []),
+      ...(prettier ? ['prettier --write .'] : []),
+      ...(eslint ? ['eslint --fix .'] : []),
       ...(jest ? ['jest --ci'] : []),
       'tsc --noEmit',
     ],
   };
 
   const mdYmlJsonConfig = {
-    '**/*.{md, yml, yaml, json}': [
-      ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
-    ],
+    '**/*.{md, yml, yaml, json}': [...(prettier ? ['prettier --write .'] : [])],
   };
 
   const stylesConfig = {
     '**/*.{css}': [
-      ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
+      ...(prettier ? ['prettier --write .'] : []),
       // TODO: add styledlint
     ],
   };
 
   const lintStagedrc = {
     '**/*.js?(x)': [
-      ...(prettier ? ['prettier --check .', 'prettier --write .'] : []),
-      ...(eslint ? ['eslint .', 'eslint --fix .'] : []),
+      ...(prettier ? ['prettier --write .'] : []),
+      ...(eslint ? ['eslint --fix .'] : []),
       ...(jest ? ['jest --ci'] : []),
     ],
     ...(typescript ? tsLintConfig : {}),

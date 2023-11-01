@@ -3,7 +3,6 @@ import figlet from 'figlet';
 import fs from 'fs';
 import { markdownTable } from 'markdown-table';
 import ora, { Options as OraOptions } from 'ora';
-//, { Options as OraOptions }
 import path from 'path';
 import picocolors from 'picocolors';
 import prompts from 'prompts';
@@ -14,6 +13,7 @@ import makeHuskyPreCommit from './helpers/makeHuskyPreCommit.js';
 import makeLintStagedrc from './helpers/makeLintStagedrc.js';
 import { makePrettierignore, makePrettierrc } from './helpers/makePrettier.js';
 import prepareConfig from './helpers/prepareConfig.js';
+import sleep from './helpers/sleep.js';
 import { ChoiceValuesType } from './prompts.js';
 
 type ConfiguratorPropsType = {
@@ -94,12 +94,8 @@ class Configurator {
     });
   }
 
-  awaitTimeout = (delay: number) => {
-    return new Promise((resolve) => setTimeout(resolve, delay));
-  };
-
   private withSpinner = async (
-    fn: () => Promise<void | unknown | ConfigType>,
+    fn: () => Promise<void | unknown>,
     text: string,
     opts: OraOptions = {},
     delay: number = 1000
@@ -107,7 +103,7 @@ class Configurator {
     const spinner = ora(opts).start(text);
 
     await fn()
-      .then(() => this.awaitTimeout(delay))
+      .then(() => sleep(delay))
       .then(() => spinner.succeed())
       .catch(() => spinner.fail());
   };
@@ -151,13 +147,22 @@ class Configurator {
   };
 
   public prepare = () => {
-    const { options } = this;
     return new Promise((resolve) => {
       this.config = {
         ...this.config,
-        ...prepareConfig(options),
+        ...prepareConfig(this.options),
       };
       resolve(this.config);
+    });
+  };
+
+  public setOptions = (options: OptionsType | prompts.Answers<string>) => {
+    return new Promise((resolve) => {
+      this.options = {
+        ...this.options,
+        ...options,
+      };
+      resolve(this.options);
     });
   };
 
@@ -177,45 +182,39 @@ class Configurator {
     });
   };
 
-  public setOptions = (answers: OptionsType | prompts.Answers<string>) => {
-    return new Promise((resolve) => {
-      this.options = {
-        ...this.options,
-        ...answers,
-      };
-      resolve(this.options);
-    });
-  };
-
   public createNextApp = async () => {
     const { cwd, packageManager } = this;
     const pm = packageManager.getKind();
 
+    if (pm !== PackageManagerKindEnum.NPM) {
+      await $`${pm} -v`.catch((error) => {
+        console.log(
+          `\n\n` + red(bold('Error!')),
+          `Please check that your chosen package manager ${cyan(
+            bold(pm)
+          )} is installed:`,
+          cyan(
+            pm === PackageManagerKindEnum.PNPM
+              ? 'https://pnpm.io/installation'
+              : pm === PackageManagerKindEnum.YARN
+              ? 'https://yarnpkg.com/getting-started/install'
+              : 'https://bun.sh/docs/installation'
+          ) + `\n\n`
+        );
+        throw new Error(`\n${error}`);
+      });
+    }
+
     await $({
       stdio: 'inherit',
     })`npx create-next-app@latest ${cwd} --use-${pm}`.catch((error) => {
-      console.log(
-        `\n\n` + red(bold('Error!')),
-        `Please check that your chosen package manager ${cyan(
-          bold(pm)
-        )} is installed:`,
-        cyan(
-          pm === PackageManagerKindEnum.PNPM
-            ? 'https://pnpm.io/installation'
-            : pm === PackageManagerKindEnum.YARN
-            ? 'https://yarnpkg.com/getting-started/install'
-            : 'https://bun.sh/docs/installation'
-        ) + `\n\n`
-      );
       throw new Error(`\n${error}`);
     });
 
-    this.options = {
+    return this.setOptions({
       ...this.options,
       ...this.getNextConfig(),
-    };
-
-    return this.options;
+    });
   };
 
   public getConfig = () => {
@@ -351,14 +350,14 @@ class Configurator {
       );
     };
 
-    const copyPromises = [
+    const copyTemplates = [
       ...(configTemplateDirectories.length > 0
         ? copy(configTemplateDirectories, true)
         : []),
       ...(configTemplateFiles.length > 0 ? copy(configTemplateFiles) : []),
     ];
 
-    return Promise.all(copyPromises).catch((error) => {
+    return Promise.all(copyTemplates).catch((error) => {
       throw new Error(`${error}`);
     });
   };
@@ -366,13 +365,16 @@ class Configurator {
   private cleanUp = async () => {
     // clean up ie format files - maybe other stuff TBC
     const { packageManager, options, cwd } = this;
+
     if (options.prettier) {
-      await $({ cwd })`${packageManager.getKind()} run format:write`.catch(
+      return $({ cwd })`${packageManager.getKind()} run format:write`.catch(
         (error) => {
-          console.log(`${error}`);
+          throw new Error(`${error}`);
         }
       );
     }
+
+    return;
   };
 
   private makeDependenciesMarkdownTable() {

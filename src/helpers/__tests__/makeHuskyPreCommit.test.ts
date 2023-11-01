@@ -66,9 +66,7 @@ describe('makeHuskyPreCommit', () => {
 
       const script = makeHuskyPreCommit(options);
 
-      expect(script).toContain('yarn run lint:check');
       expect(script).toContain('yarn run lint:fix');
-      expect(script).toContain('yarn run format:check');
       expect(script).toContain('yarn run format:write');
       expect(script).toContain('yarn run test --passWithNoTests');
       expect(script).toContain('yarn run build --no-emit');

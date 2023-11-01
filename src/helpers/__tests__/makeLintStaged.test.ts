@@ -4,26 +4,15 @@ describe('makeLintStagedrc', () => {
   describe('When eslint, jest, prettier and typescript options are true', () => {
     it('should return a valid lint-staged configuration object', () => {
       const expectedConfig = {
-        '**/*.js?(x)': [
-          'prettier --check .',
-          'prettier --write .',
-          'eslint .',
-          'eslint --fix .',
-          'jest --ci',
-        ],
+        '**/*.js?(x)': ['prettier --write .', 'eslint --fix .', 'jest --ci'],
         '**/*.ts?(x)': [
-          'prettier --check .',
           'prettier --write .',
-          'eslint .',
           'eslint --fix .',
           'jest --ci',
           'tsc --noEmit',
         ],
-        '**/*.{md, yml, yaml, json}': [
-          'prettier --check .',
-          'prettier --write .',
-        ],
-        '**/*.{css}': ['prettier --check .', 'prettier --write .'],
+        '**/*.{md, yml, yaml, json}': ['prettier --write .'],
+        '**/*.{css}': ['prettier --write .'],
       };
 
       const config = makeLintStagedrc({
@@ -40,18 +29,9 @@ describe('makeLintStagedrc', () => {
   describe('When typescript is false and all other options are true', () => {
     it('should return a valid lint-staged configuration object without typescript', () => {
       const expectedConfig = {
-        '**/*.js?(x)': [
-          'prettier --check .',
-          'prettier --write .',
-          'eslint .',
-          'eslint --fix .',
-          'jest --ci',
-        ],
-        '**/*.{md, yml, yaml, json}': [
-          'prettier --check .',
-          'prettier --write .',
-        ],
-        '**/*.{css}': ['prettier --check .', 'prettier --write .'],
+        '**/*.js?(x)': ['prettier --write .', 'eslint --fix .', 'jest --ci'],
+        '**/*.{md, yml, yaml, json}': ['prettier --write .'],
+        '**/*.{css}': ['prettier --write .'],
       };
 
       const config = makeLintStagedrc({
@@ -67,24 +47,10 @@ describe('makeLintStagedrc', () => {
   describe('When jest is false and all other options are true', () => {
     it('should return a valid lint-staged configuration object without jest', () => {
       const expectedConfig = {
-        '**/*.js?(x)': [
-          'prettier --check .',
-          'prettier --write .',
-          'eslint .',
-          'eslint --fix .',
-        ],
-        '**/*.ts?(x)': [
-          'prettier --check .',
-          'prettier --write .',
-          'eslint .',
-          'eslint --fix .',
-          'tsc --noEmit',
-        ],
-        '**/*.{md, yml, yaml, json}': [
-          'prettier --check .',
-          'prettier --write .',
-        ],
-        '**/*.{css}': ['prettier --check .', 'prettier --write .'],
+        '**/*.js?(x)': ['prettier --write .', 'eslint --fix .'],
+        '**/*.ts?(x)': ['prettier --write .', 'eslint --fix .', 'tsc --noEmit'],
+        '**/*.{md, yml, yaml, json}': ['prettier --write .'],
+        '**/*.{css}': ['prettier --write .'],
       };
 
       const config = makeLintStagedrc({
@@ -100,13 +66,8 @@ describe('makeLintStagedrc', () => {
   describe('When prettier is false and all other options are true', () => {
     it('should return a valid lint-staged configuration object without Prettier', () => {
       const expectedConfig = {
-        '**/*.js?(x)': ['eslint .', 'eslint --fix .', 'jest --ci'],
-        '**/*.ts?(x)': [
-          'eslint .',
-          'eslint --fix .',
-          'jest --ci',
-          'tsc --noEmit',
-        ],
+        '**/*.js?(x)': ['eslint --fix .', 'jest --ci'],
+        '**/*.ts?(x)': ['eslint --fix .', 'jest --ci', 'tsc --noEmit'],
       };
 
       const config = makeLintStagedrc({
@@ -129,22 +90,10 @@ describe('makeLintStagedrc', () => {
         typescript: true,
       };
       const expectedConfig = {
-        '**/*.js?(x)': [
-          'prettier --check .',
-          'prettier --write .',
-          'jest --ci',
-        ],
-        '**/*.ts?(x)': [
-          'prettier --check .',
-          'prettier --write .',
-          'jest --ci',
-          'tsc --noEmit',
-        ],
-        '**/*.{md, yml, yaml, json}': [
-          'prettier --check .',
-          'prettier --write .',
-        ],
-        '**/*.{css}': ['prettier --check .', 'prettier --write .'],
+        '**/*.js?(x)': ['prettier --write .', 'jest --ci'],
+        '**/*.ts?(x)': ['prettier --write .', 'jest --ci', 'tsc --noEmit'],
+        '**/*.{md, yml, yaml, json}': ['prettier --write .'],
+        '**/*.{css}': ['prettier --write .'],
       };
 
       const config = makeLintStagedrc(options);
